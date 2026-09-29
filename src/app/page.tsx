@@ -1,950 +1,511 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
-type IconProps = {
-  className?: string;
-};
-
-/* =========================================================
-   ICONS
-========================================================= */
-
-function ShieldIcon({ className = "w-5 h-5" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M12 3 4 7v5c0 4.8 3.4 7.8 8 9 4.6-1.2 8-4.2 8-9V7l-8-4Z" />
-      <path d="m8.5 12 2.2 2.2 4.8-5" />
-    </svg>
-  );
-}
-
-function TruckIcon({ className = "w-5 h-5" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M3 6h11v11H3z" />
-      <path d="M14 10h4l3 3v4h-7z" />
-      <circle cx="7" cy="19" r="2" />
-      <circle cx="18" cy="19" r="2" />
-    </svg>
-  );
-}
-
-function CardIcon({ className = "w-5 h-5" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 10h18" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon({ className = "w-5 h-5" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 8.6 8.6 0 0 1-4-.95L3 21l1.9-5A8.5 8.5 0 1 1 21 11.5Z" />
-      <path d="M8 12h.01M12 12h.01M16 12h.01" />
-    </svg>
-  );
-}
-
-function HeartIcon({ className = "w-5 h-5" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M20.8 8.8c0 5.4-8.8 10.2-8.8 10.2S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z" />
-    </svg>
-  );
-}
-
-function MaleWellnessIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="10" cy="14" r="5" />
-      <path d="m14 10 6-6" />
-      <path d="M16 4h4v4" />
-    </svg>
-  );
-}
-
-function SexualHealthIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M20.8 8.8c0 5.4-8.8 10.2-8.8 10.2S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z" />
-      <path d="M12 9v6" />
-      <path d="M9 12h6" />
-    </svg>
-  );
-}
-
-function FertilityIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M5 21a7 7 0 0 1 14 0" />
-      <path d="M18 5c1.5-1.5 2.5-2 3-2" />
-    </svg>
-  );
-}
-
-function WomenIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="8" r="4.5" />
-      <path d="M12 12.5V22" />
-      <path d="M8.5 19h7" />
-    </svg>
-  );
-}
-
-function DropIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M12 3s6 6.2 6 11a6 6 0 0 1-12 0c0-4.8 6-11 6-11Z" />
-      <path d="M9.5 15.5a2.8 2.8 0 0 0 5 0" />
-    </svg>
-  );
-}
-
-function DigestiveIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M8 3v6c0 2 1.5 3 3.5 3H13c2 0 3 1.5 3 3.5V21" />
-      <path d="M8 3h4" />
-      <path d="M16 3v4" />
-      <path d="M5 21h11" />
-    </svg>
-  );
-}
-
-function ScaleIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M5 7h14l2 14H3L5 7Z" />
-      <path d="M9 7a3 3 0 0 1 6 0" />
-      <path d="m12 11 2 3" />
-      <path d="M12 14h.01" />
-    </svg>
-  );
-}
-
-function JointIcon({ className = "w-7 h-7" }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M8 4a3 3 0 1 1 5.8 1.1l-2.2 4.5a3 3 0 0 0 .7 3.5l2.9 2.4a3 3 0 1 1-3.8 4.6l-3-2.5a8 8 0 0 1-1.8-9.5l1.6-3.2A3 3 0 0 1 8 4Z" />
-    </svg>
-  );
-}
-
-/* =========================================================
-   DATA
-========================================================= */
-
-const promos = [
-  {
-    eyebrow: "AYURVEDIC & UNANI",
-    title: "Wellness essentials",
-    subtitle:
-      "Explore products for everyday health & wellness.",
-    badge: "Explore Range",
-    bg: "bg-[#edf7f3]",
-    accent: "text-[#0f4c3a]",
-    image:
-      "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500",
-    href: "/products?category=general-problems",
-  },
-  {
-    eyebrow: "EVERYDAY WELLNESS",
-    title: "Better care, delivered",
-    subtitle:
-      "Browse our range of Ayurvedic & Unani products.",
-    badge: "Shop Products",
-    bg: "bg-[#eef5fb]",
-    accent: "text-[#185a7a]",
-    image:
-      "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=500",
-    href: "/products",
-  },
-  {
-    eyebrow: "MEN'S WELLNESS",
-    title: "Care for men's health",
-    subtitle:
-      "Explore our men's wellness collection.",
-    badge: "Explore Men's Care",
-    bg: "bg-[#f7f1e7]",
-    accent: "text-[#805b25]",
-    image:
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500",
-    href: "/products?category=male-problems",
-  },
-];
-
-const concerns = [
-  {
-    name: "Men's Wellness",
-    slug: "mens-vitality",
-    icon: <MaleWellnessIcon />,
-  },
-  {
-    name: "Sexual Wellness",
-    slug: "sexual-health",
-    icon: <SexualHealthIcon />,
-  },
-  {
-    name: "Male Fertility",
-    slug: "male-fertility",
-    icon: <FertilityIcon />,
-  },
-  {
-    name: "Women's Wellness",
-    slug: "womens-health",
-    icon: <WomenIcon />,
-  },
-  {
-    name: "White Discharge",
-    slug: "white-discharge",
-    icon: <DropIcon />,
-  },
-  {
-    name: "Digestive Care",
-    slug: "gastric-digestion",
-    icon: <DigestiveIcon />,
-  },
-  {
-    name: "Weight Management",
-    slug: "weight-loss",
-    icon: <ScaleIcon />,
-  },
-  {
-    name: "Joints & Pain",
-    slug: "joints-pain",
-    icon: <JointIcon />,
-  },
-];
-
-/* =========================================================
-   HOME
-========================================================= */
-
 export default function Home() {
   const [bannerIndex, setBannerIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % promos.length);
-    }, 5000);
+  const promos = [
+    {
+      brand: "AYURVEDIC RANGE",
+      title: "Up to 20% off",
+      subtitle: "Immunity & overall health",
+      brandColor: "text-teal-700",
+      bg: "bg-gradient-to-r from-teal-50 to-teal-100",
+      text: "text-gray-900",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300",
+      href: "/products?category=general-problems",
+    },
+    {
+      brand: "BEST SAVINGS",
+      title: "Up to 14% off",
+      subtitle: "On all medicines + cashback",
+      brandColor: "text-blue-700",
+      bg: "bg-gradient-to-r from-blue-50 to-blue-100",
+      text: "text-gray-900",
+      image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300",
+      href: "/products",
+    },
+    {
+      brand: "MEN'S WELLNESS",
+      title: "Up to 25% off",
+      subtitle: "Vitality & strength products",
+      brandColor: "text-amber-700",
+      bg: "bg-gradient-to-r from-amber-50 to-amber-100",
+      text: "text-gray-900",
+      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300",
+      href: "/products?category=male-problems",
+    },
+  ];
 
-    return () => clearInterval(timer);
-  }, []);
-
-  const nextBanner = () => {
-    setBannerIndex((prev) => (prev + 1) % promos.length);
-  };
-
-  const previousBanner = () => {
-    setBannerIndex(
-      (prev) => (prev - 1 + promos.length) % promos.length
-    );
-  };
+  const concerns = [
+    { name: "Men's Vitality", icon: "🦁", slug: "mens-vitality" },
+    { name: "Sexual Health", icon: "🛡️", slug: "sexual-health" },
+    { name: "Male Fertility", icon: "👶", slug: "male-fertility" },
+    { name: "Women's Health", icon: "💗", slug: "womens-health" },
+    { name: "Likoria", icon: "🩺", slug: "white-discharge" },
+    { name: "Gastric & Acidity", icon: "🫀", slug: "gastric-digestion" },
+    { name: "Weight Loss", icon: "📏", slug: "weight-loss" },
+    { name: "Weight Gain", icon: "💪", slug: "weight-gain" },
+    { name: "Joints & Pain", icon: "🦵", slug: "joints-pain" },
+    { name: "Diabetes", icon: "🩸", slug: "diabetes" },
+  ];
 
   return (
-    <main className="bg-[#f8faf9] text-gray-900">
-
-      {/* =====================================================
-          TRUST STRIP
-      ===================================================== */}
-
-      <section className="bg-white border-b border-gray-100">
+    <div>
+      {/* ============================================ */}
+      {/* MOBILE + DESKTOP: TRUST BADGES (Desktop Only on mobile?) */}
+      {/* ============================================ */}
+      {/* Trust Badges — Desktop only */}
+      <section className="hidden md:block bg-white py-3 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100">
-
-            <div className="flex items-center justify-center gap-2.5 py-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <ShieldIcon className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-gray-800">
-                  Authentic
-                </p>
-                <p className="text-[9px] text-gray-400">
-                  Carefully sourced
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-2.5 py-3">
-              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                <TruckIcon className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-gray-800">
-                  Delivery
-                </p>
-                <p className="text-[9px] text-gray-400">
-                  Eligible locations
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-2.5 py-3">
-              <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
-                <CardIcon className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-gray-800">
-                  Easy Payment
-                </p>
-                <p className="text-[9px] text-gray-400">
-                  Multiple options
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden md:flex items-center justify-center gap-2.5 py-3">
-              <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center">
-                <WhatsAppIcon className="w-4 h-4" />
-              </div>
-
-              <div>
-                <p className="text-[11px] font-bold text-gray-800">
-                  WhatsApp
-                </p>
-                <p className="text-[9px] text-gray-400">
-                  Easy assistance
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================
-          HERO SLIDER
-      ===================================================== */}
-
-      <section className="bg-white py-4 md:py-6">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div
-            className="relative overflow-hidden rounded-2xl md:rounded-3xl"
-            onTouchStart={(e) => {
-              setTouchStart(e.touches[0].clientX);
-            }}
-            onTouchEnd={(e) => {
-              if (touchStart === null) return;
-
-              const diff =
-                touchStart - e.changedTouches[0].clientX;
-
-              if (diff > 50) {
-                nextBanner();
-              } else if (diff < -50) {
-                previousBanner();
-              }
-
-              setTouchStart(null);
-            }}
-          >
-            <div
-              className="flex transition-transform duration-500 ease-out"
-              style={{
-                transform: `translateX(-${bannerIndex * 100}%)`,
-              }}
-            >
-              {promos.map((promo, index) => (
-                <div
-                  key={promo.title}
-                  className={`w-full shrink-0 ${promo.bg}`}
-                >
-                  <Link
-                    href={promo.href}
-                    className="min-h-[190px] md:min-h-[280px] flex items-center justify-between px-5 py-6 md:px-12 md:py-10"
-                  >
-                    <div className="max-w-xl">
-
-                      <p
-                        className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] ${promo.accent} mb-2`}
-                      >
-                        {promo.eyebrow}
-                      </p>
-
-                      <h1 className="text-2xl md:text-5xl font-black tracking-tight leading-[1.05] text-gray-900">
-                        {promo.title}
-                      </h1>
-
-                      <p className="text-xs md:text-base text-gray-600 mt-2 md:mt-3 max-w-md">
-                        {promo.subtitle}
-                      </p>
-
-                      <span
-                        className={`inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-full bg-white text-xs md:text-sm font-bold shadow-sm ${promo.accent}`}
-                      >
-                        {promo.badge}
-                        <span>→</span>
-                      </span>
-
-                    </div>
-
-                    <div className="relative w-28 h-28 md:w-52 md:h-52 shrink-0">
-                      <Image
-                        src={promo.image}
-                        alt={promo.title}
-                        fill
-                        priority={index === 0}
-                        className="object-contain"
-                        sizes="(max-width: 768px) 112px, 208px"
-                      />
-                    </div>
-                  </Link>
+          <div className="grid grid-cols-4 gap-2 md:gap-4">
+            {[
+              { icon: "✅", label: "100% Authentic" },
+              { icon: "🚚", label: "Fast Delivery" },
+              { icon: "💵", label: "COD Available" },
+              { icon: "💬", label: "WhatsApp" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex flex-col items-center gap-1 text-center"
+              >
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-lg md:text-xl">{item.icon}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Desktop arrows */}
-
-            <button
-              type="button"
-              onClick={previousBanner}
-              aria-label="Previous banner"
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-sm items-center justify-center text-gray-700 hover:text-primary transition"
-            >
-              ←
-            </button>
-
-            <button
-              type="button"
-              onClick={nextBanner}
-              aria-label="Next banner"
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-sm items-center justify-center text-gray-700 hover:text-primary transition"
-            >
-              →
-            </button>
-          </div>
-
-          {/* Slider dots */}
-
-          <div className="flex justify-center gap-1.5 mt-3">
-            {promos.map((promo, index) => (
-              <button
-                key={promo.title}
-                type="button"
-                onClick={() => setBannerIndex(index)}
-                aria-label={`Show banner ${index + 1}`}
-                className={`h-1.5 rounded-full transition-all ${
-                  index === bannerIndex
-                    ? "w-7 bg-primary"
-                    : "w-1.5 bg-gray-300"
-                }`}
-              />
+                <p className="text-[10px] md:text-xs font-semibold text-gray-700 leading-tight">
+                  {item.label}
+                </p>
+              </div>
             ))}
           </div>
-
         </div>
       </section>
 
-      {/* =====================================================
-          SHOP BY CONCERN
-      ===================================================== */}
+      {/* ============================================ */}
+      {/* MOBILE + DESKTOP: PROMO BANNER */}
+      {/* ============================================ */}
+      <section className="py-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div
+            className="relative px-4 md:px-6"
+            onTouchStart={(e) => {
+              (window as any).__bannerTouch = e.touches[0].clientX;
+            }}
+            onTouchEnd={(e) => {
+              const start = (window as any).__bannerTouch;
+              if (start === null || start === undefined) return;
+              const diff = start - e.changedTouches[0].clientX;
+              if (diff > 50) {
+                setBannerIndex((prev) => (prev + 1) % promos.length);
+              } else if (diff < -50) {
+                setBannerIndex(
+                  (prev) => (prev - 1 + promos.length) % promos.length
+                );
+              }
+            }}
+          >
+            <div className="overflow-hidden">
+              <div
+                className="flex transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${bannerIndex * 100}%)`,
+                }}
+              >
+                {promos.map((promo, idx) => (
+                  <div key={idx} className="shrink-0 w-full">
+                    <Link
+                      href={promo.href}
+                      target={
+                        promo.href.startsWith("http") ? "_blank" : undefined
+                      }
+                      rel={
+                        promo.href.startsWith("http")
+                          ? "noopener noreferrer"
+                          : undefined
+                      }
+                      className={`block ${promo.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4 hover:shadow-md transition`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-[10px] md:text-xs font-bold ${promo.brandColor} mb-1 tracking-wide uppercase`}
+                        >
+                          {promo.brand}
+                        </p>
+                        <h3
+                          className={`text-2xl md:text-4xl font-black ${promo.text} leading-tight mb-1`}
+                        >
+                          {promo.title}
+                        </h3>
+                        <p
+                          className={`text-xs md:text-base ${promo.text} opacity-80`}
+                        >
+                          {promo.subtitle}
+                        </p>
+                      </div>
 
-      <section className="bg-white py-7 md:py-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div className="flex items-end justify-between mb-5">
-
-            <div>
-              <p className="text-[10px] md:text-xs font-bold tracking-[0.16em] uppercase text-primary mb-1">
-                FIND WHAT YOU NEED
-              </p>
-
-              <h2 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900">
-                Shop by Concern
-              </h2>
-
-              <p className="text-xs md:text-sm text-gray-500 mt-1">
-                Browse products by wellness category
-              </p>
+                      <div className="shrink-0 w-20 h-20 md:w-32 md:h-32 relative">
+                        <Image
+                          src={promo.image}
+                          alt={promo.title}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 80px, 128px"
+                        />
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
 
+            <div className="flex justify-center items-center gap-2 mt-3">
+              {promos.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setBannerIndex(idx)}
+                  aria-label={`Go to banner ${idx + 1}`}
+                  className={`transition-all duration-300 rounded-full ${
+                    bannerIndex === idx
+                      ? "w-7 h-2 bg-teal-700"
+                      : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* DESKTOP ONLY: SHOP BY CONCERN */}
+      {/* ============================================ */}
+      <section className="hidden md:block py-6 md:py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex justify-between items-end mb-5">
+            <div>
+              <h2 className="text-xl md:text-3xl font-bold text-gray-900">
+                Shop by Concern
+              </h2>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
+                Har samasya ka natural samadhan
+              </p>
+            </div>
             <Link
               href="/concerns"
-              className="text-xs md:text-sm font-bold text-primary whitespace-nowrap hover:underline"
+              className="text-primary text-xs md:text-sm font-semibold hover:underline whitespace-nowrap"
             >
               View All →
             </Link>
-
           </div>
 
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-x-2 gap-y-6 md:gap-x-4">
-
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
             {concerns.map((concern) => (
               <Link
                 key={concern.slug}
                 href={`/concerns/${concern.slug}`}
-                className="group flex flex-col items-center text-center"
+                className="group flex flex-col items-center text-center p-2 rounded-xl hover:bg-primary/5 transition"
               >
-
-                <div
-                  className="
-                    w-14 h-14
-                    md:w-20 md:h-20
-                    rounded-2xl
-                    bg-[#f0f7f4]
-                    border border-[#e1eee9]
-                    text-primary
-                    flex items-center justify-center
-                    transition-all duration-300
-                    group-hover:bg-primary
-                    group-hover:text-white
-                    group-hover:border-primary
-                    group-hover:-translate-y-1
-                    group-hover:shadow-md
-                  "
-                >
-                  {concern.icon}
+                <div className="w-14 h-14 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2 group-hover:bg-primary group-hover:scale-105 transition duration-300">
+                  <span className="text-2xl md:text-3xl">{concern.icon}</span>
                 </div>
-
-                <p className="mt-2 text-[9px] md:text-xs font-semibold text-gray-700 leading-tight group-hover:text-primary transition max-w-[80px]">
+                <h3 className="text-[10px] md:text-sm font-semibold text-gray-800 group-hover:text-primary transition leading-tight">
                   {concern.name}
-                </p>
-
+                </h3>
               </Link>
             ))}
-
           </div>
         </div>
       </section>
 
-      {/* =====================================================
-          SHOP BY CATEGORY
-      ===================================================== */}
-
-      <section className="py-7 md:py-10 bg-[#f8faf9]">
+      {/* ============================================ */}
+      {/* DESKTOP ONLY: SHOP BY CATEGORY */}
+      {/* ============================================ */}
+      <section className="hidden md:block py-6 md:py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div className="mb-5">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.16em] uppercase text-primary mb-1">
-              EXPLORE COLLECTIONS
-            </p>
-
-            <h2 className="text-xl md:text-3xl font-bold tracking-tight">
-              Shop by Category
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
-
-            {/* Male */}
-
+          <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-5">
+            Shop by Category
+          </h2>
+          <div className="grid grid-cols-3 gap-3 md:gap-6">
             <Link
               href="/products?category=male-problems"
-              className="group relative overflow-hidden rounded-2xl bg-[#eaf5f1] p-5 md:p-7 min-h-[155px] flex flex-col justify-between hover:shadow-md transition"
+              className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-primary"
             >
-              <div className="relative z-10">
-
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                  COLLECTION
-                </span>
-
-                <h3 className="text-xl md:text-2xl font-bold mt-1 text-gray-900">
-                  Men&apos;s Wellness
-                </h3>
-
-                <p className="text-xs text-gray-600 mt-1">
-                  Explore men&apos;s care products
-                </p>
-
+              <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
+                <span className="text-2xl md:text-3xl">💊</span>
               </div>
-
-              <span className="relative z-10 text-xs font-bold text-primary mt-4">
-                Shop Now →
-              </span>
-
-              <span className="absolute -right-4 -bottom-10 text-[110px] font-black text-primary/5">
-                M
-              </span>
+              <h3 className="text-sm md:text-lg font-bold text-primary">
+                Male
+              </h3>
+              <p className="text-[10px] md:text-xs text-gray-600 mt-1">
+                Men&apos;s wellness
+              </p>
             </Link>
-
-            {/* Female */}
 
             <Link
               href="/products?category=female-problems"
-              className="group relative overflow-hidden rounded-2xl bg-[#fff2f5] p-5 md:p-7 min-h-[155px] flex flex-col justify-between hover:shadow-md transition"
+              className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-secondary"
             >
-              <div className="relative z-10">
-
-                <span className="text-[10px] font-bold uppercase tracking-widest text-pink-600">
-                  COLLECTION
-                </span>
-
-                <h3 className="text-xl md:text-2xl font-bold mt-1 text-gray-900">
-                  Women&apos;s Wellness
-                </h3>
-
-                <p className="text-xs text-gray-600 mt-1">
-                  Explore women&apos;s care products
-                </p>
-
+              <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-secondary/10 rounded-full flex items-center justify-center">
+                <span className="text-2xl md:text-3xl">🌸</span>
               </div>
-
-              <span className="relative z-10 text-xs font-bold text-pink-600 mt-4">
-                Shop Now →
-              </span>
-
-              <span className="absolute -right-4 -bottom-10 text-[110px] font-black text-pink-500/5">
-                W
-              </span>
+              <h3 className="text-sm md:text-lg font-bold text-secondary">
+                Female
+              </h3>
+              <p className="text-[10px] md:text-xs text-gray-600 mt-1">
+                Women&apos;s wellness
+              </p>
             </Link>
-
-            {/* General */}
 
             <Link
               href="/products?category=general-problems"
-              className="group relative overflow-hidden rounded-2xl bg-[#eef6ec] p-5 md:p-7 min-h-[155px] flex flex-col justify-between hover:shadow-md transition"
+              className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-green-600"
             >
-              <div className="relative z-10">
-
-                <span className="text-[10px] font-bold uppercase tracking-widest text-green-700">
-                  COLLECTION
-                </span>
-
-                <h3 className="text-xl md:text-2xl font-bold mt-1 text-gray-900">
-                  General Wellness
-                </h3>
-
-                <p className="text-xs text-gray-600 mt-1">
-                  Everyday health & wellness
-                </p>
-
+              <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl md:text-3xl">🌿</span>
               </div>
-
-              <span className="relative z-10 text-xs font-bold text-green-700 mt-4">
-                Shop Now →
-              </span>
-
-              <span className="absolute -right-4 -bottom-10 text-[110px] font-black text-green-700/5">
-                G
-              </span>
+              <h3 className="text-sm md:text-lg font-bold text-green-700">
+                General
+              </h3>
+              <p className="text-[10px] md:text-xs text-gray-600 mt-1">
+                Everyday health
+              </p>
             </Link>
-
           </div>
         </div>
       </section>
 
-      {/* =====================================================
-          BEST SELLERS
-      ===================================================== */}
-
-      <section className="bg-white py-7 md:py-10">
+      {/* ============================================ */}
+      {/* MOBILE + DESKTOP: BEST SELLING PRODUCTS */}
+      {/* ============================================ */}
+      <section className="py-6 md:py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div className="flex items-end justify-between mb-5">
-
+          <div className="flex justify-between items-end mb-5">
             <div>
-              <p className="text-[10px] md:text-xs font-bold tracking-[0.16em] uppercase text-primary mb-1">
-                POPULAR PRODUCTS
-              </p>
-
-              <h2 className="text-xl md:text-3xl font-bold tracking-tight">
-                Best Sellers
+              <h2 className="text-xl md:text-3xl font-bold text-gray-900">
+                Best Selling Products
               </h2>
-
               <p className="text-xs md:text-sm text-gray-500 mt-1">
-                Popular choices from our store
+                Hamare sabse popular products
               </p>
             </div>
-
             <Link
               href="/products"
-              className="text-xs md:text-sm font-bold text-primary whitespace-nowrap hover:underline"
+              className="text-primary text-xs md:text-sm font-semibold hover:underline whitespace-nowrap"
             >
               View All →
             </Link>
-
           </div>
-
           <FeaturedProducts />
-
         </div>
       </section>
 
-      {/* =====================================================
-          TRUST / SERVICES
-      ===================================================== */}
-
-      <section className="py-7 md:py-10 bg-[#f8faf9]">
+      {/* ============================================ */}
+      {/* DESKTOP ONLY: WHY CHOOSE US */}
+      {/* ============================================ */}
+      <section className="hidden md:block py-6 md:py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-
-          <div className="text-center mb-6">
-
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.16em] uppercase text-primary mb-1">
-              THE AMROHA PHARMACY DIFFERENCE
-            </p>
-
-            <h2 className="text-xl md:text-3xl font-bold tracking-tight">
-              Simple, reliable healthcare shopping
-            </h2>
-
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-            <div className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <ShieldIcon />
-              </div>
-
-              <div>
-                <h3 className="font-bold text-sm text-gray-900">
-                  Authentic Products
-                </h3>
-
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Carefully sourced Ayurvedic & Unani products.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <TruckIcon />
-              </div>
-
-              <div>
-                <h3 className="font-bold text-sm text-gray-900">
-                  Doorstep Delivery
-                </h3>
-
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Convenient delivery across eligible locations.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-4">
-
-              <div className="w-10 h-10 shrink-0 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-                <WhatsAppIcon />
-              </div>
-
-              <div>
-                <h3 className="font-bold text-sm text-gray-900">
-                  Easy Ordering
-                </h3>
-
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Order online or contact us for assistance.
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =====================================================
-          CONTACT CTA
-      ===================================================== */}
-
-      <section className="bg-white py-7 md:py-10">
-        <div className="max-w-5xl mx-auto px-4 md:px-6">
-
-          <div className="rounded-2xl md:rounded-3xl bg-primary px-5 py-7 md:px-10 md:py-9 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div>
-
-              <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-white/60 mb-2">
-                NEED ASSISTANCE?
-              </p>
-
-              <h2 className="text-xl md:text-3xl font-bold">
-                Not sure what to choose?
-              </h2>
-
-              <p className="text-xs md:text-sm text-white/70 mt-1.5 max-w-lg">
-                Contact Amroha Pharmacy for product and ordering assistance.
-              </p>
-
-            </div>
-
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center gap-2 bg-white text-primary px-5 py-3 rounded-full text-sm font-bold hover:bg-gray-100 transition shrink-0"
-            >
-              Contact Us
-              <span>→</span>
-            </Link>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =====================================================
-          FINAL CTA
-      ===================================================== */}
-
-      <section className="py-8 md:py-12 bg-[#f8faf9] border-t border-gray-100">
-
-        <div className="max-w-2xl mx-auto px-4 text-center">
-
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6"
-            >
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-              <path d="M3 6h18" />
-              <path d="M8 10a4 4 0 0 0 8 0" />
-            </svg>
-          </div>
-
-          <h2 className="text-xl md:text-3xl font-bold">
-            Explore Amroha Pharmacy
+          <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
+            Why Choose Us?
           </h2>
-
-          <p className="text-xs md:text-sm text-gray-500 mt-1.5">
-            Browse our Ayurvedic & Unani wellness collection.
-          </p>
-
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 mt-5 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full text-sm font-bold transition"
-          >
-            Browse Products
-            <span>→</span>
-          </Link>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-primary rounded-full flex items-center justify-center">
+                <span className="text-xl">✅</span>
+              </div>
+              <h3 className="text-base md:text-lg font-bold mb-1">
+                Authentic Products
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">
+                100% genuine Ayurvedic & Unani medicines.
+              </p>
+            </div>
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-secondary rounded-full flex items-center justify-center">
+                <span className="text-xl">🚚</span>
+              </div>
+              <h3 className="text-base md:text-lg font-bold mb-1">
+                Fast Delivery
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">
+                Quick delivery with Cash on Delivery option.
+              </p>
+            </div>
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-green-600 rounded-full flex items-center justify-center">
+                <span className="text-xl">👨‍⚕️</span>
+              </div>
+              <h3 className="text-base md:text-lg font-bold mb-1">
+                Expert Support
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">
+                Guidance from qualified experts.
+              </p>
+            </div>
+          </div>
         </div>
-
       </section>
 
-    </main>
+      {/* ============================================ */}
+      {/* DESKTOP ONLY: TESTIMONIALS */}
+      {/* ============================================ */}
+      <section className="hidden md:block py-6 md:py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
+            Customer Reviews
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+            <div className="bg-background rounded-xl border p-4 md:p-6">
+              <div className="flex gap-0.5 text-secondary mb-3 text-sm">
+                ⭐⭐⭐⭐⭐
+              </div>
+              <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
+                &ldquo;Bahut achhi quality ki medicines hain. Delivery bhi fast
+                thi. Highly recommended!&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  R
+                </div>
+                <div>
+                  <p className="font-semibold text-xs md:text-sm">
+                    Rahul Khan
+                  </p>
+                  <p className="text-[10px] md:text-xs text-gray-500">Amroha</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-xl border p-4 md:p-6">
+              <div className="flex gap-0.5 text-secondary mb-3 text-sm">
+                ⭐⭐⭐⭐⭐
+              </div>
+              <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
+                &ldquo;WhatsApp pe order karna bahut aasan tha. Saath hi
+                guidance bhi mili. Thank you!&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  F
+                </div>
+                <div>
+                  <p className="font-semibold text-xs md:text-sm">
+                    Fatima Ansari
+                  </p>
+                  <p className="text-[10px] md:text-xs text-gray-500">
+                    Moradabad
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-background rounded-xl border p-4 md:p-6">
+              <div className="flex gap-0.5 text-secondary mb-3 text-sm">
+                ⭐⭐⭐⭐⭐
+              </div>
+              <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
+                &ldquo;Genuine products aur reasonable price. Poore family ke
+                liye yahan se order kiya.&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  A
+                </div>
+                <div>
+                  <p className="font-semibold text-xs md:text-sm">Adnan Ali</p>
+                  <p className="text-[10px] md:text-xs text-gray-500">Delhi</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* DESKTOP ONLY: NEWSLETTER */}
+      {/* ============================================ */}
+      <section className="hidden md:block py-6 md:py-10 bg-primary/5">
+        <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
+          <h2 className="text-xl md:text-3xl font-bold mb-2 text-primary">
+            Get Health Tips & Offers
+          </h2>
+          <p className="text-xs md:text-sm text-gray-600 mb-4">
+            Ayurvedic tips aur exclusive offers paane ke liye subscribe karein
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const email = (e.target as any).email.value;
+              const msg = `📧 Newsletter Subscribe\n\nEmail: ${email}`;
+              window.open(
+                `https://wa.me/918077988509?text=${encodeURIComponent(msg)}`,
+                "_blank"
+              );
+            }}
+            className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
+          >
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="your@email.com"
+              className="flex-1 border border-gray-300 rounded-full px-5 py-2.5 text-sm focus:outline-none focus:border-primary"
+            />
+            <button
+              type="submit"
+              className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-full font-semibold text-sm transition whitespace-nowrap"
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* MOBILE + DESKTOP: TALK TO EXPERT */}
+      {/* ============================================ */}
+      <section className="py-8 md:py-10 bg-background">
+        <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-full flex items-center justify-center shadow-lg">
+            <span className="text-3xl">👨‍⚕️</span>
+          </div>
+          <h2 className="text-xl md:text-3xl font-bold mb-2 text-gray-900">
+            Need Help Choosing?
+          </h2>
+          <p className="text-xs md:text-sm text-gray-600 mb-5">
+            Our experts are here to help you find the right medicine.
+          </p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 md:px-8 py-3 rounded-full font-semibold text-sm transition shadow-md"
+          >
+            <span>💬</span>
+            <span>Talk to an Expert</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* MOBILE ONLY: WHATSAPP FLOATING BUTTON */}
+      {/* ============================================ */}
+      <a
+        href="https://wa.me/918077988509?text=Hello%20Amroha%20Pharmacy%2C%20mujhe%20madad%20chahiye"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="md:hidden fixed right-4 bottom-20 z-40 w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition transform hover:scale-110"
+      >
+        <svg
+          className="w-7 h-7 text-white"
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+      </a>
+    </div>
   );
 }
