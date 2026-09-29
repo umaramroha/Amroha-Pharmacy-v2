@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --ink:#10231e; --muted:#64746f; --line:#e3ebe8; --brand:#087f73; --brand-dark:#075e56; --brand-soft:#eaf7f4; --cream:#fbfdfb; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--cream); color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+* { box-sizing:border-box; }
+::selection { background:#bfe8df; color:#063c36; }
+:focus-visible { outline:3px solid rgba(8,127,115,.25); outline-offset:2px; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-track { background:#f1f5f3; }
+::-webkit-scrollbar-thumb { background:#a9c7c0; border-radius:999px; }
+::-webkit-scrollbar-thumb:hover { background:#6da79c; }
+
+@layer components {
+  .nav-link { @apply rounded-xl px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800; }
+  .nav-link-active { @apply bg-emerald-50 text-emerald-800; }
+  .header-icon-btn { @apply relative grid h-10 w-10 place-items-center rounded-xl text-slate-600 transition hover:bg-slate-50 hover:text-emerald-700; }
+  .badge { @apply absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-extrabold text-white; }
+  .badge-rose { @apply bg-rose-500; } .badge-amber { @apply bg-amber-500; }
+  .menu-link { @apply mt-1 block rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800; }
+  .mobile-nav-link { @apply flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800; }
+  .mobile-bottom-nav { @apply fixed bottom-0 left-0 right-0 z-[60] border-t border-slate-200 bg-white/95 shadow-[0_-10px_30px_rgba(15,23,42,.08)] backdrop-blur-xl; }
+  .product-card { @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-900/10; }
+  .product-image-wrap { @apply flex aspect-square items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-6; }
+}
+
+/* Elevate the existing pages without changing their data or workflows. */
+main .container { max-width:80rem; }
+main h1 { letter-spacing:-.035em; }
+main a { transition:color .2s ease, background-color .2s ease, border-color .2s ease, transform .2s ease; }
+main input, main select, main textarea { border-radius:.85rem; border-color:#dbe6e2; background:#fff; transition:border-color .2s, box-shadow .2s; }
+main input:focus, main select:focus, main textarea:focus { border-color:#4aa99d; box-shadow:0 0 0 4px rgba(8,127,115,.09); outline:none; }
+main button { transition:transform .2s, box-shadow .2s, background-color .2s, border-color .2s; }
+main button:not(:disabled):hover { transform:translateY(-1px); }
+main [class*="shadow-sm"] { box-shadow:0 4px 18px rgba(16,35,30,.055); }
+main [class*="shadow-md"], main [class*="shadow-lg"] { box-shadow:0 16px 45px rgba(16,35,30,.09); }
+
+/* Existing utility-heavy pages inherit a calmer visual system. */
+.bg-background { background:var(--cream) !important; }
+.bg-primary { background-color:var(--brand) !important; }
+.text-primary { color:var(--brand) !important; }
+.border-primary { border-color:var(--brand) !important; }
+.hover\:bg-primary-dark:hover { background-color:var(--brand-dark) !important; }
+.bg-secondary { background-color:#e9a52a !important; }
+.text-secondary { color:#b87500 !important; }
+
+@media (max-width: 767px) {
+  main { padding-bottom:76px; }
+  main .container { padding-left:1rem; padding-right:1rem; }
+}
+@layer components {
+  .footer-heading { @apply mb-4 text-xs font-extrabold uppercase tracking-[.18em] text-slate-200; }
+  .footer-link { @apply block w-fit text-sm text-slate-400 transition hover:translate-x-0.5 hover:text-emerald-300; }
+}
+
+/* Admin workspace polish */
+main .bg-gray-50 { background-color:#f7faf9 !important; }
+main .bg-gray-100 { background-color:#f1f5f3 !important; }
+main .border-gray-100, main .border-gray-200 { border-color:#e2ebe8 !important; }
+main .text-gray-900 { color:#152923 !important; }
+main .text-gray-800 { color:#243a33 !important; }
+main .text-gray-700 { color:#40544e !important; }
+main .text-gray-600 { color:#64746f !important; }
+main .text-gray-500 { color:#7b8b86 !important; }
+main .rounded-lg { border-radius:1rem !important; }
+main .rounded-xl { border-radius:1.15rem !important; }
+main .rounded-2xl { border-radius:1.35rem !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
