@@ -19,10 +19,10 @@ export default function Error({
       <div className="text-center max-w-md">
         <div className="text-6xl mb-4">⚠️</div>
         <h1 className="text-2xl md:text-3xl font-bold mb-3 text-gray-800">
-          Kuch galat ho gaya
+          Something went wrong
         </h1>
         <p className="text-gray-600 mb-8">
-          Page load karne me problem aayi. Thoda wait karke dobara try karo.
+          There was a problem loading the page. Please wait a moment and try again.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
           <button

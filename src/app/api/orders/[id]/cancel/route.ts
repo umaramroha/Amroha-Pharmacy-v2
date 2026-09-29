@@ -56,7 +56,7 @@ export async function POST(
     if (!CANCELLABLE_STATUSES.includes(order.status)) {
       return NextResponse.json(
         {
-          error: `Order "${order.status}" status me hai, isliye ab cancel nahi ho sakta. Shipped orders cancel nahi hote — kripya humse WhatsApp pe contact karein.`,
+          error: `Order is currently "${order.status}" and cannot be cancelled. Shipped orders cannot be cancelled — please contact us on WhatsApp.`,
         },
         { status: 400 }
       );
@@ -104,12 +104,12 @@ export async function POST(
                   .toUpperCase()}</strong> successfully cancel kar diya gaya hai.</p>
                 <p><strong>Refund:</strong> ${
                   order.paymentStatus === "PAID"
-                    ? "Aapka payment refund 5-7 working days me process ho jayega. Koi question ho toh WhatsApp pe contact karein."
+                    ? "Your payment will be refunded within 5-7 business days. For any questions, please contact us on WhatsApp."
                     : "Koi payment nahi hui thi is order ke liye, isliye koi refund ki zaroorat nahi."
                 }</p>
                 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
                 <p style="font-size: 14px; color: #6b7280;">
-                  Koi sawaal? WhatsApp karein:
+                  Any questions? WhatsApp us:
                   <a href="https://wa.me/918077988509" style="color: #0F766E;">
                     +91 80779 88509
                   </a>
@@ -138,7 +138,7 @@ export async function POST(
               <p><strong>Total:</strong> ₹${order.total}</p>
               <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
               <p><strong>Stock restored:</strong> Yes</p>
-              <p>Admin panel me check karein: <a href="https://amrohapharmastore.vercel.app/admin/orders">View Order</a></p>
+              <p>Review in admin panel: <a href="https://amrohapharmacy.vercel.app/kggg0b/orders">View Order</a></p>
             </div>
           `,
         });
@@ -149,12 +149,12 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Order successfully cancel ho gaya. Refund 5-7 working days me process hoga.",
+      message: "Order cancelled successfully. Refund will be processed within 5-7 business days.",
     });
   } catch (error: any) {
     console.error("Cancel order error:", error);
     return NextResponse.json(
-      { error: "Order cancel nahi ho paya. Kripya baad me try karein." },
+      { error: "Failed to cancel the order. Please try again later." },
       { status: 500 }
     );
   }

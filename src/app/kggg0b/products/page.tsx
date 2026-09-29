@@ -132,7 +132,7 @@ useEffect(() => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? Ye action undo nahi hoga.`)) return;
+    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
 
     try {
       const res = await fetch(`/api/admin/products/${id}`, {

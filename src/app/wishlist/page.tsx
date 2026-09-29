@@ -71,7 +71,7 @@ export default function WishlistPage() {
               Your wishlist is empty
             </h2>
             <p className="text-gray-500 mb-6">
-              Products save karein aur baad me dekhein.
+              Save products and view them later.
             </p>
             <Link
               href="/products"

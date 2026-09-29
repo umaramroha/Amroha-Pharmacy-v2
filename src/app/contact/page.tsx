@@ -24,7 +24,7 @@ export default function ContactPage() {
 
     if (!validateMobile(formData.mobile)) {
       setError(
-        "Kripya sahi 10-digit mobile number daalein (jaise 9876543210)."
+        "Please enter a valid 10-digit mobile number (e.g. 9876543210)."
       );
       return;
     }
@@ -56,7 +56,7 @@ ${formData.message}`;
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Hum aapki madad ke liye yahan hain. WhatsApp, phone ya form ke
-            through humse sampark karein.
+            reach out to us.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ ${formData.message}`;
               <p className="text-xs text-green-800 leading-relaxed">
                 💡 <strong>Quick Response:</strong> WhatsApp pe sabse jaldi
                 reply milta hai. Order, product ya kisi bhi sawaal ke liye
-                direct message karein.
+                message us directly.
               </p>
             </div>
 
@@ -162,7 +162,7 @@ ${formData.message}`;
 
             {sent && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-                ✓ Message WhatsApp pe bhej diya gaya!
+                ✓ Message opened in WhatsApp!
               </div>
             )}
 
@@ -254,7 +254,7 @@ ${formData.message}`;
               </button>
 
               <p className="text-xs text-gray-500 text-center">
-                Message WhatsApp pe khulega, wahin se bhej dena
+                Message will open in WhatsApp — please send it from there
               </p>
             </form>
           </div>

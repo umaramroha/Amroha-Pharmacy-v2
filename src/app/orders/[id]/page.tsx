@@ -93,7 +93,7 @@ export default function OrderDetailPage({
 
     // Confirm dialog
     const confirmed = window.confirm(
-      "Kya aap ye order cancel karna chahte hain?\n\nYe action undo nahi hoga. Stock wapas add ho jayega aur agar payment ho chuki hai toh refund 5-7 working days me process hoga."
+      "Do you want to cancel this order?\n\nThis action cannot be undone. Stock will be restored and if payment has been made, the refund will be processed within 5-7 business days."
     );
 
     if (!confirmed) return;
@@ -123,7 +123,7 @@ export default function OrderDetailPage({
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error("Cancel error:", err);
-      setCancelError("Network error. Kripya dobara try karein.");
+      setCancelError("Network error. Please try again.");
       setCancelling(false);
     }
   };
@@ -179,11 +179,11 @@ export default function OrderDetailPage({
       {cancelSuccess && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm font-semibold text-green-800">
-            ✅ Order successfully cancel ho gaya!
+            ✅ Order cancelled successfully!
           </p>
           <p className="text-xs text-green-700 mt-1">
             {order.paymentStatus === "PAID"
-              ? "Refund 5-7 working days me process hoga. Confirmation email bhej di gayi hai."
+              ? "Refund will be processed within 5-7 business days. A confirmation email has been sent."
               : "Koi payment nahi hui thi, isliye refund ki zaroorat nahi. Confirmation email bhej di gayi hai."}
           </p>
         </div>
@@ -233,8 +233,7 @@ export default function OrderDetailPage({
             </button>
             <p className="text-xs text-gray-500 mt-2">
               Order abhi "{order.status}" status me hai, isliye cancel kar
-              sakte hain. Shipped hone ke baad cancel nahi hoga.
-            </p>
+              This order can be cancelled as it is still in "{order.status}" status. Once shipped, orders cannot be cancelled.            </p>
           </div>
         )}
       </div>

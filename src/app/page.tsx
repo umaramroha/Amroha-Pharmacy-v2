@@ -191,7 +191,7 @@ export default function Home() {
                 Shop by Concern
               </h2>
               <p className="text-xs md:text-sm text-gray-500 mt-1">
-                Har samasya ka natural samadhan
+                Natural solutions for every health concern
               </p>
             </div>
             <Link
@@ -433,7 +433,7 @@ export default function Home() {
             Get Health Tips & Offers
           </h2>
           <p className="text-xs md:text-sm text-gray-600 mb-4">
-            Ayurvedic tips aur exclusive offers paane ke liye subscribe karein
+            Subscribe to receive Ayurvedic tips and exclusive offers
           </p>
           <form
             onSubmit={(e) => {

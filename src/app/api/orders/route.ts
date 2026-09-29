@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Aapne aaj ke liye order limit reach kar li hai. Kripya kal try karein ya humse WhatsApp pe contact karein.",
+            "You have reached your daily order limit. Please try again tomorrow or contact us on WhatsApp.",
         },
         { status: 429 }
       );
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
       if (item.quantity > MAX_QTY_PER_PRODUCT) {
         return NextResponse.json(
           {
-            error: `Ek product ka maximum ${MAX_QTY_PER_PRODUCT} units order kar sakte hain. Kripya quantity kam karein.`,
+            error: `Maximum ${MAX_QTY_PER_PRODUCT} units allowed per product. Please reduce the quantity.`,
           },
           { status: 400 }
         );
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     if (totalItemsCount > MAX_TOTAL_ITEMS) {
       return NextResponse.json(
         {
-          error: `Ek order me maximum ${MAX_TOTAL_ITEMS} items ho sakte hain. Bulk order ke liye WhatsApp pe contact karein.`,
+          error: `Maximum ${MAX_TOTAL_ITEMS} items allowed per order. For bulk orders, please contact us on WhatsApp.`,
         },
         { status: 400 }
       );
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
       if (product.stock < item.quantity) {
         return NextResponse.json(
           {
-            error: `Sirf ${product.stock} units available hain "${product.name}" ke liye. Kripya quantity kam karein.`,
+            error: `Only ${product.stock} units available for "${product.name}". Please reduce the quantity.`,
           },
           { status: 400 }
         );
@@ -242,7 +242,7 @@ export async function POST(request: Request) {
 
         if (result.count === 0) {
           throw new Error(
-            "STOCK_CHANGED: Stock abhi available nahi hai. Kripya cart refresh karein."
+            "STOCK_CHANGED: Stock is no longer available. Please refresh your cart."
           );
         }
       }
@@ -318,7 +318,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Stock abhi available nahi hai. Kripya cart refresh karein aur dobara try karein.",
+            "Stock is no longer available. Please refresh your cart and try again.",
         },
         { status: 409 }
       );

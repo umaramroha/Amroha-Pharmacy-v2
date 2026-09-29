@@ -63,7 +63,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
           <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${customerName}</strong>,</p>
 
           <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
-            Aapka order successfully place ho gaya hai. Hum jald hi aapke order ko dispatch karenge aur tracking details WhatsApp pe bhej denge.
+            Your order has been placed successfully. We will dispatch it shortly and send tracking details on WhatsApp.
           </p>
 
           <div style="background-color: #f0fdfa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #0F766E;">
@@ -116,7 +116,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
 
         <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #6b7280;">
           <p style="margin: 0 0 10px;">
-            Koi sawaal? WhatsApp karein:
+            Any questions? WhatsApp us:
             <a href="https://wa.me/918077988509" style="color: #0F766E; text-decoration: none;">
               +91 80779 88509
             </a>

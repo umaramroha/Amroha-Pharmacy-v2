@@ -80,7 +80,7 @@ export default function BlogDetailPage() {
             Blog Not Found
           </h1>
           <p className="text-gray-600 mb-7">
-            Ye blog exist nahi karta ya remove ho gaya hai.
+            This blog does not exist or has been removed.
           </p>
           <Link
             href="/blogs"
@@ -251,7 +251,7 @@ export default function BlogDetailPage() {
           </h3>
           <p className="text-white/90 mb-6 max-w-lg mx-auto">
             Is blog ke baare me ya apni health concern ke baare me expert se
-            baat karein.
+            talk to us.
           </p>
           <a
             href={getWhatsAppLink(

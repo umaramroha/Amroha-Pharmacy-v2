@@ -60,7 +60,7 @@ export default function CheckoutPage() {
 💰 Amount: ₹${finalTotal}
 💳 Payment Method: UPI
 
-Ye raha mera payment screenshot. Order confirm karein please.`;
+Please find my payment screenshot attached. Kindly confirm my order.`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +74,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
     // ✅ FIX 2: Mobile validation
     if (!validateMobile(formData.mobile)) {
       setOrderError(
-        "Kripya sahi 10-digit mobile number daalein (jaise 9876543210)."
+        "Please enter a valid 10-digit mobile number (e.g. 9876543210)."
       );
       return;
     }
@@ -82,7 +82,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
     // ✅ FIX 3: Pincode validation
     if (!validatePincode(formData.pincode)) {
       setOrderError(
-        "Kripya sahi 6-digit pincode daalein (jaise 244221)."
+        "Please enter a valid 6-digit pincode (e.g. 244221)."
       );
       return;
     }
@@ -197,7 +197,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
             </p>
             <p className="mb-3">
               Order confirm karne ke liye apna payment screenshot WhatsApp pe
-              bhejein.
+              submit it.
             </p>
             <a
               href={getWhatsAppLink(paymentScreenshotMessage)}
@@ -427,7 +427,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
                   <div className="mt-4 p-5 bg-gray-50 rounded-lg border space-y-4">
                     <div className="text-center">
                       <p className="text-sm font-semibold text-gray-700 mb-3">
-                        Scan karke pay karein ₹{finalTotal}
+                        Scan to pay ₹{finalTotal}
                       </p>
                       <div className="w-64 h-64 mx-auto bg-white border-2 border-primary/20 rounded-lg flex items-center justify-center p-2">
                         <img
@@ -437,7 +437,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
                         />
                       </div>
                       <p className="text-xs text-gray-500 mt-3">
-                        GPay, PhonePe, Paytm, ya kisi bhi UPI app se scan karein
+                        Scan using GPay, PhonePe, Paytm, or any UPI app
                       </p>
                     </div>
 
@@ -451,7 +451,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
 
                     <div className="text-center">
                       <p className="text-xs text-gray-600 mb-2">
-                        Neeche button pe click karein — payment app khul jayega
+                        Click the button below to open your payment app
                       </p>
                       <a
                         href={upiLink}
@@ -469,7 +469,7 @@ Ye raha mera payment screenshot. Order confirm karein please.`;
 
                     <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                       <p className="text-xs text-green-800 font-semibold mb-2">
-                        📸 Payment ke baad screenshot bhejna zaroori hai
+                        📸 Please share payment screenshot after paying
                       </p>
                       <a
                         href={getWhatsAppLink(paymentScreenshotMessage)}

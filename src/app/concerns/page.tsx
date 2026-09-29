@@ -4,7 +4,7 @@ import { concerns } from "@/data/concerns";
 export const metadata = {
   title: "Shop by Concern - Amroha Pharmacy",
   description:
-    "Har samasya ka natural samadhan. Ayurvedic aur Unani experts dwara approved concerns ke hisaab se products dhundhein.",
+    "Natural solutions for every health concern. Browse products by Ayurvedic and Unani expert-approved concerns.",
 };
 
 export default function ConcernsPage() {
@@ -15,7 +15,7 @@ export default function ConcernsPage() {
           Shop by Concern
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Har samasya ka natural samadhan — Ayurvedic aur Unani experts dwara
+          Natural solutions for every health concern — approved by Ayurvedic and Unani experts
           approved
         </p>
       </div>
