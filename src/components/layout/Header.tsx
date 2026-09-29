@@ -105,8 +105,9 @@ export default function Header() {
             <label className="relative block">
               <span className="sr-only">Search products</span>
               <input name="q" placeholder="Search medicines, wellness & concerns" className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10" />
-              <Icon name="search" className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
-            </label>
+              
+<Icon name="search" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+             </label>
           </form>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2 md:ml-0">
