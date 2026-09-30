@@ -19,17 +19,23 @@ async function isAdmin() {
   return session.isAdminLoggedIn && session.adminId;
 }
 
-// GET all products (admin — includes inactive)
+function normalizeImages(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((u): u is string => typeof u === "string")
+    .map((u) => u.trim())
+    .filter((u) => u.length > 0)
+    .slice(0, 10);
+}
+
 export async function GET() {
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
-
     return NextResponse.json({ products });
   } catch (error: any) {
     console.error("Admin get products error:", error);
@@ -40,15 +46,13 @@ export async function GET() {
   }
 }
 
-// POST — create new product
 export async function POST(request: Request) {
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     const body = await request.json();
-    const { name, slug, description, price, mrp, image, category, stock } = body;
+    const { name, slug, description, price, mrp, image, images, category, stock } = body;
 
     if (!name || !slug || !price) {
       return NextResponse.json(
@@ -68,6 +72,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const cleanImages = normalizeImages(images);
+    const finalImages =
+      cleanImages.length > 0
+        ? cleanImages
+        : image?.trim()
+          ? [image.trim()]
+          : [];
+
     const product = await prisma.product.create({
       data: {
         name: name.trim(),
@@ -75,7 +87,8 @@ export async function POST(request: Request) {
         description: description?.trim() || null,
         price: parseFloat(price),
         mrp: mrp ? parseFloat(mrp) : null,
-        image: image?.trim() || null,
+        image: image?.trim() || finalImages[0] || null,
+        images: finalImages,
         category: category?.trim() || null,
         stock: parseInt(stock) || 0,
         isActive: true,

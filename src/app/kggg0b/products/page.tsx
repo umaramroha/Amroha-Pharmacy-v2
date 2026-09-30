@@ -12,6 +12,7 @@ type Product = {
   price: string;
   mrp: string | null;
   image: string | null;
+  images: string[];
   category: string | null;
   stock: number;
   isActive: boolean;
@@ -24,6 +25,7 @@ const EMPTY_FORM = {
   price: "",
   mrp: "",
   image: "",
+  images: [] as string[],
   category: "general-problems",
   stock: "0",
 };
@@ -34,12 +36,12 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
-// Auto-scroll to top when form opens (edit or new)
-useEffect(() => {
-  if (showForm) {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-}, [showForm]);
+  // Auto-scroll to top when form opens
+  useEffect(() => {
+    if (showForm) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [showForm]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -75,6 +77,7 @@ useEffect(() => {
       price: product.price,
       mrp: product.mrp || "",
       image: product.image || "",
+      images: product.images || [],
       category: product.category || "general-problems",
       stock: product.stock.toString(),
     });
@@ -96,10 +99,50 @@ useEffect(() => {
     setError("");
   };
 
+  // Add new image URL field
+  const handleAddImage = () => {
+    setFormData({
+      ...formData,
+      images: [...formData.images, ""],
+    });
+  };
+
+  // Update image at index
+  const handleImageChange = (index: number, value: string) => {
+    const newImages = [...formData.images];
+    newImages[index] = value;
+    setFormData({ ...formData, images: newImages });
+  };
+
+  // Remove image at index
+  const handleRemoveImage = (index: number) => {
+    setFormData({
+      ...formData,
+      images: formData.images.filter((_, i) => i !== index),
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError("");
+
+    // Clean images — remove empty ones
+    const cleanImages = formData.images
+      .map((img) => img.trim())
+      .filter((img) => img !== "");
+
+    // If primary image is empty but images has one, use first as primary
+    let primaryImage = formData.image.trim();
+    if (!primaryImage && cleanImages.length > 0) {
+      primaryImage = cleanImages[0];
+    }
+
+    const payload = {
+      ...formData,
+      image: primaryImage,
+      images: cleanImages,
+    };
 
     try {
       const url = editingId
@@ -110,7 +153,7 @@ useEffect(() => {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -321,9 +364,10 @@ useEffect(() => {
                 />
               </div>
 
+              {/* Primary Image */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
+                  Main Image URL (Cover)
                 </label>
                 <input
                   type="text"
@@ -335,7 +379,7 @@ useEffect(() => {
                   placeholder="https://..."
                 />
                 {formData.image && (
-                  <div className="mt-2 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
+                  <div className="mt-2 w-24 h-24 bg-gray-100 rounded-md overflow-hidden border">
                     <img
                       src={formData.image}
                       alt="Preview"
@@ -344,6 +388,74 @@ useEffect(() => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Images */}
+              <div className="md:col-span-2 border-t pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Additional Images (Gallery)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddImage}
+                    className="text-xs bg-primary hover:bg-primary-dark text-white px-3 py-1.5 rounded-full font-semibold transition"
+                  >
+                    + Add Image
+                  </button>
+                </div>
+
+                {formData.images.length === 0 ? (
+                  <p className="text-xs text-gray-500 italic">
+                    No additional images. Click "+ Add Image" to add more.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {formData.images.map((img, idx) => (
+                      <div key={idx} className="flex gap-3 items-start">
+                        {/* Preview */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden shrink-0 border">
+                          {img ? (
+                            <img
+                              src={img}
+                              alt={`Image ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xl">
+                              🖼
+                            </div>
+                          )}
+                        </div>
+
+                        {/* URL Input */}
+                        <input
+                          type="text"
+                          value={img}
+                          onChange={(e) =>
+                            handleImageChange(idx, e.target.value)
+                          }
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                          placeholder={`Image ${idx + 1} URL`}
+                        />
+
+                        {/* Remove Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-md transition text-sm font-semibold"
+                          title="Remove image"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -396,7 +508,7 @@ useEffect(() => {
             No products yet
           </h2>
           <p className="text-gray-500 mb-6">
-            Pehla product add karne ke liye "Add Product" dabao.
+            Add your first product to get started.
           </p>
           <button
             onClick={handleNew}
@@ -414,7 +526,7 @@ useEffect(() => {
                 !product.isActive ? "opacity-60" : ""
               }`}
             >
-              <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden shrink-0">
+              <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden shrink-0 relative">
                 {product.image ? (
                   <img
                     src={product.image}
@@ -425,6 +537,12 @@ useEffect(() => {
                   <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">
                     💊
                   </div>
+                )}
+                {/* Image count badge */}
+                {product.images && product.images.length > 0 && (
+                  <span className="absolute bottom-0 right-0 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-tl">
+                    +{product.images.length}
+                  </span>
                 )}
               </div>
 

@@ -20,6 +20,7 @@ type Product = {
   price: string;
   mrp: string | null;
   image: string | null;
+  images: string[];
   category: string | null;
   description: string | null;
   stock: number;
@@ -286,6 +287,8 @@ export default function ProductDetailPage({
   const [activeTab, setActiveTab] =
     useState<Tab>("description");
 
+  const [activeImage, setActiveImage] = useState(0);
+
   const [pincode, setPincode] = useState("");
   const [deliveryCheck, setDeliveryCheck] =
     useState<string | null>(null);
@@ -331,6 +334,7 @@ export default function ProductDetailPage({
         const fetchedProduct: Product = data.product;
 
         setProduct(fetchedProduct);
+        setActiveImage(0);
 
         if (fetchedProduct.category) {
           try {
@@ -449,6 +453,13 @@ export default function ProductDetailPage({
     ? categoryLabels[product.category] ||
       product.category
     : null;
+
+  const gallery: string[] =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image
+      ? [product.image]
+      : [];
 
   /* ------------------------------------------------------------------------ */
   /* CART                                                                     */
@@ -618,28 +629,27 @@ export default function ProductDetailPage({
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-7 lg:gap-14">
 
-          {/* IMAGE -------------------------------------------------------- */}
+          {/* IMAGE GALLERY ------------------------------------------------ */}
 
           <div className="lg:sticky lg:top-24 lg:self-start">
             <div className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-
               {discount > 0 && (
                 <div className="absolute left-4 top-4 z-10 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold">
                   {discount}% OFF
                 </div>
               )}
 
-              <div className="aspect-square flex items-center justify-center bg-white p-6 sm:p-10">
-                {product.image ? (
+              {/* MAIN IMAGE */}
+              <div className="aspect-square bg-white">
+                {gallery.length > 0 && gallery[activeImage] ? (
                   <img
-                    src={product.image}
+                    src={gallery[activeImage]}
                     alt={product.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full min-h-[280px] flex flex-col items-center justify-center bg-gray-50 rounded-xl text-gray-300">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-300">
                     <PackageIcon className="w-20 h-20" />
-
                     <p className="mt-3 text-sm text-gray-400">
                       Product image unavailable
                     </p>
@@ -648,8 +658,32 @@ export default function ProductDetailPage({
               </div>
             </div>
 
-            {/* IMAGE NOTE */}
+            {/* THUMBNAILS */}
+            {gallery.length > 1 && (
+              <div className="flex gap-2 sm:gap-3 mt-3 overflow-x-auto pb-1">
+                {gallery.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImage(idx)}
+                    className={`shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition ${
+                      activeImage === idx
+                        ? "border-primary"
+                        : "border-gray-200 hover:border-gray-400"
+                    }`}
+                    aria-label={`View image ${idx + 1}`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
 
+            {/* IMAGE NOTE */}
             <div className="hidden sm:flex items-center justify-center gap-2 text-xs text-gray-400 mt-3">
               <ShieldIcon />
               Product image shown for representation. Refer to packaging for exact details.
