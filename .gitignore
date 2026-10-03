@@ -8,3 +8,8 @@ prisma/*.db
 scripts/seed-admin.js
 scripts/reset-admin.js
 scripts/check-admin.js
+.babelrc
+.babelrc
+
+# Backup files
+*.bak

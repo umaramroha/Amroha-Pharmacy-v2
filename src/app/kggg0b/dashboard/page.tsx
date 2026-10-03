@@ -88,7 +88,12 @@ export default function AdminDashboard() {
       icon: "💊",
       desc: "Add, edit, delete products",
     },
-    {
+{
+  label: "Banners",
+  href: "/kggg0b/banners",
+  icon: "🖼️",
+},
+   {
       label: "Customers",
       href: "/kggg0b/customers",
       icon: "👥",

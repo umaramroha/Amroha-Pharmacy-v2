@@ -73,3 +73,18 @@ model Customer {
   createdAt DateTime @default(now())
   orders    Order[]
 }
+
+
+model Banner {
+  id        String   @id @default(cuid())
+  brand     String
+  title     String
+  subtitle  String?
+  imageUrl  String
+  linkUrl   String?
+  theme     String   @default("teal")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

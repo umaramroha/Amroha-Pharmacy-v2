@@ -1,45 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 
-export default function Home() {
-  const [bannerIndex, setBannerIndex] = useState(0);
+const [promos, setPromos] = useState<any[]>([]);
+const [bannersLoading, setBannersLoading] = useState(true);
 
-  const promos = [
-    {
-      brand: "AYURVEDIC RANGE",
-      title: "Up to 20% off",
-      subtitle: "Immunity & overall health",
-      brandColor: "text-teal-700",
-      bg: "bg-gradient-to-r from-teal-50 to-teal-100",
-      text: "text-gray-900",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300",
-      href: "/products?category=general-problems",
-    },
-    {
-      brand: "BEST SAVINGS",
-      title: "Up to 14% off",
-      subtitle: "On all medicines + cashback",
-      brandColor: "text-blue-700",
-      bg: "bg-gradient-to-r from-blue-50 to-blue-100",
-      text: "text-gray-900",
-      image: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300",
-      href: "/products",
-    },
-    {
-      brand: "MEN'S WELLNESS",
-      title: "Up to 25% off",
-      subtitle: "Vitality & strength products",
-      brandColor: "text-amber-700",
-      bg: "bg-gradient-to-r from-amber-50 to-amber-100",
-      text: "text-gray-900",
-      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300",
-      href: "/products?category=male-problems",
-    },
-  ];
+useEffect(() => {
+  const fetchBanners = async () => {
+    try {
+      const res = await fetch("/api/banners", { cache: "no-store" });
+      const data = await res.json();
+
+      // Theme → Tailwind classes map
+      const THEME_MAP: Record<string, { bg: string; brandColor: string; text: string }> = {
+        teal: { bg: "bg-gradient-to-r from-teal-50 to-teal-100", brandColor: "text-teal-700", text: "text-gray-900" },
+        blue: { bg: "bg-gradient-to-r from-blue-50 to-blue-100", brandColor: "text-blue-700", text: "text-gray-900" },
+        amber: { bg: "bg-gradient-to-r from-amber-50 to-amber-100", brandColor: "text-amber-700", text: "text-gray-900" },
+        rose: { bg: "bg-gradient-to-r from-rose-50 to-rose-100", brandColor: "text-rose-700", text: "text-gray-900" },
+        indigo: { bg: "bg-gradient-to-r from-indigo-50 to-indigo-100", brandColor: "text-indigo-700", text: "text-gray-900" },
+        emerald: { bg: "bg-gradient-to-r from-emerald-50 to-emerald-100", brandColor: "text-emerald-700", text: "text-gray-900" },
+      };
+
+      const mapped = (data.banners || []).map((b: any) => {
+        const t = THEME_MAP[b.theme] || THEME_MAP.teal;
+        return {
+          brand: b.brand,
+          title: b.title,
+          subtitle: b.subtitle || "",
+          brandColor: t.brandColor,
+          bg: t.bg,
+          text: t.text,
+          image: b.imageUrl,
+          href: b.linkUrl || "",
+        };
+      });
+
+      setPromos(mapped);
+      setBannerIndex(0);
+    } catch (err) {
+      console.error("Failed to fetch banners", err);
+    } finally {
+      setBannersLoading(false);
+    }
+  };
+
+  fetchBanners();
+}, []);
 
   const concerns = [
     { name: "Men's Vitality", icon: "🦁", slug: "mens-vitality" },
@@ -88,7 +97,8 @@ export default function Home() {
       {/* ============================================ */}
       {/* MOBILE + DESKTOP: PROMO BANNER */}
       {/* ============================================ */}
-      <section className="py-4 bg-white">
+{promos.length > 0 && (
+<section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div
             className="relative px-4 md:px-6"
@@ -179,6 +189,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: SHOP BY CONCERN */}
