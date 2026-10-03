@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { brand, title, subtitle, imageUrl, linkUrl, theme, order, isActive } = body;
+const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActive } = body;    
 
     if (!brand || !title || !imageUrl) {
       return NextResponse.json(
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
         imageUrl: imageUrl.trim(),
         linkUrl: linkUrl?.trim() || null,
         theme: theme?.trim() || "teal",
+        layout: layout?.trim() || "split",
         order: parseInt(order) || 0,
         isActive: typeof isActive === "boolean" ? isActive : true,
       },

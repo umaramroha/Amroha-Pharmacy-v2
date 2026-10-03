@@ -25,6 +25,13 @@ const THEMES = [
   { value: "emerald", label: "Emerald (Dark Green)" },
 ];
 
+
+const LAYOUTS = [
+  { value: "split", label: "Split (Text + Image)" },
+  { value: "overlay", label: "Overlay (Image + Text on top)" },
+  { value: "image-only", label: "Image Only (No text)" },
+];
+
 const EMPTY_FORM = {
   brand: "",
   title: "",
@@ -32,6 +39,7 @@ const EMPTY_FORM = {
   imageUrl: "",
   linkUrl: "",
   theme: "teal",
+layout: "split",
   order: "0",
   isActive: true,
 };
@@ -83,7 +91,8 @@ export default function AdminBannersPage() {
       imageUrl: banner.imageUrl,
       linkUrl: banner.linkUrl || "",
       theme: banner.theme,
-      order: banner.order.toString(),
+layout: banner.layout || "split",      
+order: banner.order.toString(),
       isActive: banner.isActive,
     });
     setShowForm(true);
@@ -342,6 +351,24 @@ export default function AdminBannersPage() {
                 </select>
               </div>
 
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Layout Style
+  </label>
+  <select
+    value={formData.layout}
+    onChange={(e) =>
+      setFormData({ ...formData, layout: e.target.value })
+    }
+    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary bg-white"
+  >
+    {LAYOUTS.map((l) => (
+      <option key={l.value} value={l.value}>
+        {l.label}
+      </option>
+    ))}
+  </select>
+</div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Link URL (optional)
@@ -419,7 +446,8 @@ export default function AdminBannersPage() {
                   subtitle={formData.subtitle || "Subtitle"}
                   theme={formData.theme}
                   imageUrl={formData.imageUrl}
-                />
+layout={formData.layout}                
+/>
               </div>
 
               <div className="md:col-span-2">
@@ -518,6 +546,10 @@ export default function AdminBannersPage() {
                 </p>
               </div>
 
+<span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+  {banner.layout || "split"}
+</span>
+
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => handleEdit(banner)}
@@ -586,23 +618,70 @@ const THEME_MAP: Record<
   },
 };
 
+
 function PreviewBanner({
   brand,
   title,
   subtitle,
   theme,
   imageUrl,
+  layout,
 }: {
   brand: string;
   title: string;
   subtitle: string;
   theme: string;
   imageUrl: string;
+  layout: string;
 }) {
   const t = THEME_MAP[theme] || THEME_MAP.teal;
 
+  // ---- Image Only ----
+  if (layout === "image-only") {
+    return (
+      <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+        {imageUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+            Full banner image
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---- Overlay ----
+  if (layout === "overlay") {
+    return (
+      <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+        {imageUrl && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={imageUrl}
+            alt="Preview"
+            className="w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center p-4 md:p-6 text-white">
+          <p className="text-[10px] md:text-xs font-bold tracking-wide uppercase opacity-90 mb-1">
+            {brand}
+          </p>
+          <h3 className="text-xl md:text-4xl font-black leading-tight mb-1">
+            {title}
+          </h3>
+          <p className="text-xs md:text-base opacity-90">{subtitle}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Split (default) ----
   return (
-    <div className={`${t.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4`}>
+    <div
+      className={`${t.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4`}
+    >
       <div className="flex-1 min-w-0">
         <p
           className={`text-[10px] md:text-xs font-bold ${t.brandColor} mb-1 tracking-wide uppercase`}
@@ -618,7 +697,7 @@ function PreviewBanner({
           {subtitle}
         </p>
       </div>
-      <div className="shrink-0 w-20 h-20 md:w-32 md:h-32 relative">
+      <div className="shrink-0 w-24 h-24 md:w-40 md:h-40 relative">
         {imageUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img

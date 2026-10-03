@@ -83,6 +83,7 @@ model Banner {
   imageUrl  String
   linkUrl   String?
   theme     String   @default("teal")
+  layout    String   @default("split")
   order     Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
