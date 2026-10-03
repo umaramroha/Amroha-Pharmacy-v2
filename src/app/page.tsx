@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 
+export default function Home() {
+  const [bannerIndex, setBannerIndex] = useState(0);
 const [promos, setPromos] = useState<any[]>([]);
 const [bannersLoading, setBannersLoading] = useState(true);
 
@@ -158,13 +160,12 @@ useEffect(() => {
                       </div>
 
                       <div className="shrink-0 w-20 h-20 md:w-32 md:h-32 relative">
-                        <Image
-                          src={promo.image}
-                          alt={promo.title}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 80px, 128px"
-                        />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+           src={promo.image}
+           alt={promo.title}
+           className="w-full h-full object-contain"
+          />
                       </div>
                     </Link>
                   </div>
