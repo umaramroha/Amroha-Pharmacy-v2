@@ -12,6 +12,7 @@ type Banner = {
   imageUrl: string;
   linkUrl: string | null;
   theme: string;
+  layout: string;
   order: number;
   isActive: boolean;
 };
