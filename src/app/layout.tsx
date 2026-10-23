@@ -15,15 +15,53 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.com"),
-  title: "Amroha Pharmacy - Ayurvedic & Unani Care",
+  metadataBase: new URL("https://amrohapharmacy.vercel.app"),
+  title: {
+    default: "Amroha Pharmacy - Ayurvedic & Unani Care",
+    template: "%s | Amroha Pharmacy"
+  },
   description:
-    "Authentic Ayurvedic and Unani medicines in Amroha. Delivering wellness across India.",
-  keywords: ["Amroha Pharmacy", "Ayurvedic medicines", "Unani medicines", "wellness"],
+    "Authentic Ayurvedic and Unani medicines in Amroha. Delivering wellness across India. Buy online for fast delivery.",
+  keywords: [
+    "Amroha Pharmacy", 
+    "Ayurvedic medicines", 
+    "Unani medicines", 
+    "wellness",
+    "online pharmacy",
+    "ayurvedic store"
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: "Amroha Pharmacy | Ayurvedic & Unani Wellness",
     description: "Authentic Ayurvedic and Unani wellness products from Amroha.",
+    url: "https://amrohapharmacy.vercel.app",
+    siteName: "Amroha Pharmacy",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&h=630&fit=crop", // Temporary high-quality pharmacy image
+        width: 1200,
+        height: 630,
+        alt: "Amroha Pharmacy",
+      },
+    ],
+    locale: "en_IN",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Amroha Pharmacy - Ayurvedic & Unani Care",
+    description: "Authentic Ayurvedic and Unani medicines delivered across India.",
+    images: ["https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&h=630&fit=crop"],
   },
 };
 
