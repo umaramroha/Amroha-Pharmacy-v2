@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, type MouseEvent } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -26,7 +27,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <button onClick={handleWishlist} aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/95 shadow-sm ring-1 ring-slate-200 transition hover:scale-105"><Heart active={inWishlist} /></button>
         <Link href={`/products/${product.slug}`} className="block">
           <div className="product-image-wrap">
-            {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="h-full w-full object-contain mix-blend-multiply transition duration-500 group-hover:scale-105" /> : <span className="text-5xl">🌿</span>}
+            {product.image ? <Image src={product.image} alt={product.name} width={400} height={400} className="h-full w-full object-contain mix-blend-multiply transition duration-500 group-hover:scale-105" /> : <span className="text-5xl">🌿</span>}
           </div>
           <div className="px-4 pb-2 pt-4">
             {product.category && <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-700">{product.category}</p>}
