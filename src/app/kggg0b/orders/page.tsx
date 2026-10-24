@@ -55,6 +55,7 @@ export default function AdminOrdersPage() {
   const [filter, setFilter] = useState("ALL");
   const [updating, setUpdating] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [printOrder, setPrintOrder] = useState<any>(null);
 // Auto-scroll to top when order expanded
 useEffect(() => {
   if (expandedId) {
@@ -124,8 +125,105 @@ useEffect(() => {
           <div className="h-32 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
-    );
-  }
+
+      {/* ================= INVOICE PRINT MODAL ================= */}
+      {printOrder && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 no-print">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            {/* Modal Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 sticky top-0 z-10">
+              <h3 className="font-bold text-lg text-gray-800">Invoice Preview</h3>
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                  Print / Save PDF
+                </button>
+                <button onClick={() => setPrintOrder(null)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                  Close
+                </button>
+              </div>
+            </div>
+            
+            {/* Printable Area */}
+            <div className="p-6 sm:p-8 print-area text-gray-800">
+              
+              {/* Invoice Header */}
+              <div className="text-center mb-8 border-b pb-6">
+                <h1 className="text-3xl font-black text-primary tracking-tight">AMROHA PHARMACY</h1>
+                <p className="text-sm text-gray-500 mt-1">Authentic Ayurvedic & Unani Medicines</p>
+                <p className="text-xs text-gray-400 mt-1">Amroha, Uttar Pradesh | WhatsApp: +91 8077988509</p>
+              </div>
+
+              {/* Billed To & Info */}
+              <div className="flex flex-wrap justify-between mb-8 text-sm gap-4">
+                <div>
+                  <p className="font-bold text-gray-500 uppercase tracking-wide text-xs mb-1">Billed To:</p>
+                  <p className="font-semibold text-base">{printOrder.customerName}</p>
+                  <p>{printOrder.customerMobile}</p>
+                  <p className="max-w-[200px]">{printOrder.address}</p>
+                  <p>{printOrder.city}, {printOrder.state} - {printOrder.pincode}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-500 uppercase tracking-wide text-xs mb-1">Invoice Details:</p>
+                  <p><strong>Invoice No:</strong> #{printOrder.id.slice(-8).toUpperCase()}</p>
+                  <p><strong>Date:</strong> {new Date(printOrder.createdAt).toLocaleDateString("en-IN")}</p>
+                  <p><strong>Payment:</strong> {printOrder.paymentMethod}</p>
+                  <p><strong>Status:</strong> {printOrder.status}</p>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <table className="w-full text-sm mb-8 border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-gray-300 text-gray-600">
+                    <th className="text-left py-3 px-2">Item Description</th>
+                    <th className="text-center py-3 px-2">Qty</th>
+                    <th className="text-right py-3 px-2">Price</th>
+                    <th className="text-right py-3 px-2">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {printOrder.items?.map((item: any, idx: number) => (
+                    <tr key={idx} className="border-b border-gray-200">
+                      <td className="py-3 px-2 font-medium">{item.product?.name || item.name || "Product"}</td>
+                      <td className="text-center py-3 px-2">{item.quantity}</td>
+                      <td className="text-right py-3 px-2">₹{item.price}</td>
+                      <td className="text-right py-3 px-2 font-medium">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Totals */}
+              <div className="flex justify-end text-sm">
+                <div className="w-full sm:w-1/2">
+                  <div className="flex justify-between py-2 border-b text-gray-600">
+                    <span>Subtotal:</span>
+                    <span>₹{printOrder.subtotal || printOrder.total}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b text-gray-600">
+                    <span>Delivery Fee:</span>
+                    <span>₹{printOrder.deliveryFee || 0}</span>
+                  </div>
+                  <div className="flex justify-between py-3 border-b-2 border-gray-800 font-bold text-lg text-gray-900">
+                    <span>Grand Total:</span>
+                    <span>₹{printOrder.total}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-12 text-center text-xs text-gray-500 border-t pt-4">
+                <p className="font-semibold text-gray-700 mb-1">Thank you for shopping with Amroha Pharmacy!</p>
+                <p>For any queries, please contact us on WhatsApp at +91 8077988509</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+  );
+}
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -229,6 +327,12 @@ useEffect(() => {
                     className="text-xs text-primary hover:underline font-medium px-2"
                   >
                     {expandedId === order.id ? "Hide" : "Details"}
+                  </button>
+                  <button
+                    onClick={() => setPrintOrder(order)}
+                    className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2"
+                  >
+                    🖨️ Print Bill
                   </button>
                 </div>
               </div>
