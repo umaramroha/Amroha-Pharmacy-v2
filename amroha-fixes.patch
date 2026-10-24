@@ -1,0 +1,1493 @@
+diff --git a/src/app/api/admin/banners/[id]/route.ts b/src/app/api/admin/banners/[id]/route.ts
+index 8db69f9..534f10d 100644
+--- a/src/app/api/admin/banners/[id]/route.ts
++++ b/src/app/api/admin/banners/[id]/route.ts
+@@ -3,6 +3,8 @@ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
+ import { prisma } from "@/lib/prisma";
+ import { adminSessionOptions } from "@/lib/adminSession";
++import { revalidateTag, revalidatePath } from "next/cache";
++import { BANNERS_CACHE_TAG } from "@/lib/banners";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -47,6 +49,10 @@ const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActiv
+       },
+     });
+ 
++    // Make the home page show this change right away (instead of waiting up to 60s)
++    revalidateTag(BANNERS_CACHE_TAG);
++    revalidatePath("/");
++
+     return NextResponse.json({ success: true, banner });
+   } catch (error: any) {
+     console.error("Admin update banner error:", error);
+@@ -66,6 +72,10 @@ export async function DELETE(
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
+     await prisma.banner.delete({ where: { id: params.id } });
++
++    // Make the home page show this change right away (instead of waiting up to 60s)
++    revalidateTag(BANNERS_CACHE_TAG);
++    revalidatePath("/");
+     return NextResponse.json({ success: true });
+   } catch (error: any) {
+     console.error("Admin delete banner error:", error);
+diff --git a/src/app/api/admin/banners/route.ts b/src/app/api/admin/banners/route.ts
+index 0e32773..97fe270 100644
+--- a/src/app/api/admin/banners/route.ts
++++ b/src/app/api/admin/banners/route.ts
+@@ -3,6 +3,8 @@ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
+ import { prisma } from "@/lib/prisma";
+ import { adminSessionOptions } from "@/lib/adminSession";
++import { revalidateTag, revalidatePath } from "next/cache";
++import { BANNERS_CACHE_TAG } from "@/lib/banners";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -69,6 +71,10 @@ const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActiv
+       },
+     });
+ 
++    // Make the home page show this change right away (instead of waiting up to 60s)
++    revalidateTag(BANNERS_CACHE_TAG);
++    revalidatePath("/");
++
+     return NextResponse.json({ success: true, banner });
+   } catch (error: any) {
+     console.error("Admin create banner error:", error);
+diff --git a/src/app/api/banners/route.ts b/src/app/api/banners/route.ts
+index 5098b8c..40e27fc 100644
+--- a/src/app/api/banners/route.ts
++++ b/src/app/api/banners/route.ts
+@@ -1,16 +1,23 @@
+ import { NextResponse } from "next/server";
+-import { prisma } from "@/lib/prisma";
++import { fetchActiveBanners } from "@/lib/banners";
+ 
++// Kept dynamic on purpose so `next build` never needs database access for this route.
++// The database work itself is cached for 60s inside fetchActiveBanners().
+ export const dynamic = "force-dynamic";
+ 
+ export async function GET() {
+   try {
+-    const banners = await prisma.banner.findMany({
+-      where: { isActive: true },
+-      orderBy: { order: "asc" },
+-    });
++    const banners = await fetchActiveBanners();
+ 
+-    return NextResponse.json({ banners });
++    return NextResponse.json(
++      { banners },
++      {
++        headers: {
++          // Let Vercel's CDN / browsers reuse the response for a minute
++          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
++        },
++      }
++    );
+   } catch (error: any) {
+     console.error("Public banners API error:", error);
+     return NextResponse.json(
+diff --git a/src/app/api/orders/route.ts b/src/app/api/orders/route.ts
+index 2fd5a41..ef50f0c 100644
+--- a/src/app/api/orders/route.ts
++++ b/src/app/api/orders/route.ts
+@@ -6,9 +6,12 @@ import {
+ import { NextResponse } from "next/server";
+ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
++import { Prisma } from "@prisma/client";
++import { z } from "zod";
+ import { prisma } from "@/lib/prisma";
+ import { sessionOptions, SessionData } from "@/lib/session";
+-import { checkRateLimit } from "@/lib/rateLimit";
++import { rateLimit } from "@/lib/rateLimit";
++import { deliveryConfig } from "@/lib/config";
+ 
+ // ==============================
+ // CONSTANTS
+@@ -16,6 +19,56 @@ import { checkRateLimit } from "@/lib/rateLimit";
+ const MAX_QTY_PER_PRODUCT = 10;
+ const MAX_TOTAL_ITEMS = 30;
+ const MAX_ORDERS_PER_DAY = 10;
++const DAY_MS = 24 * 60 * 60 * 1000;
++
++// Same cleaning the checkout page uses, so anything the form accepts is accepted here.
++const cleanMobile = (m: string) => m.replace(/[\s\-()]/g, "").replace(/^\+?91/, "");
++
++// ==============================
++// INPUT VALIDATION
++// ------------------------------
++// NOTE: there is intentionally NO price / subtotal / deliveryFee / total here.
++// zod drops unknown keys, so even if a client sends them they are ignored.
++// All money values are calculated on the server from the database.
++// ==============================
++const OrderInput = z.object({
++  customerName: z.string().trim().min(1, "Please enter your name").max(80),
++  customerMobile: z
++    .string()
++    .trim()
++    .refine(
++      (m) => /^[6-9]\d{9}$/.test(cleanMobile(m)),
++      "Please enter a valid 10-digit mobile number"
++    ),
++  customerEmail: z
++    .string()
++    .trim()
++    .email("Please enter a valid email address")
++    .max(120)
++    .or(z.literal(""))
++    .nullish(),
++  address: z.string().trim().min(3, "Please enter your address").max(300),
++  city: z.string().trim().min(1, "Please enter your city").max(80),
++  state: z.string().trim().min(1, "Please enter your state").max(80),
++  pincode: z
++    .string()
++    .trim()
++    .regex(/^[1-9]\d{5}$/, "Please enter a valid 6-digit pincode"),
++  paymentMethod: z.enum(["cod", "upi"], {
++    errorMap: () => ({ message: "Invalid payment method" }),
++  }),
++  items: z
++    .array(
++      z.object({
++        id: z.string().min(1).max(64),
++        quantity: z.number().int().min(1, "Invalid item data"),
++      })
++    )
++    .min(1, "Your cart is empty")
++    .max(100, "Too many items in the order"),
++});
++
++class StockChangedError extends Error {}
+ 
+ // GET — fetch logged-in user's orders
+ export async function GET() {
+@@ -56,6 +109,9 @@ export async function GET() {
+ // POST — create new order
+ export async function POST(request: Request) {
+   try {
++    // ==============================
++    // 1. AUTH
++    // ==============================
+     const session = await getIronSession<SessionData>(
+       cookies(),
+       sessionOptions
+@@ -67,77 +123,42 @@ export async function POST(request: Request) {
+         { status: 401 }
+       );
+     }
++    const userId = session.userId;
+ 
+     // ==============================
+-    // RATE LIMITING (10 orders/day)
++    // 2. VALIDATE INPUT SHAPE
+     // ==============================
+-    const rateKey = `orders:${session.userId}`;
+-    const rateCheck = await checkRateLimit(rateKey);
+-
+-    if (!rateCheck.allowed) {
+-      return NextResponse.json(
+-        {
+-          error:
+-            "You have reached your daily order limit. Please try again tomorrow or contact us on WhatsApp.",
+-        },
+-        { status: 429 }
+-      );
++    let body: unknown;
++    try {
++      body = await request.json();
++    } catch {
++      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+     }
+ 
+-    const body = await request.json();
+-    const {
+-      customerName,
+-      customerMobile,
+-      customerEmail,
+-      address,
+-      city,
+-      state,
+-      pincode,
+-      items,
+-      subtotal,
+-      deliveryFee,
+-      total,
+-      paymentMethod,
+-    } = body;
+-
+-    // ==============================
+-    // VALIDATION
+-    // ==============================
+-    if (
+-      !customerName ||
+-      !customerMobile ||
+-      !address ||
+-      !city ||
+-      !state ||
+-      !pincode ||
+-      !items ||
+-      items.length === 0
+-    ) {
++    const parsed = OrderInput.safeParse(body);
++    if (!parsed.success) {
+       return NextResponse.json(
+-        { error: "All required fields must be filled" },
++        { error: parsed.error.issues[0]?.message || "Invalid order data" },
+         { status: 400 }
+       );
+     }
++    const input = parsed.data;
+ 
+-    if (!["cod", "upi"].includes(paymentMethod)) {
+-      return NextResponse.json(
+-        { error: "Invalid payment method" },
+-        { status: 400 }
++    // ==============================
++    // 3. MERGE DUPLICATE PRODUCT IDS, THEN CHECK LIMITS
++    //    (two lines of the same product must not bypass the per-product cap)
++    // ==============================
++    const qtyByProduct = new Map<string, number>();
++    for (const item of input.items) {
++      qtyByProduct.set(
++        item.id,
++        (qtyByProduct.get(item.id) ?? 0) + item.quantity
+       );
+     }
+ 
+-    // ==============================
+-    // MAX QUANTITY CHECK
+-    // ==============================
+     let totalItemsCount = 0;
+-    for (const item of items) {
+-      if (!item.id || !item.quantity || item.quantity < 1) {
+-        return NextResponse.json(
+-          { error: "Invalid item data" },
+-          { status: 400 }
+-        );
+-      }
+-      if (item.quantity > MAX_QTY_PER_PRODUCT) {
++    for (const qty of Array.from(qtyByProduct.values())) {
++      if (qty > MAX_QTY_PER_PRODUCT) {
+         return NextResponse.json(
+           {
+             error: `Maximum ${MAX_QTY_PER_PRODUCT} units allowed per product. Please reduce the quantity.`,
+@@ -145,7 +166,7 @@ export async function POST(request: Request) {
+           { status: 400 }
+         );
+       }
+-      totalItemsCount += item.quantity;
++      totalItemsCount += qty;
+     }
+ 
+     if (totalItemsCount > MAX_TOTAL_ITEMS) {
+@@ -158,24 +179,53 @@ export async function POST(request: Request) {
+     }
+ 
+     // ==============================
+-    // STOCK CHECK (before transaction)
++    // 4. RATE LIMIT — only after validation passed,
++    //    so typos / bad requests don't use up the customer's daily quota
+     // ==============================
+-    const productIds = items.map((i: any) => i.id);
++    const rate = await rateLimit(
++      `orders:${userId}`,
++      MAX_ORDERS_PER_DAY,
++      DAY_MS
++    );
++    if (!rate.allowed) {
++      return NextResponse.json(
++        {
++          error:
++            "You have reached your daily order limit. Please try again tomorrow or contact us on WhatsApp.",
++        },
++        { status: 429 }
++      );
++    }
++
++    // ==============================
++    // 5. LOAD REAL PRODUCTS + PRICES FROM THE DATABASE
++    // ==============================
++    const productIds = Array.from(qtyByProduct.keys());
+     const products = await prisma.product.findMany({
+       where: { id: { in: productIds } },
+       select: {
+         id: true,
+         name: true,
++        price: true,
+         stock: true,
+         isActive: true,
+       },
+     });
++    const productById = new Map(products.map((p) => [p.id, p]));
++
++    const lines: {
++      productId: string;
++      name: string;
++      quantity: number;
++      unitPrice: Prisma.Decimal;
++    }[] = [];
++
++    for (const [productId, quantity] of Array.from(qtyByProduct.entries())) {
++      const product = productById.get(productId);
+ 
+-    for (const item of items) {
+-      const product = products.find((p) => p.id === item.id);
+       if (!product) {
+         return NextResponse.json(
+-          { error: `Product not found: ${item.id}` },
++          { error: `Product not found: ${productId}` },
+           { status: 400 }
+         );
+       }
+@@ -185,7 +235,7 @@ export async function POST(request: Request) {
+           { status: 400 }
+         );
+       }
+-      if (product.stock < item.quantity) {
++      if (product.stock < quantity) {
+         return NextResponse.json(
+           {
+             error: `Only ${product.stock} units available for "${product.name}". Please reduce the quantity.`,
+@@ -193,33 +243,63 @@ export async function POST(request: Request) {
+           { status: 400 }
+         );
+       }
++      if (product.price.lte(0)) {
++        return NextResponse.json(
++          {
++            error: `${product.name} is not available for online order right now. Please contact us on WhatsApp.`,
++          },
++          { status: 400 }
++        );
++      }
++
++      lines.push({
++        productId,
++        name: product.name,
++        quantity,
++        unitPrice: product.price,
++      });
+     }
+ 
+     // ==============================
+-    // CREATE ORDER + ATOMIC STOCK DECREMENT
++    // 6. CALCULATE MONEY ON THE SERVER (Decimal = no floating point errors)
++    //    delivery: subtotal >= 500 ? 0 : 50   (values come from lib/config.ts)
+     // ==============================
++    const subtotal = lines.reduce(
++      (sum, l) => sum.plus(l.unitPrice.mul(l.quantity)),
++      new Prisma.Decimal(0)
++    );
++    const deliveryFee = subtotal.gte(deliveryConfig.freeAbove)
++      ? new Prisma.Decimal(0)
++      : new Prisma.Decimal(deliveryConfig.fee);
++    const total = subtotal.plus(deliveryFee);
++
++    // ==============================
++    // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
++    // ==============================
++    const customerEmail = input.customerEmail?.trim() || null;
++
+     const order = await prisma.$transaction(async (tx) => {
+       const newOrder = await tx.order.create({
+         data: {
+-          customerId: session.userId as string,
+-          customerName: customerName.trim(),
+-          customerMobile: customerMobile.trim(),
+-          customerEmail: customerEmail?.trim() || null,
+-          address: address.trim(),
+-          city: city.trim(),
+-          state: state.trim(),
+-          pincode: pincode.trim(),
+-          subtotal: subtotal,
+-          deliveryFee: deliveryFee,
+-          total: total,
++          customerId: userId,
++          customerName: input.customerName,
++          customerMobile: input.customerMobile,
++          customerEmail,
++          address: input.address,
++          city: input.city,
++          state: input.state,
++          pincode: input.pincode,
++          subtotal,
++          deliveryFee,
++          total,
+           status: "PENDING",
+-          paymentMethod: paymentMethod,
++          paymentMethod: input.paymentMethod,
+           paymentStatus: "PENDING",
+           items: {
+-            create: items.map((item: any) => ({
+-              productId: item.id,
+-              quantity: item.quantity,
+-              price: item.price,
++            create: lines.map((l) => ({
++              productId: l.productId,
++              quantity: l.quantity,
++              price: l.unitPrice, // price at the time of order, from the DB
+             })),
+           },
+         },
+@@ -228,21 +308,22 @@ export async function POST(request: Request) {
+         },
+       });
+ 
+-      // Atomic stock decrement — only if stock >= quantity
+-      for (const item of items) {
++      // Atomic stock decrement — only if the product is still active and in stock
++      for (const l of lines) {
+         const result = await tx.product.updateMany({
+           where: {
+-            id: item.id,
+-            stock: { gte: item.quantity },
++            id: l.productId,
++            isActive: true,
++            stock: { gte: l.quantity },
+           },
+           data: {
+-            stock: { decrement: item.quantity },
++            stock: { decrement: l.quantity },
+           },
+         });
+ 
+         if (result.count === 0) {
+-          throw new Error(
+-            "STOCK_CHANGED: Stock is no longer available. Please refresh your cart."
++          throw new StockChangedError(
++            "Stock is no longer available. Please refresh your cart."
+           );
+         }
+       }
+@@ -251,39 +332,32 @@ export async function POST(request: Request) {
+     });
+ 
+     // ==============================
+-    // SEND EMAILS
++    // 8. SEND EMAILS (unchanged behaviour; values now come from the server)
+     // ==============================
+     try {
+-      const productList = await prisma.product.findMany({
+-        where: { id: { in: productIds } },
+-        select: { id: true, name: true },
+-      });
++      const shortId = order.id.slice(-8).toUpperCase();
++      const fullAddress = `${input.address}, ${input.city}, ${input.state} - ${input.pincode}`;
+ 
+-      const orderItems = items.map((i: any) => {
+-        const product = productList.find((p) => p.id === i.id);
+-        return {
+-          name: product?.name || "Product",
+-          quantity: i.quantity,
+-          price: Number(i.price),
+-        };
+-      });
++      const orderItems = lines.map((l) => ({
++        name: l.name,
++        quantity: l.quantity,
++        price: Number(l.unitPrice),
++      }));
+ 
+       if (customerEmail) {
+         await transporter.sendMail({
+           from: FROM_EMAIL,
+           to: customerEmail,
+-          subject: `✅ Order Confirmed - #${order.id
+-            .slice(-8)
+-            .toUpperCase()} - Amroha Pharmacy`,
++          subject: `✅ Order Confirmed - #${shortId} - Amroha Pharmacy`,
+           html: getOrderConfirmationHTML({
+-            customerName,
++            customerName: input.customerName,
+             orderId: order.id,
+             items: orderItems,
+             subtotal: Number(subtotal),
+             deliveryFee: Number(deliveryFee),
+             total: Number(total),
+-            address: `${address}, ${city}, ${state} - ${pincode}`,
+-            paymentMethod,
++            address: fullAddress,
++            paymentMethod: input.paymentMethod,
+           }),
+         });
+       }
+@@ -292,15 +366,13 @@ export async function POST(request: Request) {
+         await transporter.sendMail({
+           from: FROM_EMAIL,
+           to: ADMIN_EMAIL,
+-          subject: `🔔 New Order #${order.id
+-            .slice(-8)
+-            .toUpperCase()} - ₹${total}`,
++          subject: `🔔 New Order #${shortId} - ₹${total.toString()}`,
+           html: getAdminOrderNotificationHTML({
+-            customerName,
+-            customerMobile,
++            customerName: input.customerName,
++            customerMobile: input.customerMobile,
+             total: Number(total),
+-            paymentMethod,
+-            address: `${address}, ${city}, ${state} - ${pincode}`,
++            paymentMethod: input.paymentMethod,
++            address: fullAddress,
+             orderId: order.id,
+           }),
+         });
+@@ -313,8 +385,7 @@ export async function POST(request: Request) {
+   } catch (error: any) {
+     console.error("Create order error:", error);
+ 
+-    // Handle stock-changed error from transaction
+-    if (error.message?.includes("STOCK_CHANGED")) {
++    if (error instanceof StockChangedError) {
+       return NextResponse.json(
+         {
+           error:
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 995fd60..bec651e 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,57 +1,20 @@
+-"use client";
+-
+-import { useState, useEffect } from "react";
+-import { motion } from "framer-motion";
+ import Link from "next/link";
+ import FeaturedProducts from "@/components/home/FeaturedProducts";
++import PromoCarousel from "@/components/home/PromoCarousel";
++import RevealSection from "@/components/home/RevealSection";
++import NewsletterForm from "@/components/home/NewsletterForm";
++import { getActiveBanners } from "@/lib/banners";
++import { getFeaturedProducts } from "@/lib/products";
+ 
+-export default function Home() {
+-  const [bannerIndex, setBannerIndex] = useState(0);
+-const [promos, setPromos] = useState<any[]>([]);
+-const [bannersLoading, setBannersLoading] = useState(true);
+-
+-useEffect(() => {
+-  const fetchBanners = async () => {
+-    try {
+-      const res = await fetch("/api/banners", { cache: "no-store" });
+-      const data = await res.json();
+-
+-      // Theme → Tailwind classes map
+-      const THEME_MAP: Record<string, { bg: string; brandColor: string; text: string }> = {
+-        teal: { bg: "bg-gradient-to-r from-teal-50 to-teal-100", brandColor: "text-teal-700", text: "text-gray-900" },
+-        blue: { bg: "bg-gradient-to-r from-blue-50 to-blue-100", brandColor: "text-blue-700", text: "text-gray-900" },
+-        amber: { bg: "bg-gradient-to-r from-amber-50 to-amber-100", brandColor: "text-amber-700", text: "text-gray-900" },
+-        rose: { bg: "bg-gradient-to-r from-rose-50 to-rose-100", brandColor: "text-rose-700", text: "text-gray-900" },
+-        indigo: { bg: "bg-gradient-to-r from-indigo-50 to-indigo-100", brandColor: "text-indigo-700", text: "text-gray-900" },
+-        emerald: { bg: "bg-gradient-to-r from-emerald-50 to-emerald-100", brandColor: "text-emerald-700", text: "text-gray-900" },
+-      };
+-
+-      const mapped = (data.banners || []).map((b: any) => {
+-        const t = THEME_MAP[b.theme] || THEME_MAP.teal;
+-        return {
+-          brand: b.brand,
+-          title: b.title,
+-          subtitle: b.subtitle || "",
+-          brandColor: t.brandColor,
+-          bg: t.bg,
+-          text: t.text,
+-          image: b.imageUrl,
+-          href: b.linkUrl || "",
+-    layout: b.layout || "split",
+-        };
+-      });
+-
+-      setPromos(mapped);
+-      setBannerIndex(0);
+-    } catch (err) {
+-      console.error("Failed to fetch banners", err);
+-    } finally {
+-      setBannersLoading(false);
+-    }
+-  };
++// Pre-render this page on the server and refresh it at most once a minute.
++export const revalidate = 60;
+ 
+-  fetchBanners();
+-}, []);
++export default async function Home() {
++  // Both queries run at the same time, on the server, before any HTML is sent.
++  const [banners, featuredProducts] = await Promise.all([
++    getActiveBanners(),
++    getFeaturedProducts(4),
++  ]);
+ 
+   const concerns = [
+     { name: "Men's Vitality", icon: "🦁", slug: "mens-vitality" },
+@@ -72,7 +35,7 @@ useEffect(() => {
+       {/* MOBILE + DESKTOP: TRUST BADGES (Desktop Only on mobile?) */}
+       {/* ============================================ */}
+       {/* Trust Badges — Desktop only */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block bg-white py-3 border-b border-gray-100">
++      <RevealSection className="hidden md:block bg-white py-3 border-b border-gray-100">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <div className="grid grid-cols-4 gap-2 md:gap-4">
+             {[
+@@ -95,123 +58,17 @@ useEffect(() => {
+             ))}
+           </div>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* MOBILE + DESKTOP: PROMO BANNER */}
+       {/* ============================================ */}
+-{promos.length > 0 && (
+-<motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-4 bg-white">
+-        <div className="max-w-7xl mx-auto">
+-          <div
+-            className="relative px-4 md:px-6"
+-            onTouchStart={(e) => {
+-              (window as any).__bannerTouch = e.touches[0].clientX;
+-            }}
+-            onTouchEnd={(e) => {
+-              const start = (window as any).__bannerTouch;
+-              if (start === null || start === undefined) return;
+-              const diff = start - e.changedTouches[0].clientX;
+-              if (diff > 50) {
+-                setBannerIndex((prev) => (prev + 1) % promos.length);
+-              } else if (diff < -50) {
+-                setBannerIndex(
+-                  (prev) => (prev - 1 + promos.length) % promos.length
+-                );
+-              }
+-            }}
+-          >
+-            <div className="overflow-hidden">
+-              <div
+-                className="flex transition-transform duration-500 ease-out"
+-                style={{
+-                  transform: `translateX(-${bannerIndex * 100}%)`,
+-                }}
+-              >
+-                {promos.map((promo, idx) => {
+-                let content;
+-
+-                if (promo.layout === "image-only") {
+-                  content = (
+-                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+-                      {promo.image ? (
+-                        /* eslint-disable-next-line @next/next/no-img-element */
+-                        <img src={promo.image} alt={promo.title || "Banner"} className="w-full h-full object-cover" />
+-                      ) : (
+-                        <div className="w-full h-full flex items-center justify-center text-gray-400">Banner</div>
+-                      )}
+-                    </div>
+-                  );
+-                } else if (promo.layout === "overlay") {
+-                  content = (
+-                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+-                      {promo.image && (
+-                        /* eslint-disable-next-line @next/next/no-img-element */
+-                        <img src={promo.image} alt={promo.title} className="w-full h-full object-cover" />
+-                      )}
+-                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center p-4 md:p-6 text-white">
+-                        <p className="text-[10px] md:text-xs font-bold tracking-wide uppercase opacity-90 mb-1">{promo.brand}</p>
+-                        <h3 className="text-2xl md:text-4xl font-black leading-tight mb-1">{promo.title}</h3>
+-                        <p className="text-xs md:text-base opacity-90">{promo.subtitle}</p>
+-                      </div>
+-                    </div>
+-                  );
+-                } else {
+-                  content = (
+-                    <div className={`${promo.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4 hover:shadow-md transition`}>
+-                      <div className="flex-1 min-w-0">
+-                        <p className={`text-[10px] md:text-xs font-bold ${promo.brandColor} mb-1 tracking-wide uppercase`}>{promo.brand}</p>
+-                        <h3 className={`text-2xl md:text-4xl font-black ${promo.text} leading-tight mb-1`}>{promo.title}</h3>
+-                        <p className={`text-xs md:text-base ${promo.text} opacity-80`}>{promo.subtitle}</p>
+-                      </div>
+-                      <div className="shrink-0 w-28 h-28 md:w-44 md:h-44 relative">
+-                        {promo.image ? (
+-                          /* eslint-disable-next-line @next/next/no-img-element */
+-                          <img src={promo.image} alt={promo.title} className="w-full h-full object-contain" />
+-                        ) : (
+-                          <div className="w-full h-full bg-white/50 rounded flex items-center justify-center text-gray-400 text-xs">Image</div>
+-                        )}
+-                      </div>
+-                    </div>
+-                  );
+-                }
+-
+-                return (
+-                  <div key={idx} className="shrink-0 w-full">
+-                    {promo.href ? (
+-                      <Link href={promo.href} target={promo.href.startsWith("http") ? "_blank" : undefined} rel={promo.href.startsWith("http") ? "noopener noreferrer" : undefined} className="block">
+-                        {content}
+-                      </Link>
+-                    ) : (content)}
+-                  </div>
+-                );
+-              })}
+-              </div>
+-            </div>
+-
+-            <div className="flex justify-center items-center gap-2 mt-3">
+-              {promos.map((_, idx) => (
+-                <button
+-                  key={idx}
+-                  onClick={() => setBannerIndex(idx)}
+-                  aria-label={`Go to banner ${idx + 1}`}
+-                  className={`transition-all duration-300 rounded-full ${
+-                    bannerIndex === idx
+-                      ? "w-7 h-2 bg-teal-700"
+-                      : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+-                  }`}
+-                />
+-              ))}
+-            </div>
+-          </div>
+-        </div>
+-      </motion.section>
+-      )}
++      <PromoCarousel banners={banners} />
+ 
+       {/* ============================================ */}
+       {/* DESKTOP ONLY: SHOP BY CONCERN */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-white">
++      <RevealSection className="hidden md:block py-6 md:py-10 bg-white">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <div className="flex justify-between items-end mb-5">
+             <div>
+@@ -247,12 +104,12 @@ useEffect(() => {
+             ))}
+           </div>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* DESKTOP ONLY: SHOP BY CATEGORY */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-background">
++      <RevealSection className="hidden md:block py-6 md:py-10 bg-background">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-5">
+             Shop by Category
+@@ -304,12 +161,12 @@ useEffect(() => {
+             </Link>
+           </div>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* MOBILE + DESKTOP: BEST SELLING PRODUCTS */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-6 md:py-10 bg-white">
++      <RevealSection className="py-6 md:py-10 bg-white">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <div className="flex justify-between items-end mb-5">
+             <div>
+@@ -327,14 +184,14 @@ useEffect(() => {
+               View All →
+             </Link>
+           </div>
+-          <FeaturedProducts />
++          <FeaturedProducts products={featuredProducts} />
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* DESKTOP ONLY: WHY CHOOSE US */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-background">
++      <RevealSection className="hidden md:block py-6 md:py-10 bg-background">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
+             Why Choose Us?
+@@ -375,12 +232,12 @@ useEffect(() => {
+             </div>
+           </div>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* DESKTOP ONLY: TESTIMONIALS */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-white">
++      <RevealSection className="hidden md:block py-6 md:py-10 bg-white">
+         <div className="max-w-7xl mx-auto px-4 md:px-6">
+           <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
+             Customer Reviews
+@@ -450,12 +307,12 @@ useEffect(() => {
+             </div>
+           </div>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* DESKTOP ONLY: NEWSLETTER */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-primary/5">
++      <RevealSection className="hidden md:block py-6 md:py-10 bg-primary/5">
+         <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
+           <h2 className="text-xl md:text-3xl font-bold mb-2 text-primary">
+             Get Health Tips & Offers
+@@ -463,39 +320,14 @@ useEffect(() => {
+           <p className="text-xs md:text-sm text-gray-600 mb-4">
+             Subscribe to receive Ayurvedic tips and exclusive offers
+           </p>
+-          <form
+-            onSubmit={(e) => {
+-              e.preventDefault();
+-              const email = (e.target as any).email.value;
+-              const msg = `📧 Newsletter Subscribe\n\nEmail: ${email}`;
+-              window.open(
+-                `https://wa.me/918077988509?text=${encodeURIComponent(msg)}`,
+-                "_blank"
+-              );
+-            }}
+-            className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
+-          >
+-            <input
+-              type="email"
+-              name="email"
+-              required
+-              placeholder="your@email.com"
+-              className="flex-1 border border-gray-300 rounded-full px-5 py-2.5 text-sm focus:outline-none focus:border-primary"
+-            />
+-            <button
+-              type="submit"
+-              className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-full font-semibold text-sm transition whitespace-nowrap"
+-            >
+-              Subscribe
+-            </button>
+-          </form>
++          <NewsletterForm />
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* MOBILE + DESKTOP: TALK TO EXPERT */}
+       {/* ============================================ */}
+-      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-8 md:py-10 bg-background">
++      <RevealSection className="py-8 md:py-10 bg-background">
+         <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
+           <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-full flex items-center justify-center shadow-lg">
+             <span className="text-3xl">👨‍⚕️</span>
+@@ -514,7 +346,7 @@ useEffect(() => {
+             <span>Talk to an Expert</span>
+           </Link>
+         </div>
+-      </motion.section>
++      </RevealSection>
+ 
+       {/* ============================================ */}
+       {/* MOBILE ONLY: WHATSAPP FLOATING BUTTON */}
+diff --git a/src/components/home/FeaturedProducts.tsx b/src/components/home/FeaturedProducts.tsx
+index 3e4ebbe..5ef49e1 100644
+--- a/src/components/home/FeaturedProducts.tsx
++++ b/src/components/home/FeaturedProducts.tsx
+@@ -1,56 +1,16 @@
+-"use client";
+-
+-import { useState, useEffect } from "react";
+ import ProductCard from "@/components/product/ProductCard";
++import type { FeaturedProduct } from "@/lib/products";
+ 
+-type Product = {
+-  id: string;
+-  name: string;
+-  slug: string;
+-  price: string;
+-  mrp: string | null;
+-  image: string | null;
+-  stock?: number;
+-};
+-
+-export default function FeaturedProducts() {
+-  const [products, setProducts] = useState<Product[]>([]);
+-  const [loading, setLoading] = useState(true);
+-
+-  useEffect(() => {
+-    const fetchProducts = async () => {
+-      try {
+-        const res = await fetch("/api/products");
+-        const data = await res.json();
+-        setProducts((data.products || []).slice(0, 4));
+-      } catch (err) {
+-        console.error("Failed to fetch featured products", err);
+-      } finally {
+-        setLoading(false);
+-      }
+-    };
+-    fetchProducts();
+-  }, []);
+-
+-  if (loading) {
+-    return (
+-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+-        {[1, 2, 3, 4].map((i) => (
+-          <div
+-            key={i}
+-            className="bg-white rounded-xl border overflow-hidden animate-pulse"
+-          >
+-            <div className="aspect-square bg-gray-200"></div>
+-            <div className="p-4 space-y-2">
+-              <div className="h-4 bg-gray-200 rounded"></div>
+-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+-            </div>
+-          </div>
+-        ))}
+-      </div>
+-    );
+-  }
+-
++/**
++ * Server component: receives products already loaded on the server,
++ * so there is no loading skeleton and no extra /api/products request.
++ * <ProductCard> itself stays a client component (cart + wishlist buttons).
++ */
++export default function FeaturedProducts({
++  products,
++}: {
++  products: FeaturedProduct[];
++}) {
+   return (
+     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+       {products.map((product) => (
+diff --git a/src/components/home/NewsletterForm.tsx b/src/components/home/NewsletterForm.tsx
+new file mode 100644
+index 0000000..dcbc72e
+--- /dev/null
++++ b/src/components/home/NewsletterForm.tsx
+@@ -0,0 +1,41 @@
++"use client";
++
++import type { FormEvent } from "react";
++
++/**
++ * Event handlers (onSubmit) are not allowed in server components,
++ * so the newsletter form lives in its own small client component.
++ * Behaviour is unchanged: it opens WhatsApp with the entered email.
++ */
++export default function NewsletterForm() {
++  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
++    e.preventDefault();
++    const email = String(new FormData(e.currentTarget).get("email") ?? "");
++    const msg = `📧 Newsletter Subscribe\n\nEmail: ${email}`;
++    window.open(
++      `https://wa.me/918077988509?text=${encodeURIComponent(msg)}`,
++      "_blank"
++    );
++  };
++
++  return (
++    <form
++      onSubmit={handleSubmit}
++      className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto"
++    >
++      <input
++        type="email"
++        name="email"
++        required
++        placeholder="your@email.com"
++        className="flex-1 border border-gray-300 rounded-full px-5 py-2.5 text-sm focus:outline-none focus:border-primary"
++      />
++      <button
++        type="submit"
++        className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-full font-semibold text-sm transition whitespace-nowrap"
++      >
++        Subscribe
++      </button>
++    </form>
++  );
++}
+diff --git a/src/components/home/PromoCarousel.tsx b/src/components/home/PromoCarousel.tsx
+new file mode 100644
+index 0000000..468173d
+--- /dev/null
++++ b/src/components/home/PromoCarousel.tsx
+@@ -0,0 +1,148 @@
++"use client";
++
++import { useRef, useState } from "react";
++import Link from "next/link";
++import RevealSection from "@/components/home/RevealSection";
++import type { BannerDTO } from "@/lib/banners";
++
++// Theme -> Tailwind classes. Kept in /components (not /lib) on purpose:
++// tailwind.config.ts only scans src/app and src/components, so classes
++// written anywhere else would be purged from the CSS.
++const THEME_MAP: Record<string, { bg: string; brandColor: string; text: string }> = {
++  teal: { bg: "bg-gradient-to-r from-teal-50 to-teal-100", brandColor: "text-teal-700", text: "text-gray-900" },
++  blue: { bg: "bg-gradient-to-r from-blue-50 to-blue-100", brandColor: "text-blue-700", text: "text-gray-900" },
++  amber: { bg: "bg-gradient-to-r from-amber-50 to-amber-100", brandColor: "text-amber-700", text: "text-gray-900" },
++  rose: { bg: "bg-gradient-to-r from-rose-50 to-rose-100", brandColor: "text-rose-700", text: "text-gray-900" },
++  indigo: { bg: "bg-gradient-to-r from-indigo-50 to-indigo-100", brandColor: "text-indigo-700", text: "text-gray-900" },
++  emerald: { bg: "bg-gradient-to-r from-emerald-50 to-emerald-100", brandColor: "text-emerald-700", text: "text-gray-900" },
++};
++
++export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
++  const [bannerIndex, setBannerIndex] = useState(0);
++  const touchStartX = useRef<number | null>(null);
++
++  const promos = banners.map((b) => {
++    const t = THEME_MAP[b.theme] || THEME_MAP.teal;
++    return {
++      brand: b.brand,
++      title: b.title,
++      subtitle: b.subtitle || "",
++      brandColor: t.brandColor,
++      bg: t.bg,
++      text: t.text,
++      image: b.imageUrl,
++      href: b.linkUrl || "",
++      layout: b.layout || "split",
++    };
++  });
++
++  if (promos.length === 0) return null;
++
++  return (
++<RevealSection className="py-4 bg-white">
++        <div className="max-w-7xl mx-auto">
++          <div
++            className="relative px-4 md:px-6"
++            onTouchStart={(e) => {
++              touchStartX.current = e.touches[0].clientX;
++            }}
++            onTouchEnd={(e) => {
++              const start = touchStartX.current;
++              if (start === null) return;
++              const diff = start - e.changedTouches[0].clientX;
++              if (diff > 50) {
++                setBannerIndex((prev) => (prev + 1) % promos.length);
++              } else if (diff < -50) {
++                setBannerIndex(
++                  (prev) => (prev - 1 + promos.length) % promos.length
++                );
++              }
++            }}
++          >
++            <div className="overflow-hidden">
++              <div
++                className="flex transition-transform duration-500 ease-out"
++                style={{
++                  transform: `translateX(-${bannerIndex * 100}%)`,
++                }}
++              >
++                {promos.map((promo, idx) => {
++                let content;
++
++                if (promo.layout === "image-only") {
++                  content = (
++                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
++                      {promo.image ? (
++                        /* eslint-disable-next-line @next/next/no-img-element */
++                        <img src={promo.image} alt={promo.title || "Banner"} className="w-full h-full object-cover" />
++                      ) : (
++                        <div className="w-full h-full flex items-center justify-center text-gray-400">Banner</div>
++                      )}
++                    </div>
++                  );
++                } else if (promo.layout === "overlay") {
++                  content = (
++                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
++                      {promo.image && (
++                        /* eslint-disable-next-line @next/next/no-img-element */
++                        <img src={promo.image} alt={promo.title} className="w-full h-full object-cover" />
++                      )}
++                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center p-4 md:p-6 text-white">
++                        <p className="text-[10px] md:text-xs font-bold tracking-wide uppercase opacity-90 mb-1">{promo.brand}</p>
++                        <h3 className="text-2xl md:text-4xl font-black leading-tight mb-1">{promo.title}</h3>
++                        <p className="text-xs md:text-base opacity-90">{promo.subtitle}</p>
++                      </div>
++                    </div>
++                  );
++                } else {
++                  content = (
++                    <div className={`${promo.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4 hover:shadow-md transition`}>
++                      <div className="flex-1 min-w-0">
++                        <p className={`text-[10px] md:text-xs font-bold ${promo.brandColor} mb-1 tracking-wide uppercase`}>{promo.brand}</p>
++                        <h3 className={`text-2xl md:text-4xl font-black ${promo.text} leading-tight mb-1`}>{promo.title}</h3>
++                        <p className={`text-xs md:text-base ${promo.text} opacity-80`}>{promo.subtitle}</p>
++                      </div>
++                      <div className="shrink-0 w-28 h-28 md:w-44 md:h-44 relative">
++                        {promo.image ? (
++                          /* eslint-disable-next-line @next/next/no-img-element */
++                          <img src={promo.image} alt={promo.title} className="w-full h-full object-contain" />
++                        ) : (
++                          <div className="w-full h-full bg-white/50 rounded flex items-center justify-center text-gray-400 text-xs">Image</div>
++                        )}
++                      </div>
++                    </div>
++                  );
++                }
++
++                return (
++                  <div key={idx} className="shrink-0 w-full">
++                    {promo.href ? (
++                      <Link href={promo.href} target={promo.href.startsWith("http") ? "_blank" : undefined} rel={promo.href.startsWith("http") ? "noopener noreferrer" : undefined} className="block">
++                        {content}
++                      </Link>
++                    ) : (content)}
++                  </div>
++                );
++              })}
++              </div>
++            </div>
++
++            <div className="flex justify-center items-center gap-2 mt-3">
++              {promos.map((_, idx) => (
++                <button
++                  key={idx}
++                  onClick={() => setBannerIndex(idx)}
++                  aria-label={`Go to banner ${idx + 1}`}
++                  className={`transition-all duration-300 rounded-full ${
++                    bannerIndex === idx
++                      ? "w-7 h-2 bg-teal-700"
++                      : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
++                  }`}
++                />
++              ))}
++            </div>
++          </div>
++        </div>
++      </RevealSection>
++  );
++}
+diff --git a/src/components/home/RevealSection.tsx b/src/components/home/RevealSection.tsx
+new file mode 100644
+index 0000000..91e7c48
+--- /dev/null
++++ b/src/components/home/RevealSection.tsx
+@@ -0,0 +1,29 @@
++"use client";
++
++import { motion } from "framer-motion";
++import type { ReactNode } from "react";
++
++/**
++ * Client-side wrapper that gives a <section> the same fade-up scroll animation
++ * the home page already had. The content passed as `children` can be a
++ * server component: only this thin wrapper needs the browser.
++ */
++export default function RevealSection({
++  children,
++  className,
++}: {
++  children: ReactNode;
++  className?: string;
++}) {
++  return (
++    <motion.section
++      initial={{ opacity: 0, y: 30 }}
++      whileInView={{ opacity: 1, y: 0 }}
++      viewport={{ once: true, margin: "-50px" }}
++      transition={{ duration: 0.6, ease: "easeOut" }}
++      className={className}
++    >
++      {children}
++    </motion.section>
++  );
++}
+diff --git a/src/lib/banners.ts b/src/lib/banners.ts
+new file mode 100644
+index 0000000..360d1a0
+--- /dev/null
++++ b/src/lib/banners.ts
+@@ -0,0 +1,62 @@
++import { unstable_cache } from "next/cache";
++import { prisma } from "@/lib/prisma";
++
++/** Tag used to refresh the cache when an admin edits banners. */
++export const BANNERS_CACHE_TAG = "banners";
++
++/**
++ * Only plain strings / numbers here (no Date objects), so the value can be
++ * cached and then passed straight to a client component as props.
++ */
++export type BannerDTO = {
++  id: string;
++  brand: string;
++  title: string;
++  subtitle: string | null;
++  imageUrl: string;
++  linkUrl: string | null;
++  theme: string;
++  layout: string;
++  order: number;
++};
++
++/**
++ * Reads active banners from the database and caches the result for 60 seconds.
++ * The cache is cleared immediately by revalidateTag(BANNERS_CACHE_TAG)
++ * whenever an admin creates, edits or deletes a banner.
++ *
++ * Throws if the database fails (a failed result is never cached).
++ */
++export const fetchActiveBanners = unstable_cache(
++  async (): Promise<BannerDTO[]> =>
++    prisma.banner.findMany({
++      where: { isActive: true },
++      orderBy: { order: "asc" },
++      select: {
++        id: true,
++        brand: true,
++        title: true,
++        subtitle: true,
++        imageUrl: true,
++        linkUrl: true,
++        theme: true,
++        layout: true,
++        order: true,
++      },
++    }),
++  ["active-banners"],
++  { revalidate: 60, tags: [BANNERS_CACHE_TAG] }
++);
++
++/**
++ * Safe version for pages: if the database is down, the page still renders
++ * (just without the banner slider) instead of crashing.
++ */
++export async function getActiveBanners(): Promise<BannerDTO[]> {
++  try {
++    return await fetchActiveBanners();
++  } catch (err) {
++    console.error("Failed to load banners:", err);
++    return [];
++  }
++}
+diff --git a/src/lib/products.ts b/src/lib/products.ts
+new file mode 100644
+index 0000000..ad14ee5
+--- /dev/null
++++ b/src/lib/products.ts
+@@ -0,0 +1,51 @@
++import { prisma } from "@/lib/prisma";
++
++/**
++ * Shape handed to <ProductCard>. Prices are strings because Prisma's Decimal
++ * objects cannot be passed from a server component to a client component.
++ */
++export type FeaturedProduct = {
++  id: string;
++  name: string;
++  slug: string;
++  price: string;
++  mrp: string | null;
++  image: string | null;
++  stock: number;
++};
++
++/**
++ * Newest active products (same ordering the old /api/products call used).
++ * If the database is unavailable the home page still renders, with an empty list.
++ */
++export async function getFeaturedProducts(limit = 4): Promise<FeaturedProduct[]> {
++  try {
++    const rows = await prisma.product.findMany({
++      where: { isActive: true },
++      orderBy: { createdAt: "desc" },
++      take: limit,
++      select: {
++        id: true,
++        name: true,
++        slug: true,
++        price: true,
++        mrp: true,
++        image: true,
++        stock: true,
++      },
++    });
++
++    return rows.map((p) => ({
++      id: p.id,
++      name: p.name,
++      slug: p.slug,
++      price: p.price.toString(),
++      mrp: p.mrp ? p.mrp.toString() : null,
++      image: p.image,
++      stock: p.stock,
++    }));
++  } catch (err) {
++    console.error("Failed to load featured products:", err);
++    return [];
++  }
++}
+diff --git a/src/lib/rateLimit.ts b/src/lib/rateLimit.ts
+index 63f837c..aee6663 100644
+--- a/src/lib/rateLimit.ts
++++ b/src/lib/rateLimit.ts
+@@ -1,83 +1,106 @@
+ import { prisma } from "@/lib/prisma";
+ 
+-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+-const MAX_ATTEMPTS = 5;
+-
+-export async function checkRateLimit(key: string): Promise<{
++export type RateLimitResult = {
+   allowed: boolean;
+   remaining: number;
++  /** milliseconds until the current window resets */
+   resetIn: number;
+-}> {
+-  const now = new Date();
++};
++
++type RateLimitOptions = {
++  /**
++   * What to do if the database call fails.
++   * true  (default) = let the request through (same behaviour as before)
++   * false           = block the request (recommended for login endpoints
++   *                   once you have confirmed the "RateLimit" table exists)
++   */
++  failOpen?: boolean;
++};
++
++// Defaults used by the older checkRateLimit() helper (login / register)
++const DEFAULT_MAX_ATTEMPTS = 5;
++const DEFAULT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
++
++/**
++ * Atomic fixed-window rate limiter.
++ *
++ * One single INSERT ... ON CONFLICT DO UPDATE statement does the whole job,
++ * so two parallel requests can never read the same counter and both slip
++ * through (the old SELECT-then-UPDATE version had that race).
++ *
++ * The time comparison uses the database clock (now()), so it does not depend
++ * on the clock of the serverless function.
++ */
++export async function rateLimit(
++  key: string,
++  max: number,
++  windowMs: number,
++  options: RateLimitOptions = {}
++): Promise<RateLimitResult> {
++  const { failOpen = true } = options;
++  const windowSeconds = windowMs / 1000;
+ 
+   try {
+-    // Use raw query since RateLimit is not in Prisma schema
+-    const existing: any[] = await prisma.$queryRaw`
+-      SELECT "key", "count", "resetAt"
+-      FROM "RateLimit"
+-      WHERE "key" = ${key}
++    const rows = await prisma.$queryRaw<
++      { count: number; resetInMs: number }[]
++    >`
++      INSERT INTO "RateLimit" ("key", "count", "resetAt")
++      VALUES (
++        ${key},
++        1,
++        now() + make_interval(secs => ${windowSeconds}::double precision)
++      )
++      ON CONFLICT ("key") DO UPDATE SET
++        "count" = CASE
++          WHEN "RateLimit"."resetAt" <= now() THEN 1
++          ELSE "RateLimit"."count" + 1
++        END,
++        "resetAt" = CASE
++          WHEN "RateLimit"."resetAt" <= now()
++            THEN now() + make_interval(secs => ${windowSeconds}::double precision)
++          ELSE "RateLimit"."resetAt"
++        END
++      RETURNING
++        "count"::int AS "count",
++        (EXTRACT(EPOCH FROM ("RateLimit"."resetAt" - now())) * 1000)::float8 AS "resetInMs"
+     `;
+ 
+-    // No record — create one
+-    if (!existing || existing.length === 0) {
+-      const resetAt = new Date(Date.now() + WINDOW_MS);
+-      await prisma.$executeRaw`
+-        INSERT INTO "RateLimit" ("key", "count", "resetAt")
+-        VALUES (${key}, 1, ${resetAt})
+-      `;
+-      return {
+-        allowed: true,
+-        remaining: MAX_ATTEMPTS - 1,
+-        resetIn: WINDOW_MS,
+-      };
+-    }
++    const row = rows[0];
++    if (!row) throw new Error("Rate limit query returned no row");
+ 
+-    const record = existing[0];
+-    const resetAt = new Date(record.resetAt);
++    const count = Number(row.count);
++    const resetIn = Math.max(0, Math.round(Number(row.resetInMs)));
+ 
+-    // Window expired — reset
+-    if (resetAt < now) {
+-      const newResetAt = new Date(Date.now() + WINDOW_MS);
++    // Housekeeping: on ~1% of calls, delete rows that expired over a day ago.
++    // (Keeps the table small without needing a separate cron job.)
++    if (Math.random() < 0.01) {
+       await prisma.$executeRaw`
+-        UPDATE "RateLimit"
+-        SET "count" = 1, "resetAt" = ${newResetAt}
+-        WHERE "key" = ${key}
+-      `;
+-      return {
+-        allowed: true,
+-        remaining: MAX_ATTEMPTS - 1,
+-        resetIn: WINDOW_MS,
+-      };
+-    }
+-
+-    // Limit reached
+-    if (record.count >= MAX_ATTEMPTS) {
+-      return {
+-        allowed: false,
+-        remaining: 0,
+-        resetIn: resetAt.getTime() - now.getTime(),
+-      };
++        DELETE FROM "RateLimit" WHERE "resetAt" < now() - interval '1 day'
++      `.catch(() => undefined);
+     }
+ 
+-    // Increment
+-    await prisma.$executeRaw`
+-      UPDATE "RateLimit"
+-      SET "count" = "count" + 1
+-      WHERE "key" = ${key}
+-    `;
+-
+     return {
+-      allowed: true,
+-      remaining: MAX_ATTEMPTS - record.count - 1,
+-      resetIn: resetAt.getTime() - now.getTime(),
++      allowed: count <= max,
++      remaining: Math.max(0, max - count),
++      resetIn,
+     };
+   } catch (err) {
+     console.error("Rate limit error:", err);
+-    // Fail open — allow if DB fails
+-    return { allowed: true, remaining: MAX_ATTEMPTS, resetIn: WINDOW_MS };
++    if (failOpen) {
++      return { allowed: true, remaining: max, resetIn: windowMs };
++    }
++    return { allowed: false, remaining: 0, resetIn: windowMs };
+   }
+ }
+ 
++/**
++ * Backward-compatible helper: 5 attempts per 15 minutes.
++ * Login, admin login and register keep calling this, so they need no changes.
++ */
++export async function checkRateLimit(key: string): Promise<RateLimitResult> {
++  return rateLimit(key, DEFAULT_MAX_ATTEMPTS, DEFAULT_WINDOW_MS);
++}
++
+ export async function resetRateLimit(key: string) {
+   try {
+     await prisma.$executeRaw`

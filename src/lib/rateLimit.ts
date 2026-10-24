@@ -1,81 +1,104 @@
 import { prisma } from "@/lib/prisma";
 
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
-
-export async function checkRateLimit(key: string): Promise<{
+export type RateLimitResult = {
   allowed: boolean;
   remaining: number;
+  /** milliseconds until the current window resets */
   resetIn: number;
-}> {
-  const now = new Date();
+};
+
+type RateLimitOptions = {
+  /**
+   * What to do if the database call fails.
+   * true  (default) = let the request through (same behaviour as before)
+   * false           = block the request (recommended for login endpoints
+   *                   once you have confirmed the "RateLimit" table exists)
+   */
+  failOpen?: boolean;
+};
+
+// Defaults used by the older checkRateLimit() helper (login / register)
+const DEFAULT_MAX_ATTEMPTS = 5;
+const DEFAULT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * Atomic fixed-window rate limiter.
+ *
+ * One single INSERT ... ON CONFLICT DO UPDATE statement does the whole job,
+ * so two parallel requests can never read the same counter and both slip
+ * through (the old SELECT-then-UPDATE version had that race).
+ *
+ * The time comparison uses the database clock (now()), so it does not depend
+ * on the clock of the serverless function.
+ */
+export async function rateLimit(
+  key: string,
+  max: number,
+  windowMs: number,
+  options: RateLimitOptions = {}
+): Promise<RateLimitResult> {
+  const { failOpen = true } = options;
+  const windowSeconds = windowMs / 1000;
 
   try {
-    // Use raw query since RateLimit is not in Prisma schema
-    const existing: any[] = await prisma.$queryRaw`
-      SELECT "key", "count", "resetAt"
-      FROM "RateLimit"
-      WHERE "key" = ${key}
+    const rows = await prisma.$queryRaw<
+      { count: number; resetInMs: number }[]
+    >`
+      INSERT INTO "RateLimit" ("key", "count", "resetAt")
+      VALUES (
+        ${key},
+        1,
+        now() + make_interval(secs => ${windowSeconds}::double precision)
+      )
+      ON CONFLICT ("key") DO UPDATE SET
+        "count" = CASE
+          WHEN "RateLimit"."resetAt" <= now() THEN 1
+          ELSE "RateLimit"."count" + 1
+        END,
+        "resetAt" = CASE
+          WHEN "RateLimit"."resetAt" <= now()
+            THEN now() + make_interval(secs => ${windowSeconds}::double precision)
+          ELSE "RateLimit"."resetAt"
+        END
+      RETURNING
+        "count"::int AS "count",
+        (EXTRACT(EPOCH FROM ("RateLimit"."resetAt" - now())) * 1000)::float8 AS "resetInMs"
     `;
 
-    // No record — create one
-    if (!existing || existing.length === 0) {
-      const resetAt = new Date(Date.now() + WINDOW_MS);
+    const row = rows[0];
+    if (!row) throw new Error("Rate limit query returned no row");
+
+    const count = Number(row.count);
+    const resetIn = Math.max(0, Math.round(Number(row.resetInMs)));
+
+    // Housekeeping: on ~1% of calls, delete rows that expired over a day ago.
+    // (Keeps the table small without needing a separate cron job.)
+    if (Math.random() < 0.01) {
       await prisma.$executeRaw`
-        INSERT INTO "RateLimit" ("key", "count", "resetAt")
-        VALUES (${key}, 1, ${resetAt})
-      `;
-      return {
-        allowed: true,
-        remaining: MAX_ATTEMPTS - 1,
-        resetIn: WINDOW_MS,
-      };
+        DELETE FROM "RateLimit" WHERE "resetAt" < now() - interval '1 day'
+      `.catch(() => undefined);
     }
-
-    const record = existing[0];
-    const resetAt = new Date(record.resetAt);
-
-    // Window expired — reset
-    if (resetAt < now) {
-      const newResetAt = new Date(Date.now() + WINDOW_MS);
-      await prisma.$executeRaw`
-        UPDATE "RateLimit"
-        SET "count" = 1, "resetAt" = ${newResetAt}
-        WHERE "key" = ${key}
-      `;
-      return {
-        allowed: true,
-        remaining: MAX_ATTEMPTS - 1,
-        resetIn: WINDOW_MS,
-      };
-    }
-
-    // Limit reached
-    if (record.count >= MAX_ATTEMPTS) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetIn: resetAt.getTime() - now.getTime(),
-      };
-    }
-
-    // Increment
-    await prisma.$executeRaw`
-      UPDATE "RateLimit"
-      SET "count" = "count" + 1
-      WHERE "key" = ${key}
-    `;
 
     return {
-      allowed: true,
-      remaining: MAX_ATTEMPTS - record.count - 1,
-      resetIn: resetAt.getTime() - now.getTime(),
+      allowed: count <= max,
+      remaining: Math.max(0, max - count),
+      resetIn,
     };
   } catch (err) {
     console.error("Rate limit error:", err);
-    // Fail open — allow if DB fails
-    return { allowed: true, remaining: MAX_ATTEMPTS, resetIn: WINDOW_MS };
+    if (failOpen) {
+      return { allowed: true, remaining: max, resetIn: windowMs };
+    }
+    return { allowed: false, remaining: 0, resetIn: windowMs };
   }
+}
+
+/**
+ * Backward-compatible helper: 5 attempts per 15 minutes.
+ * Login, admin login and register keep calling this, so they need no changes.
+ */
+export async function checkRateLimit(key: string): Promise<RateLimitResult> {
+  return rateLimit(key, DEFAULT_MAX_ATTEMPTS, DEFAULT_WINDOW_MS);
 }
 
 export async function resetRateLimit(key: string) {

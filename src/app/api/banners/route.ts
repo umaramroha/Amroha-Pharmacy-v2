@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { fetchActiveBanners } from "@/lib/banners";
 
+// Kept dynamic on purpose so `next build` never needs database access for this route.
+// The database work itself is cached for 60s inside fetchActiveBanners().
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const banners = await prisma.banner.findMany({
-      where: { isActive: true },
-      orderBy: { order: "asc" },
-    });
+    const banners = await fetchActiveBanners();
 
-    return NextResponse.json({ banners });
+    return NextResponse.json(
+      { banners },
+      {
+        headers: {
+          // Let Vercel's CDN / browsers reuse the response for a minute
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Public banners API error:", error);
     return NextResponse.json(

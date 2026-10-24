@@ -3,6 +3,8 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
+import { revalidateTag, revalidatePath } from "next/cache";
+import { BANNERS_CACHE_TAG } from "@/lib/banners";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +70,10 @@ const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActiv
         isActive: typeof isActive === "boolean" ? isActive : true,
       },
     });
+
+    // Make the home page show this change right away (instead of waiting up to 60s)
+    revalidateTag(BANNERS_CACHE_TAG);
+    revalidatePath("/");
 
     return NextResponse.json({ success: true, banner });
   } catch (error: any) {
