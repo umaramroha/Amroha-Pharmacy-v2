@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -98,7 +99,7 @@ export async function POST(
             <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;">
               <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;">
                 <h2 style="color: #dc2626; margin-top: 0;">Order Cancelled</h2>
-                <p>Namaste <strong>${order.customerName}</strong>,</p>
+                <p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p>
                 <p>Aapka order <strong>#${order.id
                   .slice(-8)
                   .toUpperCase()}</strong> successfully cancel kar diya gaya hai.</p>
@@ -126,15 +127,15 @@ export async function POST(
           to: ADMIN_EMAIL,
           subject: `❌ Order Cancelled #${order.id
             .slice(-8)
-            .toUpperCase()} - ${order.customerName}`,
+            .toUpperCase()} - ${escapeHtml(order.customerName)}`,
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
               <h2 style="color: #dc2626;">Order Cancelled by Customer</h2>
               <p><strong>Order ID:</strong> #${order.id
                 .slice(-8)
                 .toUpperCase()}</p>
-              <p><strong>Customer:</strong> ${order.customerName}</p>
-              <p><strong>Mobile:</strong> ${order.customerMobile}</p>
+              <p><strong>Customer:</strong> ${escapeHtml(order.customerName)}</p>
+              <p><strong>Mobile:</strong> ${escapeHtml(order.customerMobile)}</p>
               <p><strong>Total:</strong> ₹${order.total}</p>
               <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
               <p><strong>Stock restored:</strong> Yes</p>

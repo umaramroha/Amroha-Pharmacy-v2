@@ -6,6 +6,7 @@ const MAX_QTY_PER_PRODUCT = 10;
 
 export type CartItem = {
   id: string;
+  slug: string;
   name: string;
   price: number;
   image?: string;

@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/utils";
 type OrderItem = {
   name: string;
   quantity: number;
@@ -34,7 +35,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
       (item) => `
       <tr>
         <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #4b5563;">
-          ${item.name} × ${item.quantity}
+          ${escapeHtml(item.name)} × ${item.quantity}
         </td>
         <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #1f2937; font-weight: bold; text-align: right;">
           ₹${(item.price * item.quantity).toLocaleString("en-IN")}
@@ -60,7 +61,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
         </div>
 
         <div style="padding: 30px 25px;">
-          <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${customerName}</strong>,</p>
+          <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${escapeHtml(customerName)}</strong>,</p>
 
           <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
             Your order has been placed successfully. We will dispatch it shortly and send tracking details on WhatsApp.
@@ -106,7 +107,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
             Delivery Address
           </h2>
           <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0;">
-            ${address}
+            ${escapeHtml(address)}
           </p>
 
           <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
@@ -147,9 +148,9 @@ export function getAdminOrderNotificationHTML(data: {
         <h2 style="color: #0F766E; margin-top: 0;">🔔 New Order Received</h2>
         <p><strong>Order ID:</strong> #${shortId}</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;" />
-        <p><strong>Customer:</strong> ${data.customerName}</p>
-        <p><strong>Mobile:</strong> ${data.customerMobile}</p>
-        <p><strong>Address:</strong> ${data.address}</p>
+        <p><strong>Customer:</strong> ${escapeHtml(data.customerName)}</p>
+        <p><strong>Mobile:</strong> ${escapeHtml(data.customerMobile)}</p>
+        <p><strong>Address:</strong> ${escapeHtml(data.address)}</p>
         <p><strong>Total:</strong> ₹${data.total.toLocaleString("en-IN")}</p>
         <p><strong>Payment:</strong> ${data.paymentMethod === "cod" ? "COD" : "UPI"}</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;" />

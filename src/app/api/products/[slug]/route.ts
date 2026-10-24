@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const product = await prisma.product.findUnique({
-      where: { slug: params.slug },
+      where: { slug: params.slug, isActive: true },
     });
 
     if (!product) {

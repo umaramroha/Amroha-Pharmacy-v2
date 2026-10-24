@@ -1,28 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getIronSession } from "iron-session";
+import { adminSessionOptions, AdminSessionData } from "@/lib/adminSession";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const isAdminRoute = pathname.startsWith("/kggg0b");
-  const isLoginPage = pathname === "/kggg0b/login";
-
-  if (!isAdminRoute || isLoginPage) {
-    const res = NextResponse.next();
-    res.headers.set("Cache-Control", "no-store, must-revalidate");
-    return res;
-  }
-
-  const adminCookie = request.cookies.get("a2z-admin-session");
-
-  if (!adminCookie) {
-    const res = NextResponse.redirect(new URL("/kggg0b/login", request.url));
-    res.headers.set("Cache-Control", "no-store, must-revalidate");
-    return res;
-  }
-
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (pathname === "/kggg0b/login") return NextResponse.next();
+  
   const res = NextResponse.next();
-  res.headers.set("Cache-Control", "no-store, must-revalidate");
+  const session = await getIronSession<AdminSessionData>(req, res, adminSessionOptions);
+  
+  if (!session.isAdminLoggedIn) {
+    return NextResponse.redirect(new URL("/kggg0b/login", req.url));
+  }
+  res.headers.set("Cache-Control", "no-store");
   return res;
 }
 
