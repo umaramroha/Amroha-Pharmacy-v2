@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 
@@ -71,7 +72,7 @@ useEffect(() => {
       {/* MOBILE + DESKTOP: TRUST BADGES (Desktop Only on mobile?) */}
       {/* ============================================ */}
       {/* Trust Badges — Desktop only */}
-      <section className="hidden md:block bg-white py-3 border-b border-gray-100">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block bg-white py-3 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="grid grid-cols-4 gap-2 md:gap-4">
             {[
@@ -94,13 +95,13 @@ useEffect(() => {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* MOBILE + DESKTOP: PROMO BANNER */}
       {/* ============================================ */}
 {promos.length > 0 && (
-<section className="py-4 bg-white">
+<motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div
             className="relative px-4 md:px-6"
@@ -204,13 +205,13 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
       )}
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: SHOP BY CONCERN */}
       {/* ============================================ */}
-      <section className="hidden md:block py-6 md:py-10 bg-white">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex justify-between items-end mb-5">
             <div>
@@ -246,12 +247,12 @@ useEffect(() => {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: SHOP BY CATEGORY */}
       {/* ============================================ */}
-      <section className="hidden md:block py-6 md:py-10 bg-background">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-5">
             Shop by Category
@@ -303,12 +304,12 @@ useEffect(() => {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* MOBILE + DESKTOP: BEST SELLING PRODUCTS */}
       {/* ============================================ */}
-      <section className="py-6 md:py-10 bg-white">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-6 md:py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex justify-between items-end mb-5">
             <div>
@@ -328,12 +329,12 @@ useEffect(() => {
           </div>
           <FeaturedProducts />
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: WHY CHOOSE US */}
       {/* ============================================ */}
-      <section className="hidden md:block py-6 md:py-10 bg-background">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
             Why Choose Us?
@@ -374,12 +375,12 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: TESTIMONIALS */}
       {/* ============================================ */}
-      <section className="hidden md:block py-6 md:py-10 bg-white">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <h2 className="text-xl md:text-3xl font-bold text-center mb-5 text-gray-900">
             Customer Reviews
@@ -449,12 +450,12 @@ useEffect(() => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* DESKTOP ONLY: NEWSLETTER */}
       {/* ============================================ */}
-      <section className="hidden md:block py-6 md:py-10 bg-primary/5">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="hidden md:block py-6 md:py-10 bg-primary/5">
         <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
           <h2 className="text-xl md:text-3xl font-bold mb-2 text-primary">
             Get Health Tips & Offers
@@ -489,12 +490,12 @@ useEffect(() => {
             </button>
           </form>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* MOBILE + DESKTOP: TALK TO EXPERT */}
       {/* ============================================ */}
-      <section className="py-8 md:py-10 bg-background">
+      <motion.section initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, ease: "easeOut" }} className="py-8 md:py-10 bg-background">
         <div className="max-w-2xl mx-auto px-4 md:px-6 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-primary rounded-full flex items-center justify-center shadow-lg">
             <span className="text-3xl">👨‍⚕️</span>
@@ -513,7 +514,7 @@ useEffect(() => {
             <span>Talk to an Expert</span>
           </Link>
         </div>
-      </section>
+      </motion.section>
 
       {/* ============================================ */}
       {/* MOBILE ONLY: WHATSAPP FLOATING BUTTON */}
