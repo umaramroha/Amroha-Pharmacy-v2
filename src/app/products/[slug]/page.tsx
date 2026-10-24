@@ -470,6 +470,7 @@ export default function ProductDetailPage({
 
     addToCart({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       price,
       image: product.image || undefined,
