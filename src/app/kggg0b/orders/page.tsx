@@ -237,6 +237,16 @@ useEffect(() => {
                   >
                     🖨️ Print Bill
                   </button>
+                  <a
+                    href={`https://wa.me/91${(order.customerMobile || '').replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                      `Hello ${order.customerName},\n\nAapke order #${order.id.slice(-8).toUpperCase()} ka status abhi *${order.status}* hai.\nTotal Amount: ₹${order.total}\n\nThank you for choosing Amroha Pharmacy!`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2"
+                  >
+                    💬 WhatsApp
+                  </a>
                 </div>
               </div>
 
