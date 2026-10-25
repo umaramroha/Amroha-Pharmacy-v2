@@ -42,11 +42,11 @@ export default async function Home() {
               { icon: "cash", label: "COD Available", detail: "Pay on delivery" },
               { icon: "support", label: "WhatsApp Support", detail: "Here to help you" },
             ] as const).map((item) => (
-              <li key={item.label} className="flex flex-col items-center justify-center text-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50/50 p-2 md:flex-row md:items-center md:gap-3 md:p-4 md:text-left">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary md:h-10 md:w-10 md:rounded-xl">
-                  <TrustIcon name={item.icon} className="h-4 w-4 md:h-6 md:w-6" />
+              <li key={item.label} className="flex flex-row items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2 md:gap-3 md:rounded-2xl md:p-4">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-primary/10 text-primary md:h-10 md:w-10 md:rounded-xl">
+                  <TrustIcon name={item.icon} className="h-3.5 w-3.5 md:h-6 md:w-6" />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <p className="text-[10px] font-bold leading-tight text-slate-900 md:text-sm md:leading-5">{item.label}</p>
                   <p className="mt-0.5 hidden text-[10px] leading-4 text-slate-500 md:block md:text-xs">{item.detail}</p>
                 </div>
