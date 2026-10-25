@@ -87,7 +87,7 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 overflow-x-auto pb-2">
             {concerns.map((concern) => (
               <Link
                 key={concern.slug}
