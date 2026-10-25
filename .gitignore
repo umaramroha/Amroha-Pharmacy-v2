@@ -13,3 +13,6 @@ scripts/check-admin.js
 
 # Backup files
 *.bak
+
+# TypeScript build metadata
+tsconfig.tsbuildinfo
