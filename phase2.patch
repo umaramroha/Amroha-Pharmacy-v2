@@ -1,0 +1,1148 @@
+diff --git a/src/app/api/admin/products/[id]/route.ts b/src/app/api/admin/products/[id]/route.ts
+index dcca68d..2f6c046 100644
+--- a/src/app/api/admin/products/[id]/route.ts
++++ b/src/app/api/admin/products/[id]/route.ts
+@@ -3,6 +3,11 @@ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
+ import { prisma } from "@/lib/prisma";
+ import { adminSessionOptions } from "@/lib/adminSession";
++import {
++  updateProductSchema,
++  validationErrorBody,
++  MRP_BELOW_PRICE_MESSAGE,
++} from "@/lib/productSchema";
+ 
+ type AdminSessionData = {
+   adminId?: string;
+@@ -19,15 +24,6 @@ async function isAdmin() {
+   return session.isAdminLoggedIn && session.adminId;
+ }
+ 
+-function normalizeImages(input: unknown): string[] {
+-  if (!Array.isArray(input)) return [];
+-  return input
+-    .filter((u): u is string => typeof u === "string")
+-    .map((u) => u.trim())
+-    .filter((u) => u.length > 0)
+-    .slice(0, 10);
+-}
+-
+ export async function GET(
+   request: Request,
+   { params }: { params: { id: string } }
+@@ -60,27 +56,77 @@ export async function PATCH(
+     if (!(await isAdmin())) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
+-    const body = await request.json();
+-    const { name, description, price, mrp, image, images, category, stock, isActive } = body;
++
++    let body: unknown;
++    try {
++      body = await request.json();
++    } catch {
++      return NextResponse.json(
++        { error: "Request body must be valid JSON" },
++        { status: 400 }
++      );
++    }
++
++    // Strict validation of every field that was sent (partial updates allowed)
++    const parsed = updateProductSchema.safeParse(body);
++    if (!parsed.success) {
++      return NextResponse.json(validationErrorBody(parsed.error), {
++        status: 400,
++      });
++    }
++    const data = parsed.data;
++
++    // MRP must be >= price. When both are sent the schema already checked it.
++    // When only one is sent, compare it with the value saved in the database.
++    if ((data.price !== undefined) !== (data.mrp !== undefined)) {
++      const saved = await prisma.product.findUnique({
++        where: { id: params.id },
++        select: { price: true, mrp: true },
++      });
++      if (!saved) {
++        return NextResponse.json({ error: "Product not found" }, { status: 404 });
++      }
++
++      const price = data.price !== undefined ? data.price : Number(saved.price);
++      const mrp =
++        data.mrp !== undefined
++          ? data.mrp
++          : saved.mrp === null
++          ? null
++          : Number(saved.mrp);
++
++      if (mrp !== null && mrp < price) {
++        const message =
++          data.price !== undefined
++            ? `${MRP_BELOW_PRICE_MESSAGE} (saved MRP is ${mrp}). Update the MRP as well.`
++            : `${MRP_BELOW_PRICE_MESSAGE} (saved price is ${price}).`;
++        return NextResponse.json(
++          {
++            error: message,
++            issues: [{ field: "mrp", message }],
++          },
++          { status: 400 }
++        );
++      }
++    }
+ 
+     const updateData: any = {};
+ 
+-    if (name !== undefined) updateData.name = name.trim();
+-    if (description !== undefined)
+-      updateData.description = description?.trim() || null;
+-    if (price !== undefined) updateData.price = parseFloat(price);
+-    if (mrp !== undefined) updateData.mrp = mrp ? parseFloat(mrp) : null;
+-    if (category !== undefined)
+-      updateData.category = category?.trim() || null;
+-    if (stock !== undefined) updateData.stock = parseInt(stock);
+-    if (isActive !== undefined) updateData.isActive = isActive;
++    if (data.name !== undefined) updateData.name = data.name;
++    if (data.description !== undefined)
++      updateData.description = data.description?.trim() || null;
++    if (data.price !== undefined) updateData.price = data.price;
++    if (data.mrp !== undefined) updateData.mrp = data.mrp; // null clears it
++    if (data.category !== undefined)
++      updateData.category = data.category?.trim() || null;
++    if (data.stock !== undefined) updateData.stock = data.stock;
++    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+ 
+-    if (images !== undefined) {
+-      const cleanImages = normalizeImages(images);
+-      updateData.images = cleanImages;
+-      updateData.image = cleanImages[0] || null;
+-    } else if (image !== undefined) {
+-      updateData.image = image?.trim() || null;
++    if (data.images !== undefined) {
++      updateData.images = data.images;
++      updateData.image = data.images[0] || null;
++    } else if (data.image !== undefined) {
++      updateData.image = data.image?.trim() || null;
+     }
+ 
+     const product = await prisma.product.update({
+diff --git a/src/app/api/admin/products/route.ts b/src/app/api/admin/products/route.ts
+index c9189c8..00f4261 100644
+--- a/src/app/api/admin/products/route.ts
++++ b/src/app/api/admin/products/route.ts
+@@ -3,6 +3,10 @@ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
+ import { prisma } from "@/lib/prisma";
+ import { adminSessionOptions } from "@/lib/adminSession";
++import {
++  createProductSchema,
++  validationErrorBody,
++} from "@/lib/productSchema";
+ 
+ type AdminSessionData = {
+   adminId?: string;
+@@ -19,15 +23,6 @@ async function isAdmin() {
+   return session.isAdminLoggedIn && session.adminId;
+ }
+ 
+-function normalizeImages(input: unknown): string[] {
+-  if (!Array.isArray(input)) return [];
+-  return input
+-    .filter((u): u is string => typeof u === "string")
+-    .map((u) => u.trim())
+-    .filter((u) => u.length > 0)
+-    .slice(0, 10);
+-}
+-
+ export async function GET() {
+   try {
+     if (!(await isAdmin())) {
+@@ -51,18 +46,28 @@ export async function POST(request: Request) {
+     if (!(await isAdmin())) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
+-    const body = await request.json();
+-    const { name, slug, description, price, mrp, image, images, category, stock } = body;
+ 
+-    if (!name || !slug || !price) {
++    let body: unknown;
++    try {
++      body = await request.json();
++    } catch {
+       return NextResponse.json(
+-        { error: "Name, slug and price are required" },
++        { error: "Request body must be valid JSON" },
+         { status: 400 }
+       );
+     }
+ 
++    // Strict validation (price > 0, stock >= 0, mrp null or >= price, isActive boolean, ...)
++    const parsed = createProductSchema.safeParse(body);
++    if (!parsed.success) {
++      return NextResponse.json(validationErrorBody(parsed.error), {
++        status: 400,
++      });
++    }
++    const data = parsed.data;
++
+     const existing = await prisma.product.findUnique({
+-      where: { slug: slug.toLowerCase().trim() },
++      where: { slug: data.slug },
+     });
+ 
+     if (existing) {
+@@ -72,26 +77,23 @@ export async function POST(request: Request) {
+       );
+     }
+ 
+-    const cleanImages = normalizeImages(images);
++    const cleanImages = data.images ?? [];
++    const primaryImage = data.image?.trim() || null;
+     const finalImages =
+-      cleanImages.length > 0
+-        ? cleanImages
+-        : image?.trim()
+-          ? [image.trim()]
+-          : [];
++      cleanImages.length > 0 ? cleanImages : primaryImage ? [primaryImage] : [];
+ 
+     const product = await prisma.product.create({
+       data: {
+-        name: name.trim(),
+-        slug: slug.toLowerCase().trim(),
+-        description: description?.trim() || null,
+-        price: parseFloat(price),
+-        mrp: mrp ? parseFloat(mrp) : null,
+-        image: image?.trim() || finalImages[0] || null,
++        name: data.name,
++        slug: data.slug,
++        description: data.description?.trim() || null,
++        price: data.price,
++        mrp: data.mrp ?? null,
++        image: primaryImage || finalImages[0] || null,
+         images: finalImages,
+-        category: category?.trim() || null,
+-        stock: parseInt(stock) || 0,
+-        isActive: true,
++        category: data.category?.trim() || null,
++        stock: data.stock ?? 0,
++        isActive: data.isActive ?? true,
+       },
+     });
+ 
+diff --git a/src/app/api/orders/quote/route.ts b/src/app/api/orders/quote/route.ts
+new file mode 100644
+index 0000000..d8db97e
+--- /dev/null
++++ b/src/app/api/orders/quote/route.ts
+@@ -0,0 +1,100 @@
++import { NextResponse } from "next/server";
++import { getIronSession } from "iron-session";
++import { cookies } from "next/headers";
++import { z } from "zod";
++import { sessionOptions, SessionData } from "@/lib/session";
++import { mergeCartItems, checkCartLimits, priceCart } from "@/lib/pricing";
++
++/**
++ * POST /api/orders/quote
++ *
++ * Returns the authoritative subtotal / delivery fee / total for a cart,
++ * calculated on the server from the database prices. The checkout page uses
++ * this BEFORE showing the UPI amount, so a customer never pays an amount
++ * based on prices that were saved in their browser.
++ *
++ * Nothing is created or changed in the database.
++ */
++const QuoteInput = z.object({
++  items: z
++    .array(
++      z.object({
++        id: z.string().min(1).max(64),
++        quantity: z.number().int().min(1, "Invalid item data"),
++      })
++    )
++    .min(1, "Your cart is empty")
++    .max(100, "Too many items in the order"),
++});
++
++export async function POST(request: Request) {
++  try {
++    const session = await getIronSession<SessionData>(
++      cookies(),
++      sessionOptions
++    );
++
++    if (!session.isLoggedIn || !session.userId) {
++      return NextResponse.json(
++        { error: "Please login to continue" },
++        { status: 401 }
++      );
++    }
++
++    let body: unknown;
++    try {
++      body = await request.json();
++    } catch {
++      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
++    }
++
++    const parsed = QuoteInput.safeParse(body);
++    if (!parsed.success) {
++      return NextResponse.json(
++        { error: parsed.error.issues[0]?.message || "Invalid cart data" },
++        { status: 400 }
++      );
++    }
++
++    // Same merge + limits + pricing as the real order (see lib/pricing.ts)
++    const qtyByProduct = mergeCartItems(parsed.data.items);
++
++    const limitError = checkCartLimits(qtyByProduct);
++    if (limitError) {
++      return NextResponse.json(
++        { error: limitError.error },
++        { status: limitError.status }
++      );
++    }
++
++    const priced = await priceCart(qtyByProduct);
++    if (!priced.ok) {
++      return NextResponse.json(
++        { error: priced.error },
++        { status: priced.status }
++      );
++    }
++
++    return NextResponse.json({
++      success: true,
++      quote: {
++        subtotal: Number(priced.subtotal),
++        deliveryFee: Number(priced.deliveryFee),
++        total: Number(priced.total),
++        items: priced.lines.map((l) => ({
++          id: l.productId,
++          name: l.name,
++          quantity: l.quantity,
++          unitPrice: Number(l.unitPrice),
++          lineTotal: Number(l.unitPrice.mul(l.quantity)),
++        })),
++      },
++    });
++  } catch (error: any) {
++    console.error("Order quote error:", error);
++    return NextResponse.json(
++      { error: "Could not calculate the order total. Please try again." },
++      { status: 500 }
++    );
++  }
++}
+diff --git a/src/app/api/orders/route.ts b/src/app/api/orders/route.ts
+index ef50f0c..18f4285 100644
+--- a/src/app/api/orders/route.ts
++++ b/src/app/api/orders/route.ts
+@@ -6,18 +6,19 @@ import {
+ import { NextResponse } from "next/server";
+ import { getIronSession } from "iron-session";
+ import { cookies } from "next/headers";
+-import { Prisma } from "@prisma/client";
+ import { z } from "zod";
+ import { prisma } from "@/lib/prisma";
++import {
++  mergeCartItems,
++  checkCartLimits,
++  priceCart,
++} from "@/lib/pricing";
+ import { sessionOptions, SessionData } from "@/lib/session";
+ import { rateLimit } from "@/lib/rateLimit";
+-import { deliveryConfig } from "@/lib/config";
+ 
+ // ==============================
+ // CONSTANTS
+ // ==============================
+-const MAX_QTY_PER_PRODUCT = 10;
+-const MAX_TOTAL_ITEMS = 30;
+ const MAX_ORDERS_PER_DAY = 10;
+ const DAY_MS = 24 * 60 * 60 * 1000;
+ 
+@@ -148,33 +149,13 @@ export async function POST(request: Request) {
+     // 3. MERGE DUPLICATE PRODUCT IDS, THEN CHECK LIMITS
+     //    (two lines of the same product must not bypass the per-product cap)
+     // ==============================
+-    const qtyByProduct = new Map<string, number>();
+-    for (const item of input.items) {
+-      qtyByProduct.set(
+-        item.id,
+-        (qtyByProduct.get(item.id) ?? 0) + item.quantity
+-      );
+-    }
+-
+-    let totalItemsCount = 0;
+-    for (const qty of Array.from(qtyByProduct.values())) {
+-      if (qty > MAX_QTY_PER_PRODUCT) {
+-        return NextResponse.json(
+-          {
+-            error: `Maximum ${MAX_QTY_PER_PRODUCT} units allowed per product. Please reduce the quantity.`,
+-          },
+-          { status: 400 }
+-        );
+-      }
+-      totalItemsCount += qty;
+-    }
++    const qtyByProduct = mergeCartItems(input.items);
+ 
+-    if (totalItemsCount > MAX_TOTAL_ITEMS) {
++    const limitError = checkCartLimits(qtyByProduct);
++    if (limitError) {
+       return NextResponse.json(
+-        {
+-          error: `Maximum ${MAX_TOTAL_ITEMS} items allowed per order. For bulk orders, please contact us on WhatsApp.`,
+-        },
+-        { status: 400 }
++        { error: limitError.error },
++        { status: limitError.status }
+       );
+     }
+ 
+@@ -198,80 +179,19 @@ export async function POST(request: Request) {
+     }
+ 
+     // ==============================
+-    // 5. LOAD REAL PRODUCTS + PRICES FROM THE DATABASE
++    // 5. PRICE THE CART ON THE SERVER
++    //    Real products + prices from the database, stock/active checks, and
++    //    subtotal / delivery fee / total. Shared with POST /api/orders/quote
++    //    (the amount shown for UPI), so both always agree. See lib/pricing.ts
+     // ==============================
+-    const productIds = Array.from(qtyByProduct.keys());
+-    const products = await prisma.product.findMany({
+-      where: { id: { in: productIds } },
+-      select: {
+-        id: true,
+-        name: true,
+-        price: true,
+-        stock: true,
+-        isActive: true,
+-      },
+-    });
+-    const productById = new Map(products.map((p) => [p.id, p]));
+-
+-    const lines: {
+-      productId: string;
+-      name: string;
+-      quantity: number;
+-      unitPrice: Prisma.Decimal;
+-    }[] = [];
+-
+-    for (const [productId, quantity] of Array.from(qtyByProduct.entries())) {
+-      const product = productById.get(productId);
+-
+-      if (!product) {
+-        return NextResponse.json(
+-          { error: `Product not found: ${productId}` },
+-          { status: 400 }
+-        );
+-      }
+-      if (!product.isActive) {
+-        return NextResponse.json(
+-          { error: `${product.name} abhi available nahi hai.` },
+-          { status: 400 }
+-        );
+-      }
+-      if (product.stock < quantity) {
+-        return NextResponse.json(
+-          {
+-            error: `Only ${product.stock} units available for "${product.name}". Please reduce the quantity.`,
+-          },
+-          { status: 400 }
+-        );
+-      }
+-      if (product.price.lte(0)) {
+-        return NextResponse.json(
+-          {
+-            error: `${product.name} is not available for online order right now. Please contact us on WhatsApp.`,
+-          },
+-          { status: 400 }
+-        );
+-      }
+-
+-      lines.push({
+-        productId,
+-        name: product.name,
+-        quantity,
+-        unitPrice: product.price,
+-      });
++    const priced = await priceCart(qtyByProduct);
++    if (!priced.ok) {
++      return NextResponse.json(
++        { error: priced.error },
++        { status: priced.status }
++      );
+     }
+-
+-    // ==============================
+-    // 6. CALCULATE MONEY ON THE SERVER (Decimal = no floating point errors)
+-    //    delivery: subtotal >= 500 ? 0 : 50   (values come from lib/config.ts)
+-    // ==============================
+-    const subtotal = lines.reduce(
+-      (sum, l) => sum.plus(l.unitPrice.mul(l.quantity)),
+-      new Prisma.Decimal(0)
+-    );
+-    const deliveryFee = subtotal.gte(deliveryConfig.freeAbove)
+-      ? new Prisma.Decimal(0)
+-      : new Prisma.Decimal(deliveryConfig.fee);
+-    const total = subtotal.plus(deliveryFee);
++    const { lines, subtotal, deliveryFee, total } = priced;
+ 
+     // ==============================
+     // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
+diff --git a/src/app/checkout/page.tsx b/src/app/checkout/page.tsx
+index caba9bc..792bff3 100644
+--- a/src/app/checkout/page.tsx
++++ b/src/app/checkout/page.tsx
+@@ -19,6 +19,20 @@ const validatePincode = (pincode: string): boolean => {
+   return /^[1-9]\d{5}$/.test(pincode);
+ };
+ 
++// Prices calculated by the server (POST /api/orders/quote)
++type ServerQuote = {
++  subtotal: number;
++  deliveryFee: number;
++  total: number;
++  items: {
++    id: string;
++    name: string;
++    quantity: number;
++    unitPrice: number;
++    lineTotal: number;
++  }[];
++};
++
+ export default function CheckoutPage() {
+   const { items, totalPrice, totalItems, clearCart } = useCart();
+   const { user, loading } = useAuth();
+@@ -27,8 +41,23 @@ export default function CheckoutPage() {
+   const [placingOrder, setPlacingOrder] = useState(false);
+   const [orderError, setOrderError] = useState("");
+ 
+-  const deliveryFee = totalPrice >= 500 ? 0 : 50;
+-  const finalTotal = totalPrice + deliveryFee;
++  // Authoritative prices from the server. The prices saved in the browser's
++  // cart can be old, so they are only a fallback while the server answers.
++  const [quote, setQuote] = useState<ServerQuote | null>(null);
++  const [quoteStatus, setQuoteStatus] = useState<
++    "idle" | "loading" | "ready" | "error"
++  >("idle");
++  const [quoteError, setQuoteError] = useState("");
++  // Total the server saved on the order (the cart is already empty on the success screen)
++  const [placedTotal, setPlacedTotal] = useState<number | null>(null);
++
++  const subtotal = quote ? quote.subtotal : totalPrice;
++  const deliveryFee = quote
++    ? quote.deliveryFee
++    : totalPrice >= 500
++    ? 0
++    : 50;
++  const finalTotal = quote ? quote.total : totalPrice + deliveryFee;
+ 
+   const [formData, setFormData] = useState({
+     name: "",
+@@ -47,17 +76,84 @@ export default function CheckoutPage() {
+     }
+   }, [orderPlaced]);
+ 
+-  const upiLink = `upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(
+-    siteConfig.upiName
+-  )}&am=${finalTotal}&cu=INR&tn=${encodeURIComponent(
+-    `Order ${Date.now().toString().slice(-6)}`
+-  )}`;
++  // Ask the server for the real prices/total whenever the cart changes
++  const cartKey = items
++    .map((i) => `${i.id}:${i.quantity}`)
++    .sort()
++    .join(",");
++  const userId = user?.id;
++
++  useEffect(() => {
++    if (orderPlaced) return; // cart is cleared after ordering — keep what we have
++    if (!userId || cartKey === "") {
++      setQuote(null);
++      setQuoteStatus("idle");
++      return;
++    }
++
++    const controller = new AbortController();
++    setQuoteStatus("loading");
++    setQuoteError("");
++
++    (async () => {
++      try {
++        const res = await fetch("/api/orders/quote", {
++          method: "POST",
++          headers: { "Content-Type": "application/json" },
++          body: JSON.stringify({
++            items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
++          }),
++          signal: controller.signal,
++        });
++        const data = await res.json();
++
++        if (!res.ok || !data.quote) {
++          setQuote(null);
++          setQuoteError(
++            data.error || "Could not confirm the order total. Please try again."
++          );
++          setQuoteStatus("error");
++          return;
++        }
++
++        setQuote(data.quote);
++        setQuoteStatus("ready");
++      } catch (err) {
++        if (controller.signal.aborted) return;
++        console.error("Quote error:", err);
++        setQuote(null);
++        setQuoteError("Network error. Could not confirm the order total.");
++        setQuoteStatus("error");
++      }
++    })();
++
++    return () => controller.abort();
++    // cartKey stands in for `items` (same ids + quantities => same quote)
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [cartKey, userId, orderPlaced]);
++
++  // The UPI link only exists once the SERVER has confirmed the amount
++  const upiReady = quoteStatus === "ready" && quote !== null;
++  const upiLink = upiReady
++    ? `upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(
++        siteConfig.upiName
++      )}&am=${quote.total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
++        `Order ${Date.now().toString().slice(-6)}`
++      )}`
++    : undefined;
++
++  // Message to show for a failed quote (only matters when paying by UPI)
++  const formError =
++    orderError ||
++    (paymentMethod === "upi" && quoteStatus === "error" ? quoteError : "");
++
++  const quoteLine = (id: string) => quote?.items.find((l) => l.id === id);
+ 
+   const paymentScreenshotMessage = `📸 *Payment Screenshot*
+ 
+ 👤 Name: ${formData.name}
+ 📱 Mobile: ${formData.mobile}
+-💰 Amount: ₹${finalTotal}
++💰 Amount: ₹${placedTotal ?? finalTotal}
+ 💳 Payment Method: UPI
+ 
+ Please find my payment screenshot attached. Kindly confirm my order.`;
+@@ -104,12 +200,8 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+           pincode: formData.pincode,
+           items: items.map((i) => ({
+             id: i.id,
+-            price: i.price,
+             quantity: i.quantity,
+           })),
+-          subtotal: totalPrice,
+-          deliveryFee: deliveryFee,
+-          total: finalTotal,
+           paymentMethod: paymentMethod,
+         }),
+       });
+@@ -122,6 +214,9 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+         return;
+       }
+ 
++      const savedTotal = Number(data.order?.total);
++      if (Number.isFinite(savedTotal)) setPlacedTotal(savedTotal);
++
+       setOrderPlaced(true);
+       clearCart();
+     } catch (err) {
+@@ -238,9 +333,9 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           {/* Left: Form */}
+           <div className="lg:col-span-2 space-y-6">
+-            {orderError && (
++            {formError && (
+               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+-                {orderError}
++                {formError}
+               </div>
+             )}
+ 
+@@ -427,7 +522,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+                   <div className="mt-4 p-5 bg-gray-50 rounded-lg border space-y-4">
+                     <div className="text-center">
+                       <p className="text-sm font-semibold text-gray-700 mb-3">
+-                        Scan to pay ₹{finalTotal}
++                        Scan to pay ₹{upiReady ? finalTotal : "…"}
+                       </p>
+                       <div className="w-64 h-64 mx-auto bg-white border-2 border-primary/20 rounded-lg flex items-center justify-center p-2">
+                         <img
+@@ -455,9 +550,10 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+                       </p>
+                       <a
+                         href={upiLink}
++                        aria-disabled={upiReady ? undefined : true}
+                         className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full font-semibold transition"
+                       >
+-                        💳 Pay ₹{finalTotal} via UPI App
++                        💳 Pay ₹{upiReady ? finalTotal : "…"} via UPI App
+                       </a>
+                       <div className="mt-3 p-2 bg-white rounded-lg border inline-block">
+                         <p className="text-xs text-gray-500 mb-0.5">UPI ID:</p>
+@@ -500,7 +596,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+                       {item.name} × {item.quantity}
+                     </span>
+                     <span className="font-semibold">
+-                      ₹{item.price * item.quantity}
++                      ₹{quoteLine(item.id)?.lineTotal ?? item.price * item.quantity}
+                     </span>
+                   </div>
+                 ))}
+@@ -511,7 +607,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
+                   <span className="text-gray-600">
+                     Subtotal ({totalItems} items)
+                   </span>
+-                  <span className="font-semibold">₹{totalPrice}</span>
++                  <span className="font-semibold">₹{subtotal}</span>
+                 </div>
+                 <div className="flex justify-between text-sm">
+                   <span className="text-gray-600">Delivery Fee</span>
+diff --git a/src/lib/pricing.ts b/src/lib/pricing.ts
+new file mode 100644
+index 0000000..e5a6df4
+--- /dev/null
++++ b/src/lib/pricing.ts
+@@ -0,0 +1,148 @@
++import { Prisma } from "@prisma/client";
++import { prisma } from "@/lib/prisma";
++import { deliveryConfig } from "@/lib/config";
++
++/**
++ * Single source of truth for "how much does this cart cost?".
++ *
++ * Used by BOTH:
++ *   - POST /api/orders/quote  (the total shown to the customer / put in the UPI link)
++ *   - POST /api/orders        (the total saved on the order)
++ * so the amount a customer is asked to pay can never differ from the amount
++ * the order is saved with.
++ */
++
++export const MAX_QTY_PER_PRODUCT = 10;
++export const MAX_TOTAL_ITEMS = 30;
++
++export type CartLineInput = { id: string; quantity: number };
++
++export type PricedLine = {
++  productId: string;
++  name: string;
++  quantity: number;
++  unitPrice: Prisma.Decimal;
++};
++
++export type PricingFailure = { ok: false; status: number; error: string };
++
++export type PricingSuccess = {
++  ok: true;
++  lines: PricedLine[];
++  subtotal: Prisma.Decimal;
++  deliveryFee: Prisma.Decimal;
++  total: Prisma.Decimal;
++};
++
++const fail = (status: number, error: string): PricingFailure => ({
++  ok: false,
++  status,
++  error,
++});
++
++/** Merge duplicate product ids so two lines of the same product can't bypass the limits. */
++export function mergeCartItems(items: CartLineInput[]): Map<string, number> {
++  const qtyByProduct = new Map<string, number>();
++  for (const item of items) {
++    qtyByProduct.set(item.id, (qtyByProduct.get(item.id) ?? 0) + item.quantity);
++  }
++  return qtyByProduct;
++}
++
++/** Per-product and per-order quantity caps. Returns null when everything is fine. */
++export function checkCartLimits(
++  qtyByProduct: Map<string, number>
++): PricingFailure | null {
++  let totalItemsCount = 0;
++  for (const qty of Array.from(qtyByProduct.values())) {
++    if (qty > MAX_QTY_PER_PRODUCT) {
++      return fail(
++        400,
++        `Maximum ${MAX_QTY_PER_PRODUCT} units allowed per product. Please reduce the quantity.`
++      );
++    }
++    totalItemsCount += qty;
++  }
++
++  if (totalItemsCount > MAX_TOTAL_ITEMS) {
++    return fail(
++      400,
++      `Maximum ${MAX_TOTAL_ITEMS} items allowed per order. For bulk orders, please contact us on WhatsApp.`
++    );
++  }
++  return null;
++}
++
++/**
++ * subtotal, delivery fee and total (Decimal = no floating point errors).
++ * Delivery: subtotal >= freeAbove (500) ? 0 : fee (50)  — values from lib/config.ts
++ */
++export function calculateTotals(
++  lines: { unitPrice: Prisma.Decimal; quantity: number }[]
++) {
++  const subtotal = lines.reduce(
++    (sum, l) => sum.plus(l.unitPrice.mul(l.quantity)),
++    new Prisma.Decimal(0)
++  );
++  const deliveryFee = subtotal.gte(deliveryConfig.freeAbove)
++    ? new Prisma.Decimal(0)
++    : new Prisma.Decimal(deliveryConfig.fee);
++  const total = subtotal.plus(deliveryFee);
++  return { subtotal, deliveryFee, total };
++}
++
++/**
++ * Loads the real products from the database, checks they can be bought
++ * (exists, active, in stock, has a price) and calculates the totals.
++ * The client never supplies a price.
++ */
++export async function priceCart(
++  qtyByProduct: Map<string, number>
++): Promise<PricingFailure | PricingSuccess> {
++  const productIds = Array.from(qtyByProduct.keys());
++  const products = await prisma.product.findMany({
++    where: { id: { in: productIds } },
++    select: {
++      id: true,
++      name: true,
++      price: true,
++      stock: true,
++      isActive: true,
++    },
++  });
++  const productById = new Map(products.map((p) => [p.id, p]));
++
++  const lines: PricedLine[] = [];
++
++  for (const [productId, quantity] of Array.from(qtyByProduct.entries())) {
++    const product = productById.get(productId);
++
++    if (!product) {
++      return fail(400, `Product not found: ${productId}`);
++    }
++    if (!product.isActive) {
++      return fail(400, `${product.name} abhi available nahi hai.`);
++    }
++    if (product.stock < quantity) {
++      return fail(
++        400,
++        `Only ${product.stock} units available for "${product.name}". Please reduce the quantity.`
++      );
++    }
++    if (product.price.lte(0)) {
++      return fail(
++        400,
++        `${product.name} is not available for online order right now. Please contact us on WhatsApp.`
++      );
++    }
++
++    lines.push({
++      productId,
++      name: product.name,
++      quantity,
++      unitPrice: product.price,
++    });
++  }
++
++  return { ok: true, lines, ...calculateTotals(lines) };
++}
+diff --git a/src/lib/productSchema.ts b/src/lib/productSchema.ts
+new file mode 100644
+index 0000000..bc8c99f
+--- /dev/null
++++ b/src/lib/productSchema.ts
+@@ -0,0 +1,275 @@
++import { z } from "zod";
++
++/**
++ * Validation for the admin "create / edit product" payload.
++ *
++ * The admin form sends numbers as strings ("299", "0") and an empty string
++ * for "no MRP", so numeric fields accept both numbers and numeric strings.
++ * Everything else is rejected with a clear message.
++ */
++
++const MAX_PRICE = 1_000_000; // ₹10 lakh — guards against typos like 29900000
++const MAX_STOCK = 1_000_000;
++
++// ---------------------------------------------------------------
++// numeric helpers
++// ---------------------------------------------------------------
++
++/** Rupee amount: > 0, at most 2 decimals. Accepts 299, "299" or "299.50". */
++function money(label: string) {
++  return z
++    .union([z.number(), z.string()], {
++      errorMap: (_issue, ctx) => ({
++        message:
++          ctx.data === undefined || ctx.data === null
++            ? `${label} is required`
++            : `${label} must be a number`,
++      }),
++    })
++    .transform((value, ctx) => {
++      if (typeof value === "string") {
++        const text = value.trim();
++        if (text === "") {
++          ctx.addIssue({
++            code: z.ZodIssueCode.custom,
++            message: `${label} is required`,
++          });
++          return z.NEVER;
++        }
++        if (!/^-?\d+(\.\d{1,2})?$/.test(text)) {
++          ctx.addIssue({
++            code: z.ZodIssueCode.custom,
++            message: `${label} must be a number with at most 2 decimal places`,
++          });
++          return z.NEVER;
++        }
++        return Number(text);
++      }
++      return value;
++    })
++    .pipe(
++      z
++        .number()
++        .finite(`${label} must be a valid number`)
++        .gt(0, `${label} must be greater than 0`)
++        .max(MAX_PRICE, `${label} cannot be more than ${MAX_PRICE}`)
++        .refine(
++          (n) => Math.abs(n * 100 - Math.round(n * 100)) < 1e-6,
++          `${label} can have at most 2 decimal places`
++        )
++    );
++}
++
++/** Same as money(), but null / "" / missing means "none". */
++function optionalMoney(label: string) {
++  return z.preprocess(
++    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
++    money(label).nullable()
++  );
++}
++
++/** Whole number >= 0 (0 is allowed: it means "out of stock"). */
++function stock() {
++  return z
++    .union([z.number(), z.string()], {
++      errorMap: (_issue, ctx) => ({
++        message:
++          ctx.data === undefined || ctx.data === null
++            ? "Stock is required"
++            : "Stock must be a whole number",
++      }),
++    })
++    .transform((value, ctx) => {
++      if (typeof value === "string") {
++        const text = value.trim();
++        if (!/^-?\d+$/.test(text)) {
++          ctx.addIssue({
++            code: z.ZodIssueCode.custom,
++            message:
++              text === ""
++                ? "Stock is required"
++                : "Stock must be a whole number (0 or more)",
++          });
++          return z.NEVER;
++        }
++        return Number(text);
++      }
++      return value;
++    })
++    .pipe(
++      z
++        .number()
++        .int("Stock must be a whole number")
++        .min(0, "Stock cannot be negative")
++        .max(MAX_STOCK, `Stock cannot be more than ${MAX_STOCK}`)
++    );
++}
++
++// ---------------------------------------------------------------
++// text / url helpers
++// ---------------------------------------------------------------
++
++function isHttpUrl(value: string): boolean {
++  try {
++    const url = new URL(value);
++    return url.protocol === "http:" || url.protocol === "https:";
++  } catch {
++    return false;
++  }
++}
++
++const name = z
++  .string({
++    required_error: "Name is required",
++    invalid_type_error: "Name must be text",
++  })
++  .trim()
++  .min(1, "Name is required")
++  .max(200, "Name is too long (max 200 characters)");
++
++const slug = z
++  .string({
++    required_error: "Slug is required",
++    invalid_type_error: "Slug must be text",
++  })
++  .trim()
++  .toLowerCase()
++  .min(1, "Slug is required")
++  .max(100, "Slug is too long (max 100 characters)")
++  .regex(
++    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
++    "Slug can only have lowercase letters, numbers and hyphens (example: majoon-special)"
++  );
++
++const description = z
++  .string({ invalid_type_error: "Description must be text" })
++  .trim()
++  .max(5000, "Description is too long (max 5000 characters)")
++  .nullable()
++  .optional();
++
++const category = z
++  .string({ invalid_type_error: "Category must be text" })
++  .trim()
++  .max(80, "Category is too long (max 80 characters)")
++  .nullable()
++  .optional();
++
++const image = z
++  .string({ invalid_type_error: "Image must be a URL" })
++  .trim()
++  .max(2000, "Image URL is too long")
++  .refine(
++    (v) => v === "" || isHttpUrl(v),
++    "Image must be a valid http(s) URL"
++  )
++  .nullable()
++  .optional();
++
++// Blank entries are dropped (the admin form can send empty rows); the rest must be URLs.
++const images = z
++  .array(z.string({ invalid_type_error: "Each image must be a URL" }), {
++    invalid_type_error: "Images must be a list of URLs",
++  })
++  .transform((list) => list.map((u) => u.trim()).filter((u) => u.length > 0))
++  .pipe(
++    z
++      .array(
++        z
++          .string()
++          .max(2000, "Image URL is too long")
++          .refine(isHttpUrl, "Each image must be a valid http(s) URL")
++      )
++      .max(10, "You can add at most 10 images")
++  )
++  .optional();
++
++const isActive = z.boolean({
++  invalid_type_error: "isActive must be true or false",
++});
++
++// ---------------------------------------------------------------
++// cross-field rule: MRP (if given) must be >= selling price
++// ---------------------------------------------------------------
++const MRP_MESSAGE = "MRP must be greater than or equal to the selling price";
++
++function checkMrpAgainstPrice(
++  data: { price?: unknown; mrp?: unknown },
++  ctx: z.RefinementCtx
++) {
++  if (
++    typeof data.price === "number" &&
++    typeof data.mrp === "number" &&
++    data.mrp < data.price
++  ) {
++    ctx.addIssue({
++      code: z.ZodIssueCode.custom,
++      path: ["mrp"],
++      message: MRP_MESSAGE,
++    });
++  }
++}
++
++// ---------------------------------------------------------------
++// schemas
++// ---------------------------------------------------------------
++const objectError = { invalid_type_error: "Request body must be a JSON object" };
++
++/** POST /api/admin/products */
++export const createProductSchema = z
++  .object(
++    {
++      name,
++      slug,
++      description,
++      price: money("Price"),
++      mrp: optionalMoney("MRP").optional(),
++      image,
++      images,
++      category,
++      stock: stock().optional(), // missing = 0
++      isActive: isActive.optional(), // missing = true
++    },
++    objectError
++  )
++  .superRefine(checkMrpAgainstPrice);
++
++/**
++ * PATCH /api/admin/products/[id]  — every field optional (partial update).
++ * `slug` is intentionally not editable here (the admin form sends it, it is ignored).
++ * If only one of price / mrp is sent, the route compares it with the saved one.
++ */
++export const updateProductSchema = z
++  .object(
++    {
++      name: name.optional(),
++      description,
++      price: money("Price").optional(),
++      mrp: optionalMoney("MRP").optional(),
++      image,
++      images,
++      category,
++      stock: stock().optional(),
++      isActive: isActive.optional(),
++    },
++    objectError
++  )
++  .superRefine(checkMrpAgainstPrice);
++
++export type CreateProductInput = z.infer<typeof createProductSchema>;
++export type UpdateProductInput = z.infer<typeof updateProductSchema>;
++
++export const MRP_BELOW_PRICE_MESSAGE = MRP_MESSAGE;
++
++/**
++ * Body for the HTTP 400 response:
++ *   { error: "<first problem, readable>", issues: [{ field, message }, ...] }
++ * The admin page already shows `error`, so no UI change is needed.
++ */
++export function validationErrorBody(error: z.ZodError) {
++  const issues = error.issues.map((i) => ({
++    field: i.path.length ? i.path.join(".") : "body",
++    message: i.message,
++  }));
++  return { error: issues[0]?.message ?? "Invalid product data", issues };
++}
+

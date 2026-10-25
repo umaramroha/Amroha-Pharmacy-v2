@@ -22,6 +22,7 @@ model Product {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
+  @@index([isActive, category])
 }
 
 model Order {
@@ -44,6 +45,9 @@ model Order {
   updatedAt      DateTime    @updatedAt
   customer       Customer?   @relation(fields: [customerId], references: [id])
   items          OrderItem[]
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -54,6 +58,8 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Decimal
+  @@index([orderId])
+  @@index([productId])
 }
 
 model AdminUser {
@@ -88,4 +94,11 @@ model Banner {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model RateLimit {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
 }

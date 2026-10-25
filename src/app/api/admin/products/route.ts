@@ -3,6 +3,10 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
+import {
+  createProductSchema,
+  validationErrorBody,
+} from "@/lib/productSchema";
 
 type AdminSessionData = {
   adminId?: string;
@@ -17,15 +21,6 @@ async function isAdmin() {
     adminSessionOptions
   );
   return session.isAdminLoggedIn && session.adminId;
-}
-
-function normalizeImages(input: unknown): string[] {
-  if (!Array.isArray(input)) return [];
-  return input
-    .filter((u): u is string => typeof u === "string")
-    .map((u) => u.trim())
-    .filter((u) => u.length > 0)
-    .slice(0, 10);
 }
 
 export async function GET() {
@@ -51,18 +46,28 @@ export async function POST(request: Request) {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json();
-    const { name, slug, description, price, mrp, image, images, category, stock } = body;
 
-    if (!name || !slug || !price) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: "Name, slug and price are required" },
+        { error: "Request body must be valid JSON" },
         { status: 400 }
       );
     }
 
+    // Strict validation (price > 0, stock >= 0, mrp null or >= price, isActive boolean, ...)
+    const parsed = createProductSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(validationErrorBody(parsed.error), {
+        status: 400,
+      });
+    }
+    const data = parsed.data;
+
     const existing = await prisma.product.findUnique({
-      where: { slug: slug.toLowerCase().trim() },
+      where: { slug: data.slug },
     });
 
     if (existing) {
@@ -72,26 +77,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const cleanImages = normalizeImages(images);
+    const cleanImages = data.images ?? [];
+    const primaryImage = data.image?.trim() || null;
     const finalImages =
-      cleanImages.length > 0
-        ? cleanImages
-        : image?.trim()
-          ? [image.trim()]
-          : [];
+      cleanImages.length > 0 ? cleanImages : primaryImage ? [primaryImage] : [];
 
     const product = await prisma.product.create({
       data: {
-        name: name.trim(),
-        slug: slug.toLowerCase().trim(),
-        description: description?.trim() || null,
-        price: parseFloat(price),
-        mrp: mrp ? parseFloat(mrp) : null,
-        image: image?.trim() || finalImages[0] || null,
+        name: data.name,
+        slug: data.slug,
+        description: data.description?.trim() || null,
+        price: data.price,
+        mrp: data.mrp ?? null,
+        image: primaryImage || finalImages[0] || null,
         images: finalImages,
-        category: category?.trim() || null,
-        stock: parseInt(stock) || 0,
-        isActive: true,
+        category: data.category?.trim() || null,
+        stock: data.stock ?? 0,
+        isActive: data.isActive ?? true,
       },
     });
 

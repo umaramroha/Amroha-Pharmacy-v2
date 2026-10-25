@@ -19,6 +19,20 @@ const validatePincode = (pincode: string): boolean => {
   return /^[1-9]\d{5}$/.test(pincode);
 };
 
+// Prices calculated by the server (POST /api/orders/quote)
+type ServerQuote = {
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+  items: {
+    id: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
+};
+
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, clearCart } = useCart();
   const { user, loading } = useAuth();
@@ -27,8 +41,23 @@ export default function CheckoutPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
 
-  const deliveryFee = totalPrice >= 500 ? 0 : 50;
-  const finalTotal = totalPrice + deliveryFee;
+  // Authoritative prices from the server. The prices saved in the browser's
+  // cart can be old, so they are only a fallback while the server answers.
+  const [quote, setQuote] = useState<ServerQuote | null>(null);
+  const [quoteStatus, setQuoteStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
+  const [quoteError, setQuoteError] = useState("");
+  // Total the server saved on the order (the cart is already empty on the success screen)
+  const [placedTotal, setPlacedTotal] = useState<number | null>(null);
+
+  const subtotal = quote ? quote.subtotal : totalPrice;
+  const deliveryFee = quote
+    ? quote.deliveryFee
+    : totalPrice >= 500
+    ? 0
+    : 50;
+  const finalTotal = quote ? quote.total : totalPrice + deliveryFee;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,17 +76,84 @@ export default function CheckoutPage() {
     }
   }, [orderPlaced]);
 
-  const upiLink = `upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(
-    siteConfig.upiName
-  )}&am=${finalTotal}&cu=INR&tn=${encodeURIComponent(
-    `Order ${Date.now().toString().slice(-6)}`
-  )}`;
+  // Ask the server for the real prices/total whenever the cart changes
+  const cartKey = items
+    .map((i) => `${i.id}:${i.quantity}`)
+    .sort()
+    .join(",");
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (orderPlaced) return; // cart is cleared after ordering — keep what we have
+    if (!userId || cartKey === "") {
+      setQuote(null);
+      setQuoteStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    setQuoteStatus("loading");
+    setQuoteError("");
+
+    (async () => {
+      try {
+        const res = await fetch("/api/orders/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+          }),
+          signal: controller.signal,
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.quote) {
+          setQuote(null);
+          setQuoteError(
+            data.error || "Could not confirm the order total. Please try again."
+          );
+          setQuoteStatus("error");
+          return;
+        }
+
+        setQuote(data.quote);
+        setQuoteStatus("ready");
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error("Quote error:", err);
+        setQuote(null);
+        setQuoteError("Network error. Could not confirm the order total.");
+        setQuoteStatus("error");
+      }
+    })();
+
+    return () => controller.abort();
+    // cartKey stands in for `items` (same ids + quantities => same quote)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartKey, userId, orderPlaced]);
+
+  // The UPI link only exists once the SERVER has confirmed the amount
+  const upiReady = quoteStatus === "ready" && quote !== null;
+  const upiLink = upiReady
+    ? `upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(
+        siteConfig.upiName
+      )}&am=${quote.total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
+        `Order ${Date.now().toString().slice(-6)}`
+      )}`
+    : undefined;
+
+  // Message to show for a failed quote (only matters when paying by UPI)
+  const formError =
+    orderError ||
+    (paymentMethod === "upi" && quoteStatus === "error" ? quoteError : "");
+
+  const quoteLine = (id: string) => quote?.items.find((l) => l.id === id);
 
   const paymentScreenshotMessage = `📸 *Payment Screenshot*
 
 👤 Name: ${formData.name}
 📱 Mobile: ${formData.mobile}
-💰 Amount: ₹${finalTotal}
+💰 Amount: ₹${placedTotal ?? finalTotal}
 💳 Payment Method: UPI
 
 Please find my payment screenshot attached. Kindly confirm my order.`;
@@ -104,12 +200,8 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
           pincode: formData.pincode,
           items: items.map((i) => ({
             id: i.id,
-            price: i.price,
             quantity: i.quantity,
           })),
-          subtotal: totalPrice,
-          deliveryFee: deliveryFee,
-          total: finalTotal,
           paymentMethod: paymentMethod,
         }),
       });
@@ -121,6 +213,9 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
         setPlacingOrder(false);
         return;
       }
+
+      const savedTotal = Number(data.order?.total);
+      if (Number.isFinite(savedTotal)) setPlacedTotal(savedTotal);
 
       setOrderPlaced(true);
       clearCart();
@@ -238,9 +333,9 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Form */}
           <div className="lg:col-span-2 space-y-6">
-            {orderError && (
+            {formError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                {orderError}
+                {formError}
               </div>
             )}
 
@@ -427,7 +522,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                   <div className="mt-4 p-5 bg-gray-50 rounded-lg border space-y-4">
                     <div className="text-center">
                       <p className="text-sm font-semibold text-gray-700 mb-3">
-                        Scan to pay ₹{finalTotal}
+                        Scan to pay ₹{upiReady ? finalTotal : "…"}
                       </p>
                       <div className="w-64 h-64 mx-auto bg-white border-2 border-primary/20 rounded-lg flex items-center justify-center p-2">
                         <img
@@ -455,9 +550,10 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                       </p>
                       <a
                         href={upiLink}
+                        aria-disabled={upiReady ? undefined : true}
                         className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-full font-semibold transition"
                       >
-                        💳 Pay ₹{finalTotal} via UPI App
+                        💳 Pay ₹{upiReady ? finalTotal : "…"} via UPI App
                       </a>
                       <div className="mt-3 p-2 bg-white rounded-lg border inline-block">
                         <p className="text-xs text-gray-500 mb-0.5">UPI ID:</p>
@@ -500,7 +596,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                       {item.name} × {item.quantity}
                     </span>
                     <span className="font-semibold">
-                      ₹{item.price * item.quantity}
+                      ₹{quoteLine(item.id)?.lineTotal ?? item.price * item.quantity}
                     </span>
                   </div>
                 ))}
@@ -511,7 +607,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                   <span className="text-gray-600">
                     Subtotal ({totalItems} items)
                   </span>
-                  <span className="font-semibold">₹{totalPrice}</span>
+                  <span className="font-semibold">₹{subtotal}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Delivery Fee</span>

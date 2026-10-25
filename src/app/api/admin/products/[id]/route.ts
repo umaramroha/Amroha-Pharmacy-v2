@@ -3,6 +3,11 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
+import {
+  updateProductSchema,
+  validationErrorBody,
+  MRP_BELOW_PRICE_MESSAGE,
+} from "@/lib/productSchema";
 
 type AdminSessionData = {
   adminId?: string;
@@ -17,15 +22,6 @@ async function isAdmin() {
     adminSessionOptions
   );
   return session.isAdminLoggedIn && session.adminId;
-}
-
-function normalizeImages(input: unknown): string[] {
-  if (!Array.isArray(input)) return [];
-  return input
-    .filter((u): u is string => typeof u === "string")
-    .map((u) => u.trim())
-    .filter((u) => u.length > 0)
-    .slice(0, 10);
 }
 
 export async function GET(
@@ -60,27 +56,77 @@ export async function PATCH(
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const body = await request.json();
-    const { name, description, price, mrp, image, images, category, stock, isActive } = body;
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+
+    // Strict validation of every field that was sent (partial updates allowed)
+    const parsed = updateProductSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(validationErrorBody(parsed.error), {
+        status: 400,
+      });
+    }
+    const data = parsed.data;
+
+    // MRP must be >= price. When both are sent the schema already checked it.
+    // When only one is sent, compare it with the value saved in the database.
+    if ((data.price !== undefined) !== (data.mrp !== undefined)) {
+      const saved = await prisma.product.findUnique({
+        where: { id: params.id },
+        select: { price: true, mrp: true },
+      });
+      if (!saved) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+
+      const price = data.price !== undefined ? data.price : Number(saved.price);
+      const mrp =
+        data.mrp !== undefined
+          ? data.mrp
+          : saved.mrp === null
+          ? null
+          : Number(saved.mrp);
+
+      if (mrp !== null && mrp < price) {
+        const message =
+          data.price !== undefined
+            ? `${MRP_BELOW_PRICE_MESSAGE} (saved MRP is ${mrp}). Update the MRP as well.`
+            : `${MRP_BELOW_PRICE_MESSAGE} (saved price is ${price}).`;
+        return NextResponse.json(
+          {
+            error: message,
+            issues: [{ field: "mrp", message }],
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     const updateData: any = {};
 
-    if (name !== undefined) updateData.name = name.trim();
-    if (description !== undefined)
-      updateData.description = description?.trim() || null;
-    if (price !== undefined) updateData.price = parseFloat(price);
-    if (mrp !== undefined) updateData.mrp = mrp ? parseFloat(mrp) : null;
-    if (category !== undefined)
-      updateData.category = category?.trim() || null;
-    if (stock !== undefined) updateData.stock = parseInt(stock);
-    if (isActive !== undefined) updateData.isActive = isActive;
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined)
+      updateData.description = data.description?.trim() || null;
+    if (data.price !== undefined) updateData.price = data.price;
+    if (data.mrp !== undefined) updateData.mrp = data.mrp; // null clears it
+    if (data.category !== undefined)
+      updateData.category = data.category?.trim() || null;
+    if (data.stock !== undefined) updateData.stock = data.stock;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-    if (images !== undefined) {
-      const cleanImages = normalizeImages(images);
-      updateData.images = cleanImages;
-      updateData.image = cleanImages[0] || null;
-    } else if (image !== undefined) {
-      updateData.image = image?.trim() || null;
+    if (data.images !== undefined) {
+      updateData.images = data.images;
+      updateData.image = data.images[0] || null;
+    } else if (data.image !== undefined) {
+      updateData.image = data.image?.trim() || null;
     }
 
     const product = await prisma.product.update({

@@ -6,18 +6,19 @@ import {
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import {
+  mergeCartItems,
+  checkCartLimits,
+  priceCart,
+} from "@/lib/pricing";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { rateLimit } from "@/lib/rateLimit";
-import { deliveryConfig } from "@/lib/config";
 
 // ==============================
 // CONSTANTS
 // ==============================
-const MAX_QTY_PER_PRODUCT = 10;
-const MAX_TOTAL_ITEMS = 30;
 const MAX_ORDERS_PER_DAY = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -148,33 +149,13 @@ export async function POST(request: Request) {
     // 3. MERGE DUPLICATE PRODUCT IDS, THEN CHECK LIMITS
     //    (two lines of the same product must not bypass the per-product cap)
     // ==============================
-    const qtyByProduct = new Map<string, number>();
-    for (const item of input.items) {
-      qtyByProduct.set(
-        item.id,
-        (qtyByProduct.get(item.id) ?? 0) + item.quantity
-      );
-    }
+    const qtyByProduct = mergeCartItems(input.items);
 
-    let totalItemsCount = 0;
-    for (const qty of Array.from(qtyByProduct.values())) {
-      if (qty > MAX_QTY_PER_PRODUCT) {
-        return NextResponse.json(
-          {
-            error: `Maximum ${MAX_QTY_PER_PRODUCT} units allowed per product. Please reduce the quantity.`,
-          },
-          { status: 400 }
-        );
-      }
-      totalItemsCount += qty;
-    }
-
-    if (totalItemsCount > MAX_TOTAL_ITEMS) {
+    const limitError = checkCartLimits(qtyByProduct);
+    if (limitError) {
       return NextResponse.json(
-        {
-          error: `Maximum ${MAX_TOTAL_ITEMS} items allowed per order. For bulk orders, please contact us on WhatsApp.`,
-        },
-        { status: 400 }
+        { error: limitError.error },
+        { status: limitError.status }
       );
     }
 
@@ -198,80 +179,19 @@ export async function POST(request: Request) {
     }
 
     // ==============================
-    // 5. LOAD REAL PRODUCTS + PRICES FROM THE DATABASE
+    // 5. PRICE THE CART ON THE SERVER
+    //    Real products + prices from the database, stock/active checks, and
+    //    subtotal / delivery fee / total. Shared with POST /api/orders/quote
+    //    (the amount shown for UPI), so both always agree. See lib/pricing.ts
     // ==============================
-    const productIds = Array.from(qtyByProduct.keys());
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        stock: true,
-        isActive: true,
-      },
-    });
-    const productById = new Map(products.map((p) => [p.id, p]));
-
-    const lines: {
-      productId: string;
-      name: string;
-      quantity: number;
-      unitPrice: Prisma.Decimal;
-    }[] = [];
-
-    for (const [productId, quantity] of Array.from(qtyByProduct.entries())) {
-      const product = productById.get(productId);
-
-      if (!product) {
-        return NextResponse.json(
-          { error: `Product not found: ${productId}` },
-          { status: 400 }
-        );
-      }
-      if (!product.isActive) {
-        return NextResponse.json(
-          { error: `${product.name} abhi available nahi hai.` },
-          { status: 400 }
-        );
-      }
-      if (product.stock < quantity) {
-        return NextResponse.json(
-          {
-            error: `Only ${product.stock} units available for "${product.name}". Please reduce the quantity.`,
-          },
-          { status: 400 }
-        );
-      }
-      if (product.price.lte(0)) {
-        return NextResponse.json(
-          {
-            error: `${product.name} is not available for online order right now. Please contact us on WhatsApp.`,
-          },
-          { status: 400 }
-        );
-      }
-
-      lines.push({
-        productId,
-        name: product.name,
-        quantity,
-        unitPrice: product.price,
-      });
+    const priced = await priceCart(qtyByProduct);
+    if (!priced.ok) {
+      return NextResponse.json(
+        { error: priced.error },
+        { status: priced.status }
+      );
     }
-
-    // ==============================
-    // 6. CALCULATE MONEY ON THE SERVER (Decimal = no floating point errors)
-    //    delivery: subtotal >= 500 ? 0 : 50   (values come from lib/config.ts)
-    // ==============================
-    const subtotal = lines.reduce(
-      (sum, l) => sum.plus(l.unitPrice.mul(l.quantity)),
-      new Prisma.Decimal(0)
-    );
-    const deliveryFee = subtotal.gte(deliveryConfig.freeAbove)
-      ? new Prisma.Decimal(0)
-      : new Prisma.Decimal(deliveryConfig.fee);
-    const total = subtotal.plus(deliveryFee);
+    const { lines, subtotal, deliveryFee, total } = priced;
 
     // ==============================
     // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
