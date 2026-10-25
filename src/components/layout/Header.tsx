@@ -56,10 +56,14 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 shadow-[0_8px_30px_rgba(15,118,110,0.06)] backdrop-blur-xl">
-      <div className="hidden bg-slate-950 text-white sm:block">
+      <div className="bg-slate-950 text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-[11px] font-medium tracking-wide sm:px-6 lg:px-8">
-          <span className="text-slate-300">Authentic Ayurvedic & Unani care • Delivered across India</span>
-          <div className="flex items-center gap-5">
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-slate-200">
+            <svg aria-hidden="true" className="h-4 w-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            Delivering to: <strong className="font-semibold text-white">Amroha</strong>
+          </span>
+          <span className="hidden text-slate-300 xl:block">Authentic Ayurvedic & Unani care • Delivered across India</span>
+          <div className="hidden items-center gap-5 sm:flex">
             <a href="tel:+918077988509" className="transition hover:text-emerald-300">+91 80779 88509</a>
             <a href="https://wa.me/918077988509" target="_blank" rel="noopener noreferrer" className="transition hover:text-emerald-300">WhatsApp support</a>
           </div>
@@ -104,7 +108,7 @@ export default function Header() {
           <form action="/products" className="ml-auto hidden max-w-md flex-1 md:block lg:max-w-xl">
             <label className="relative block">
               <span className="sr-only">Search products</span>
-              <input name="q" placeholder="Search medicines, wellness & concerns" className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10" />
+              <input name="q" placeholder="Search medicines, wellness & concerns" className="h-11 w-full rounded-2xl border border-emerald-200 bg-white pl-11 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-500 hover:border-primary/50 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15" />
               
 <Icon name="search" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
              </label>
@@ -150,7 +154,7 @@ export default function Header() {
         </div>
 
         <form action="/products" className="pb-3 md:hidden">
-          <label className="relative block"><span className="sr-only">Search products</span><input name="q" placeholder="Search medicines & wellness" className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10" /><Icon name="search" className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /></label>
+          <label className="relative block"><span className="sr-only">Search products</span><input name="q" placeholder="Search medicines & wellness" className="h-11 w-full rounded-2xl border border-emerald-200 bg-white pl-10 pr-4 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-500 hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/15" /><Icon name="search" className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /></label>
         </form>
       </div>
 

@@ -3,6 +3,7 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import RevealSection from "@/components/home/RevealSection";
 import NewsletterForm from "@/components/home/NewsletterForm";
+import TrustIcon from "@/components/ui/TrustIcon";
 import { getActiveBanners } from "@/lib/banners";
 import { getFeaturedProducts } from "@/lib/products";
 
@@ -31,32 +32,27 @@ export default async function Home() {
 
   return (
     <div>
-      {/* ============================================ */}
-      {/* MOBILE + DESKTOP: TRUST BADGES (Desktop Only on mobile?) */}
-      {/* ============================================ */}
-      {/* Trust Badges — Desktop only */}
-      <RevealSection className="hidden md:block bg-white py-3 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-4 gap-2 md:gap-4">
-            {[
-              { icon: "✅", label: "100% Authentic" },
-              { icon: "🚚", label: "Fast Delivery" },
-              { icon: "💵", label: "COD Available" },
-              { icon: "💬", label: "WhatsApp" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex flex-col items-center gap-1 text-center"
-              >
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-lg md:text-xl">{item.icon}</span>
+      {/* Trust badges */}
+      <RevealSection className="border-b border-slate-200/70 bg-white py-4 md:py-5">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <ul aria-label="Shop with confidence" className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            {([
+              { icon: "shield", label: "100% Authentic", detail: "Ayurvedic & Unani care" },
+              { icon: "truck", label: "Fast Delivery", detail: "Across India" },
+              { icon: "cash", label: "COD Available", detail: "Pay on delivery" },
+              { icon: "support", label: "WhatsApp Support", detail: "Here to help you" },
+            ] as const).map((item) => (
+              <li key={item.label} className="flex items-center gap-2.5 rounded-2xl border border-slate-100 bg-slate-50/50 p-3 md:gap-3 md:p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <TrustIcon name={item.icon} />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold leading-5 text-slate-900 md:text-sm">{item.label}</p>
+                  <p className="mt-0.5 text-[10px] leading-4 text-slate-500 md:text-xs">{item.detail}</p>
                 </div>
-                <p className="text-[10px] md:text-xs font-semibold text-gray-700 leading-tight">
-                  {item.label}
-                </p>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </RevealSection>
 
@@ -197,9 +193,9 @@ export default async function Home() {
             Why Choose Us?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
-            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
-              <div className="w-12 h-12 mx-auto mb-3 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-xl">✅</span>
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl border border-slate-200/80 shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                <TrustIcon name="shield" />
               </div>
               <h3 className="text-base md:text-lg font-bold mb-1">
                 Authentic Products
@@ -208,9 +204,9 @@ export default async function Home() {
                 100% genuine Ayurvedic & Unani medicines.
               </p>
             </div>
-            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
-              <div className="w-12 h-12 mx-auto mb-3 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-xl">🚚</span>
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl border border-slate-200/80 shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                <TrustIcon name="truck" />
               </div>
               <h3 className="text-base md:text-lg font-bold mb-1">
                 Fast Delivery
@@ -219,9 +215,9 @@ export default async function Home() {
                 Quick delivery with Cash on Delivery option.
               </p>
             </div>
-            <div className="text-center p-4 md:p-6 bg-white rounded-xl shadow-sm">
-              <div className="w-12 h-12 mx-auto mb-3 bg-green-600 rounded-full flex items-center justify-center">
-                <span className="text-xl">👨‍⚕️</span>
+            <div className="text-center p-4 md:p-6 bg-white rounded-xl border border-slate-200/80 shadow-sm">
+              <div className="w-12 h-12 mx-auto mb-3 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                <TrustIcon name="support" />
               </div>
               <h3 className="text-base md:text-lg font-bold mb-1">
                 Expert Support

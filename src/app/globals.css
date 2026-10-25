@@ -91,3 +91,15 @@ main .rounded-2xl { border-radius:1.35rem !important; }
     display: none !important;
   }
 }
+
+/* One shared cart notification; repeated adds restart its gentle entrance/exit. */
+@keyframes cart-toast {
+  0% { opacity:0; transform:translateY(-8px); }
+  8%, 90% { opacity:1; transform:translateY(0); }
+  100% { opacity:0; transform:translateY(-4px); }
+}
+.cart-toast { animation:cart-toast 3.2s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .cart-toast { animation:none; }
+  .product-card:hover, main .product-card button:not(:disabled):hover { transform:none; }
+}

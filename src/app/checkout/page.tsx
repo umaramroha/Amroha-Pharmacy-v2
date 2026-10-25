@@ -324,7 +324,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-8 pb-32 md:pb-8">
       <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary">
         Checkout
       </h1>
@@ -628,13 +628,19 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                 </span>
               </div>
 
-              <button
-                type="submit"
-                disabled={placingOrder}
-                className="w-full mt-6 bg-primary hover:bg-primary-dark text-white py-3 rounded-full font-semibold transition disabled:opacity-50"
-              >
-                {placingOrder ? "Placing Order..." : "Place Order"}
-              </button>
+              <div className="fixed bottom-[68px] left-0 right-0 z-[55] flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(16,35,30,0.08)] md:static md:mt-6 md:block md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+                <div className="shrink-0 md:hidden">
+                  <p className="text-xs font-medium text-slate-500">Total Amount</p>
+                  <p className="text-xl font-bold tabular-nums tracking-tight text-primary">₹{finalTotal}</p>
+                </div>
+                <button
+                  type="submit"
+                  disabled={placingOrder}
+                  className="min-h-12 flex-1 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50 md:w-full"
+                >
+                  {placingOrder ? "Placing Order..." : "Place Order"}
+                </button>
+              </div>
 
               <p className="text-xs text-gray-500 text-center mt-3">
                 By placing order you agree to our Terms
