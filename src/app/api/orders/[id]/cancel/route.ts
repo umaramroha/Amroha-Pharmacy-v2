@@ -1,162 +1,81 @@
-import { escapeHtml } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { escapeHtml } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { transporter, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/email/mailer";
 
-// Statuses that CAN be cancelled by customer
 const CANCELLABLE_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING"];
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await getIronSession<SessionData>(
-      cookies(),
-      sessionOptions
-    );
-
+    const session = await getIronSession<SessionData>(cookies(), sessionOptions);
     if (!session.isLoggedIn || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch order with items
-    const order = await prisma.order.findUnique({
-      where: { id: params.id },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: { id: true, name: true },
-            },
-          },
-        },
-      },
-    });
+    // Atomic Transaction: Status update + Stock restore
+    const cancellation = await prisma.$transaction(async (tx) => {
+      const currentOrder = await tx.order.findUnique({
+        where: { id: params.id },
+        include: { items: true },
+      });
 
-    if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    }
+      if (!currentOrder || currentOrder.customerId !== session.userId) {
+        return { error: "NOT_FOUND" as const };
+      }
 
-    // Security: ensure user owns this order
-    if (order.customerId !== session.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+      if (!CANCELLABLE_STATUSES.includes(currentOrder.status)) {
+        return {
+          error: currentOrder.status === "CANCELLED" ? "ALREADY_CANCELLED" : "NOT_CANCELLABLE" as const,
+        };
+      }
 
-    // Check if order can be cancelled
-    if (order.status === "CANCELLED") {
-      return NextResponse.json(
-        { error: "Ye order already cancel ho chuka hai." },
-        { status: 400 }
-      );
-    }
-
-    if (!CANCELLABLE_STATUSES.includes(order.status)) {
-      return NextResponse.json(
-        {
-          error: `Order is currently "${order.status}" and cannot be cancelled. Shipped orders cannot be cancelled — please contact us on WhatsApp.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Cancel order + restore stock (atomic transaction)
-    await prisma.$transaction(async (tx) => {
-      // 1. Update order status
-      await tx.order.update({
-        where: { id: order.id },
+      // updateMany ensures only ONE request succeeds if double-clicked
+      const updated = await tx.order.updateMany({
+        where: { id: currentOrder.id, status: { in: CANCELLABLE_STATUSES } },
         data: {
           status: "CANCELLED",
-          paymentStatus:
-            order.paymentStatus === "PAID" ? "REFUND_PENDING" : "CANCELLED",
+          paymentStatus: currentOrder.paymentStatus === "PAID" ? "REFUND_PENDING" : "CANCELLED",
         },
       });
 
-      // 2. Restore stock for each item
-      for (const item of order.items) {
+      if (updated.count !== 1) {
+        return { error: "ALREADY_CANCELLED" as const };
+      }
+
+      for (const item of currentOrder.items) {
         await tx.product.update({
           where: { id: item.productId },
-          data: {
-            stock: { increment: item.quantity },
-          },
+          data: { stock: { increment: item.quantity } },
         });
       }
+
+      return { error: null, order: currentOrder };
     });
 
-    // Send cancellation email (non-blocking)
+    if (cancellation.error === "NOT_FOUND") return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (cancellation.error === "ALREADY_CANCELLED") return NextResponse.json({ error: "Ye order already cancel ho chuka hai." }, { status: 400 });
+    if (cancellation.error === "NOT_CANCELLABLE") return NextResponse.json({ error: `Order is currently "${cancellation.error}" and cannot be cancelled.` }, { status: 400 });
+
+    const order = cancellation.order!;
+    const shortId = order.id.slice(-8).toUpperCase();
+
     try {
-      if (order.customerEmail) {
+      if (session.email) {
         await transporter.sendMail({
           from: FROM_EMAIL,
-          to: order.customerEmail,
-          subject: `❌ Order Cancelled - #${order.id
-            .slice(-8)
-            .toUpperCase()} - Amroha Pharmacy`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;">
-              <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;">
-                <h2 style="color: #dc2626; margin-top: 0;">Order Cancelled</h2>
-                <p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p>
-                <p>Aapka order <strong>#${order.id
-                  .slice(-8)
-                  .toUpperCase()}</strong> successfully cancel kar diya gaya hai.</p>
-                <p><strong>Refund:</strong> ${
-                  order.paymentStatus === "PAID"
-                    ? "Your payment will be refunded within 5-7 business days. For any questions, please contact us on WhatsApp."
-                    : "Koi payment nahi hui thi is order ke liye, isliye koi refund ki zaroorat nahi."
-                }</p>
-                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-                <p style="font-size: 14px; color: #6b7280;">
-                  Any questions? WhatsApp us:
-                  <a href="https://wa.me/918077988509" style="color: #0F766E;">
-                    +91 80779 88509
-                  </a>
-                </p>
-              </div>
-            </div>
-          `,
+          to: session.email,
+          subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
+          html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Aapka order <strong>#${shortId}</strong> cancel kar diya gaya hai.</p></div>`,
         });
       }
+    } catch (e) {}
 
-      if (ADMIN_EMAIL) {
-        await transporter.sendMail({
-          from: FROM_EMAIL,
-          to: ADMIN_EMAIL,
-          subject: `❌ Order Cancelled #${order.id
-            .slice(-8)
-            .toUpperCase()} - ${escapeHtml(order.customerName)}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2 style="color: #dc2626;">Order Cancelled by Customer</h2>
-              <p><strong>Order ID:</strong> #${order.id
-                .slice(-8)
-                .toUpperCase()}</p>
-              <p><strong>Customer:</strong> ${escapeHtml(order.customerName)}</p>
-              <p><strong>Mobile:</strong> ${escapeHtml(order.customerMobile)}</p>
-              <p><strong>Total:</strong> ₹${order.total}</p>
-              <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
-              <p><strong>Stock restored:</strong> Yes</p>
-              <p>Review in admin panel: <a href="https://amrohapharmacy.vercel.app/kggg0b/orders">View Order</a></p>
-            </div>
-          `,
-        });
-      }
-    } catch (emailError) {
-      console.error("Cancellation email error:", emailError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Order cancelled successfully. Refund will be processed within 5-7 business days.",
-    });
+    return NextResponse.json({ success: true, message: "Order cancelled successfully" });
   } catch (error: any) {
     console.error("Cancel order error:", error);
-    return NextResponse.json(
-      { error: "Failed to cancel the order. Please try again later." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to cancel order" }, { status: 500 });
   }
 }

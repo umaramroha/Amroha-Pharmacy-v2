@@ -6,6 +6,21 @@ import { adminSessionOptions } from "@/lib/adminSession";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { BANNERS_CACHE_TAG } from "@/lib/banners";
 
+import { z } from "zod";
+
+const BannerInput = z.object({
+  brand: z.string().trim().min(1).max(50),
+  title: z.string().trim().min(1).max(100),
+  subtitle: z.string().trim().max(200).optional().nullable(),
+  imageUrl: z.string().url("Must be a valid URL"),
+  linkUrl: z.string().url().optional().nullable().or(z.literal("")),
+  theme: z.string().default("teal"),
+  layout: z.string().default("split"),
+  order: z.number().int().default(0),
+  isActive: z.boolean().default(true),
+});
+
+
 export const dynamic = "force-dynamic";
 
 type AdminSessionData = {
@@ -48,7 +63,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActive } = body;    
+    const parsed = BannerInput.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActive } = parsed.data;    
 
     if (!brand || !title || !imageUrl) {
       return NextResponse.json(
@@ -66,7 +83,7 @@ const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActiv
         linkUrl: linkUrl?.trim() || null,
         theme: theme?.trim() || "teal",
         layout: layout?.trim() || "split",
-        order: parseInt(order) || 0,
+        order: order,
         isActive: typeof isActive === "boolean" ? isActive : true,
       },
     });

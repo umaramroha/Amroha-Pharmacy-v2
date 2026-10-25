@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -7,7 +8,13 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
     const q = searchParams.get("q");
 
-    const where: any = { isActive: true };
+    const where: Prisma.ProductWhereInput = { isActive: true };
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const limit = 24;
+    const skip = (page - 1) * limit;
+  
 
     if (category) {
       where.category = category;
@@ -21,6 +28,8 @@ export async function GET(request: Request) {
     }
 
     const products = await prisma.product.findMany({
+      take: limit,
+      skip,
       where,
       orderBy: { createdAt: "desc" },
     });
