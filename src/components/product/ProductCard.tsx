@@ -56,11 +56,10 @@ export default function ProductCard({ product }: { product: Product }) {
         <Link href={`/products/${product.slug}`} className="block overflow-hidden rounded-t-2xl">
           <div className="product-image-wrap overflow-hidden">
             {product.image ? (
-              <Image 
+              <img 
                 src={product.image} 
                 alt={product.name} 
-                width={400} 
-                height={400} 
+                loading="lazy"
                 className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-110" 
               />
             ) : (
