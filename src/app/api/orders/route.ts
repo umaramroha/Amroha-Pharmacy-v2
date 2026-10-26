@@ -126,6 +126,19 @@ export async function POST(request: Request) {
     }
     const userId = session.userId;
 
+    // Verify user account
+    const customer = await prisma.customer.findUnique({ where: { id: userId }, select: { isVerified: true } });
+    if (!customer?.isVerified) {
+      return NextResponse.json({ error: "Please verify your email address before placing an order." }, { status: 403 });
+    }
+
+    // Check pending order limit (Max 3)
+    const pendingCount = await prisma.order.count({ where: { customerId: userId, status: "PENDING" } });
+    if (pendingCount >= 3) {
+      return NextResponse.json({ error: "You have 3 pending orders. Please wait for them to be confirmed." }, { status: 400 });
+    }
+  
+
     // ==============================
     // 2. VALIDATE INPUT SHAPE
     // ==============================

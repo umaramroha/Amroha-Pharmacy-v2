@@ -1,3 +1,5 @@
+import crypto from "crypto";
+import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomUUID();
 
     // Create customer
     const customer = await prisma.customer.create({
@@ -69,6 +72,7 @@ export async function POST(request: Request) {
         email: cleanEmail,
         mobile: mobile.trim(),
         password: hashedPassword,
+        verificationToken: verificationToken,
       },
     });
 
@@ -82,6 +86,27 @@ export async function POST(request: Request) {
     session.name = customer.name;
     session.isLoggedIn = true;
     await session.save();
+
+    // Send verification email
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app";
+      const verifyUrl = `${siteUrl}/verify-email?token=${verificationToken}`;
+      
+      await transporter.sendMail({
+        from: FROM_EMAIL,
+        to: cleanEmail,
+        subject: "Verify your Amroha Pharmacy Account",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+            <h2>Welcome ${name}!</h2>
+            <p>Please click the button below to verify your email address and activate your account.</p>
+            <a href="${verifyUrl}" style="display:inline-block; padding:10px 20px; background-color:#087F73; color:white; text-decoration:none; border-radius:5px; margin-top:10px;">Verify Email</a>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Verification email failed:", emailError);
+    }
 
     return NextResponse.json({
       success: true,
