@@ -14,7 +14,7 @@ type AdminSessionData = {
 export async function GET() {
   try {
     const session = await getIronSession<AdminSessionData>(
-      cookies(),
+      await cookies(),
       adminSessionOptions
     );
 

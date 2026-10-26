@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { ReactNode } from "react";
 
 type Props = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
   children: ReactNode;
 };
 
 // 1. Dynamic Metadata Generation
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   try {
     const product = await prisma.product.findUnique({
       where: { slug: params.slug },

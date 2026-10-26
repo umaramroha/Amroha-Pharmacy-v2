@@ -13,7 +13,7 @@ type AdminSessionData = {
 
 async function isAdmin() {
   const session = await getIronSession<AdminSessionData>(
-    cookies(),
+    await cookies(),
     adminSessionOptions
   );
   return session.isAdminLoggedIn && session.adminId;
@@ -29,10 +29,8 @@ const VALID_STATUSES = [
 ];
 
 // GET single order
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -67,10 +65,8 @@ export async function GET(
 }
 
 // PATCH — update order status
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

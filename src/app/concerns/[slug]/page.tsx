@@ -13,11 +13,12 @@ export async function generateStaticParams() {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
   const concern = getConcernBySlug(params.slug);
   if (!concern) return { title: "Concern Not Found" };
   return {
@@ -26,11 +27,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function ConcernDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function ConcernDetailPage(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
   const concern = getConcernBySlug(params.slug);
 
   if (!concern) {

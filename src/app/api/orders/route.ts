@@ -75,7 +75,7 @@ class StockChangedError extends Error {}
 export async function GET() {
   try {
     const session = await getIronSession<SessionData>(
-      cookies(),
+      await cookies(),
       sessionOptions
     );
 
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
     // 1. AUTH
     // ==============================
     const session = await getIronSession<SessionData>(
-      cookies(),
+      await cookies(),
       sessionOptions
     );
 

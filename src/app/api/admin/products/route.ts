@@ -17,7 +17,7 @@ type AdminSessionData = {
 
 async function isAdmin() {
   const session = await getIronSession<AdminSessionData>(
-    cookies(),
+    await cookies(),
     adminSessionOptions
   );
   return session.isAdminLoggedIn && session.adminId;
