@@ -23,7 +23,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setError("");
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -129,7 +129,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   setFormData({ ...formData, password: e.target.value })
                 }
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary"
-                placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
                 required
               />
             </div>
