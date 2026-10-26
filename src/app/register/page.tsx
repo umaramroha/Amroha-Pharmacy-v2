@@ -17,12 +17,13 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (formData.password.length < 6) {
+    if (formData.password.length < 8) {
       setError("Password must be at least 8 characters");
       return;
     }
@@ -171,6 +172,29 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         </div>
       </div>
-    </div>
+    
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Created!</h2>
+            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+              We've sent a verification link to <br/><strong className="text-gray-900">{formData.email}</strong><br/>
+              Please check your inbox (and spam folder) to activate your account.
+            </p>
+            <button
+              onClick={() => router.push("/login")}
+              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 px-4 rounded-xl transition shadow-md"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      )}
+  </div>
   );
 }
