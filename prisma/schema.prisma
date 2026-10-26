@@ -76,6 +76,8 @@ model Customer {
   email     String   @unique
   mobile    String?
   password  String
+  isVerified        Boolean   @default(false)
+  verificationToken String?
   createdAt DateTime @default(now())
   orders    Order[]
 }
