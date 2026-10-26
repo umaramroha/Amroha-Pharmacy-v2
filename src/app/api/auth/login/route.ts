@@ -10,16 +10,19 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    if (!email || !password) {
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "Email and password required" },
         { status: 400 }
       );
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    // Rate limit: 5 attempts per 15 minutes per email
+    const cleanEmail = email.trim().toLowerCase();
     const rateKey = `login:${cleanEmail}`;
     const rateCheck = await checkRateLimit(rateKey);
 
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: `Too many attempts. Please try again in ${minutes} minute${
-            minutes > 1 ? "s" : ""
+            minutes === 1 ? "" : "s"
           }.`,
         },
         { status: 429 }
@@ -41,31 +44,45 @@ export async function POST(request: Request) {
 
     if (!customer) {
       return NextResponse.json(
-        { error: "*invalid Email or password" },
+        { error: "Invalid email or password" },
         { status: 401 }
       );
     }
 
-    const passwordMatch = await bcrypt.compare(password, customer.password);
+    const passwordMatch = await bcrypt.compare(
+      password,
+      customer.password
+    );
 
     if (!passwordMatch) {
       return NextResponse.json(
-        { error: "Invalid Email or password" },
+        { error: "Invalid email or password" },
         { status: 401 }
       );
     }
 
-    // Success — reset rate limit
+    // Verification check MUST happen before creating a session.
+    if (!customer.isVerified) {
+      return NextResponse.json(
+        {
+          error: "Please verify your email address before logging in.",
+        },
+        { status: 403 }
+      );
+    }
+
     await resetRateLimit(rateKey);
 
     const session = await getIronSession<SessionData>(
-      cookies(),
+      await cookies(),
       sessionOptions
     );
+
     session.userId = customer.id;
     session.email = customer.email;
     session.name = customer.name;
     session.isLoggedIn = true;
+
     await session.save();
 
     return NextResponse.json({
@@ -78,8 +95,9 @@ export async function POST(request: Request) {
         createdAt: customer.createdAt,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Login API error:", error);
+
     return NextResponse.json(
       { error: "Login failed. Please try again." },
       { status: 500 }

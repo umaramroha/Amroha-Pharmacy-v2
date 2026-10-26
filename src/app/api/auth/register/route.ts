@@ -1,91 +1,45 @@
 import crypto from "crypto";
 import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
 import { NextResponse } from "next/server";
-import { getIronSession } from "iron-session";
-import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { sessionOptions, SessionData } from "@/lib/session";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { z } from "zod";
+
+const RegisterSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(80),
+  // Zod's .email() is strict and handles the mkk.@gmail.com edge case properly
+  email: z.string().trim().email("Please enter a valid email address"), 
+  mobile: z.string().trim().regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit Indian mobile number"),
+  password: z.string().min(8, "Password must be at least 8 characters")
+});
 
 export async function POST(request: Request) {
   try {
-    // Rate limit based on IP
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0] ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-    const rateKey = `register:${ip}`;
-    const rateCheck = await checkRateLimit(rateKey);
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "unknown";
+    const rateCheck = await checkRateLimit(`register:${ip}`);
+    if (!rateCheck.allowed) return NextResponse.json({ error: "Too many attempts. Please try later." }, { status: 429 });
 
-    if (!rateCheck.allowed) {
-      const minutes = Math.ceil(rateCheck.resetIn / 60000);
-      return NextResponse.json(
-        {
-          error: `Too many attempts. Please try again in ${minutes} minute${
-            minutes > 1 ? "s" : ""
-          }.`,
-        },
-        { status: 429 }
-      );
-    }
+    const body = await request.json();
+    const parsed = RegisterSchema.safeParse(body);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
 
-    const { name, email, mobile, password } = await request.json();
-
-    // Validation
-    if (!name || !email || !mobile || !password) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
-
+    const { name, email, mobile, password } = parsed.data;
     const cleanEmail = email.toLowerCase().trim();
 
-    // Check if email exists
-    const existing = await prisma.customer.findUnique({
-      where: { email: cleanEmail },
-    });
+    const existing = await prisma.customer.findUnique({ where: { email: cleanEmail } });
+    if (existing) return NextResponse.json({ error: "Email already registered" }, { status: 400 });
 
-    if (existing) {
-      return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 400 }
-      );
-    }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomUUID();
 
-    // Create customer
+    // Create unverified customer
     const customer = await prisma.customer.create({
       data: {
-        name: name.trim(),
-        email: cleanEmail,
-        mobile: mobile.trim(),
-        password: hashedPassword,
-        verificationToken: verificationToken,
+        name: name.trim(), email: cleanEmail, mobile: mobile.trim(),
+        password: hashedPassword, isVerified: false, verificationToken,
       },
     });
-
-    // Create session
-    const session = await getIronSession<SessionData>(
-      cookies(),
-      sessionOptions
-    );
-    session.userId = customer.id;
-    session.email = customer.email;
-    session.name = customer.name;
-    session.isLoggedIn = true;
-    await session.save();
 
     // Send verification email
     try {
@@ -96,33 +50,19 @@ export async function POST(request: Request) {
         from: FROM_EMAIL,
         to: cleanEmail,
         subject: "Verify your Amroha Pharmacy Account",
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
-            <h2>Welcome ${name}!</h2>
-            <p>Please click the button below to verify your email address and activate your account.</p>
-            <a href="${verifyUrl}" style="display:inline-block; padding:10px 20px; background-color:#087F73; color:white; text-decoration:none; border-radius:5px; margin-top:10px;">Verify Email</a>
-          </div>
-        `,
+        html: `<div style="text-align: center;"><h2>Welcome ${name}!</h2><p>Click below to verify your account:</p><a href="${verifyUrl}">Verify Email</a></div>`,
       });
     } catch (emailError) {
+      // If email fails, delete the user so they can try again without email conflict
+      await prisma.customer.delete({ where: { id: customer.id } });
       console.error("Verification email failed:", emailError);
+      return NextResponse.json({ error: "Failed to send verification email. Please check your email address or try again later." }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        mobile: customer.mobile,
-        createdAt: customer.createdAt,
-      },
-    });
+    // DO NOT auto-login. User must verify first.
+    return NextResponse.json({ success: true, message: "Registration successful. Please check your email to verify." });
+
   } catch (error: any) {
-    console.error("Register API error:", error);
-    return NextResponse.json(
-      { error: "Registration failed. Please try again." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Registration failed." }, { status: 500 });
   }
 }
