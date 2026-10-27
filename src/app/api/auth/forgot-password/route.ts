@@ -70,6 +70,6 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error("Forgot password error:", error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Something went wrong" }, { status: 500 });
   }
 }
