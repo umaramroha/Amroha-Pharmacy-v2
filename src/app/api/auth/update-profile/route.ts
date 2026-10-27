@@ -7,7 +7,7 @@ import { sessionOptions, SessionData } from "@/lib/session";
 export async function PATCH(request: Request) {
   try {
     const session = await getIronSession<SessionData>(
-      cookies(),
+      await cookies(),
       sessionOptions
     );
 

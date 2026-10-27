@@ -30,7 +30,7 @@ const QuoteInput = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getIronSession<SessionData>(
-      cookies(),
+      await cookies(),
       sessionOptions
     );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import {
@@ -270,11 +270,12 @@ function ProductSkeleton() {
 /* PAGE                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default function ProductDetailPage(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = use(props.params);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
