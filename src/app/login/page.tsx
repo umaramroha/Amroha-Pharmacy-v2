@@ -87,6 +87,9 @@ export default function LoginPage() {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
+          <div className="flex justify-end mt-2 mb-4">
+            <a href="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot Password?</a>
+          </div>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
