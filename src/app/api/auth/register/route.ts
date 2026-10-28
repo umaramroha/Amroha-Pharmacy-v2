@@ -4,7 +4,7 @@ import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { rateLimit } from "@/lib/rateLimit";
 import { z } from "zod";
 
 const RegisterSchema = z.object({
@@ -18,7 +18,7 @@ const RegisterSchema = z.object({
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "unknown";
-    const rateCheck = await checkRateLimit(`register:${ip}`, { failOpen: false });
+    const rateCheck = await rateLimit(`register:${ip}`, 5, 15 * 60 * 1000, { failOpen: false });
     if (!rateCheck.allowed) return NextResponse.json({ error: "Too many attempts. Please try later." }, { status: 429 });
 
     const body = await request.json();

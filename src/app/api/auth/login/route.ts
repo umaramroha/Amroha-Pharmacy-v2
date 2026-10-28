@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
-import { checkRateLimit, resetRateLimit } from "@/lib/rateLimit";
+import { rateLimit, resetRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     const cleanEmail = email.trim().toLowerCase();
     const rateKey = `login:${cleanEmail}`;
-    const rateCheck = await checkRateLimit(rateKey, { failOpen: false });
+    const rateCheck = await rateLimit(rateKey, 5, 15 * 60 * 1000, { failOpen: false });
 
     if (!rateCheck.allowed) {
       const minutes = Math.ceil(rateCheck.resetIn / 60000);
