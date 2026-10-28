@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
-import { adminSessionOptions } from "@/lib/adminSession";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { BANNERS_CACHE_TAG } from "@/lib/banners";
-
 import { z } from "zod";
 
 const BannerInput = z.object({
@@ -20,7 +19,6 @@ const BannerInput = z.object({
   order: z.number().int().default(0),
   isActive: z.boolean().default(true),
 });
-
 
 export const dynamic = "force-dynamic";
 
@@ -44,11 +42,11 @@ export async function GET() {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
-    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
     const banners = await prisma.banner.findMany({
       orderBy: { order: "asc" },
     });
+
     return NextResponse.json({ banners });
   } catch (error: any) {
     console.error("Admin get banners error:", error);
@@ -64,13 +62,18 @@ export async function POST(request: Request) {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
-    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
+    const session = await getAdminSession();
+    const rateCheck = await rateLimit(`admin-mutation:${session.adminId}`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Admin rate limit exceeded" }, { status: 429 });
+    }
 
     const body = await request.json();
     const parsed = BannerInput.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-    const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActive } = parsed.data;    
+
+    const { brand, title, subtitle, imageUrl, linkUrl, theme, layout, order, isActive } = parsed.data;
 
     if (!brand || !title || !imageUrl) {
       return NextResponse.json(
@@ -93,7 +96,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Make the home page show this change right away (instead of waiting up to 60s)
     revalidateTag(BANNERS_CACHE_TAG);
     revalidatePath("/");
 

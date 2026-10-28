@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
-import { adminSessionOptions } from "@/lib/adminSession";
 import {
   createProductSchema,
   validationErrorBody,
@@ -29,8 +29,6 @@ export async function GET() {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
-    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -49,8 +47,12 @@ export async function POST(request: Request) {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
-    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
+    const session = await getAdminSession();
+    const rateCheck = await rateLimit(`admin-mutation:${session.adminId}`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Admin rate limit exceeded" }, { status: 429 });
+    }
 
     let body: unknown;
     try {
@@ -62,7 +64,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Strict validation (price > 0, stock >= 0, mrp null or >= price, isActive boolean, ...)
     const parsed = createProductSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(validationErrorBody(parsed.error), {

@@ -90,7 +90,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updateData: any = {};
+    const updateData: { email?: string; password?: string } = {};
 
     // Update email
     if (newEmail && newEmail.trim().toLowerCase() !== admin.email) {
