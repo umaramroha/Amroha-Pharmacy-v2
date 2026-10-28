@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -16,7 +16,7 @@ type Order = {
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
 
-export default function AdminOrdersPage() {
+function AdminOrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialFilter = searchParams.get("status") || "ALL";
@@ -204,5 +204,13 @@ export default function AdminOrdersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminOrdersPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8 text-center">Loading...</div>}>
+      <AdminOrdersContent />
+    </Suspense>
   );
 }
