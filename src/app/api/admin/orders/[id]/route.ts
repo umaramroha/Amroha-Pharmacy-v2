@@ -101,6 +101,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       );
     }
 
+    const currentOrder = await prisma.order.findUnique({ where: { id: params.id } });
+
     const updated = await prisma.order.update({
       where: { id: params.id },
       data: updateData,
@@ -114,6 +116,28 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         },
       },
     });
+
+    
+    
+    // Send status update email to customer
+    if (status && status !== currentOrder?.status && updated.customerEmail) {
+      try {
+        await transporter.sendMail({
+          from: FROM_EMAIL,
+          to: updated.customerEmail,
+          subject: `Order Update: #${updated.id.slice(-8).toUpperCase()} is now ${status}`,
+          html: getOrderStatusUpdateHTML({
+            customerName: updated.customerName,
+            orderId: updated.id,
+            status: status,
+            total: updated.total.toString(),
+          }),
+        });
+        console.log(`Status update email sent to ${updated.customerEmail}`);
+      } catch (err) {
+        console.error("Failed to send status update email:", err);
+      }
+    }
 
     return NextResponse.json({ success: true, order: updated });
   } catch (error: any) {
