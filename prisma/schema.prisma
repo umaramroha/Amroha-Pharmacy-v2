@@ -23,6 +23,7 @@ model Product {
   updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
   @@index([isActive, category])
+  @@index([isActive, createdAt])
 }
 
 model Order {
@@ -48,6 +49,8 @@ model Order {
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+  @@index([customerId, status])
+  @@index([customerId, createdAt])
 }
 
 model OrderItem {
@@ -83,6 +86,8 @@ model Customer {
   resetTokenExpiry        DateTime?
   createdAt DateTime @default(now())
   orders    Order[]
+  @@index([resetToken])
+  @@index([verificationToken])
 }
 
 
