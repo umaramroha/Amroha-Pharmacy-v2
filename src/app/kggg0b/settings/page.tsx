@@ -28,6 +28,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     fetchAdmin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAdmin = async () => {
