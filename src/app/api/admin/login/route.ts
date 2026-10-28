@@ -1,3 +1,4 @@
+import { rateLimit } from "@/lib/rateLimit";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 
     // Rate limit: 5 attempts per 15 min
     const rateKey = `admin-login:${cleanEmail}`;
-    const rateCheck = await checkRateLimit(rateKey, { failOpen: false });
+    const rateCheck = await rateLimit(rateKey, 5, 15 * 60 * 1000, { failOpen: false });
 
     if (!rateCheck.allowed) {
       const minutes = Math.ceil(rateCheck.resetIn / 60000);
