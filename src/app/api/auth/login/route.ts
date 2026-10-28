@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     const cleanEmail = email.trim().toLowerCase();
     const rateKey = `login:${cleanEmail}`;
-    const rateCheck = await checkRateLimit(rateKey);
+    const rateCheck = await checkRateLimit(rateKey, { failOpen: false });
 
     if (!rateCheck.allowed) {
       const minutes = Math.ceil(rateCheck.resetIn / 60000);

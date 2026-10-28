@@ -38,14 +38,13 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 3. Update password and clear the reset token
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null,
-      },
+    const updated = await prisma.customer.updateMany({
+      where: { id: customer.id, resetToken: token },
+      data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null },
     });
+    if (updated.count !== 1) {
+      return NextResponse.json({ error: "Token already used or invalid." }, { status: 400 });
+    }
 
     return NextResponse.json({ 
       success: true, 

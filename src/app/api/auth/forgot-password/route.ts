@@ -71,6 +71,6 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error("Forgot password error:", error);
-    return NextResponse.json({ error: error.message || "Something went wrong" }, { status: 500 });
+    return NextResponse.json({ error: "If an account exists, a reset link has been sent." }, { status: 200 });
   }
 }

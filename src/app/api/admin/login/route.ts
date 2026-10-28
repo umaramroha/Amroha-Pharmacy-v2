@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     // Rate limit: 5 attempts per 15 min
     const rateKey = `admin-login:${cleanEmail}`;
-    const rateCheck = await checkRateLimit(rateKey);
+    const rateCheck = await checkRateLimit(rateKey, { failOpen: false });
 
     if (!rateCheck.allowed) {
       const minutes = Math.ceil(rateCheck.resetIn / 60000);
