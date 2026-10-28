@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/utils";
 import crypto from "crypto";
 import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
 import { NextResponse } from "next/server";
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
         from: FROM_EMAIL,
         to: cleanEmail,
         subject: "Verify your Amroha Pharmacy Account",
-        html: `<div style="text-align: center;"><h2>Welcome ${name}!</h2><p>Click below to verify your account:</p><a href="${verifyUrl}">Verify Email</a></div>`,
+        html: `<div style="text-align: center;"><h2>Welcome ${escapeHtml(name)}!</h2><p>Click below to verify your account:</p><a href="${verifyUrl}">Verify Email</a></div>`,
       });
     } catch (emailError) {
       // If email fails, delete the user so they can try again without email conflict

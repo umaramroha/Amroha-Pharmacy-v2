@@ -27,6 +27,7 @@ const VALID_STATUSES = [
   "DELIVERED",
   "CANCELLED",
 ];
+const VALID_PAYMENT_STATUSES = ["PENDING", "PAID", "REFUND_PENDING", "CANCELLED"];
 
 // GET single order
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {

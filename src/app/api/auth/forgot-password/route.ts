@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
               <h2>Password Reset Request</h2>
-              <p>Hello ${customer.name},</p>
+              <p>Hello ${escapeHtml(customer.name)},</p>
               <p>We received a request to reset your password. Click the button below to set a new password.</p>
               <a href="${resetUrl}" style="display:inline-block; padding:10px 20px; background-color:#087F73; color:white; text-decoration:none; border-radius:5px; margin-top:10px;">Reset Password</a>
               <p style="margin-top:20px; font-size:12px; color:#666;">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
