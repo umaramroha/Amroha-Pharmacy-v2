@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
+import { getOrderStatusUpdateHTML } from "@/lib/email/templates";
 import { adminSessionOptions } from "@/lib/adminSession";
 
 type AdminSessionData = {

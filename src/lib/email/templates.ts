@@ -161,3 +161,44 @@ export function getAdminOrderNotificationHTML(data: {
     </div>
   `;
 }
+
+export function getOrderStatusUpdateHTML(data: {
+  customerName: string;
+  orderId: string;
+  status: string;
+  total: string;
+}): string {
+  const shortId = data.orderId.slice(-8).toUpperCase();
+  
+  let statusMessage = "";
+  if (data.status === "SHIPPED") statusMessage = "Your order is on the way! 🚚";
+  else if (data.status === "DELIVERED") statusMessage = "Your order has been delivered! 📦";
+  else if (data.status === "CANCELLED") statusMessage = "Your order has been cancelled.";
+  else if (data.status === "CONFIRMED") statusMessage = "Your order has been confirmed! ✅";
+  else statusMessage = `Your order status is now: ${data.status}`;
+
+  return `
+    <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;">
+        <h2 style="color: #0F766E; margin-top: 0;">Order Update</h2>
+        <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${data.customerName}</strong>,</p>
+        <p style="font-size: 16px; color: #1f2937; font-weight: bold; background-color: #f0fdf4; padding: 10px; border-radius: 6px; text-align: center;">
+          ${statusMessage}
+        </p>
+        <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
+          <strong>Order ID:</strong> #${shortId}<br />
+          <strong>Total Amount:</strong> ₹${data.total}<br />
+          <strong>Current Status:</strong> ${data.status}
+        </p>
+        <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
+          You can view your order details by logging into your account.
+        </p>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+          <p style="font-size: 12px; color: #9ca3af; text-align: center;">
+            If you have any questions, reply to this email or contact us on WhatsApp.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
