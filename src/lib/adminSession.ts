@@ -12,7 +12,7 @@ export const defaultAdminSession: AdminSessionData = {
 };
 
 export const adminSessionOptions: SessionOptions = {
-  password: process.env.SESSION_PASSWORD as string,
+  password: process.env.ADMIN_SESSION_PASSWORD as string,
   cookieName: "a2z-admin-session", // <-- Alag cookie name
   cookieOptions: {
     httpOnly: true,

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -75,7 +76,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
     const { status, paymentStatus } = await request.json();
 
-    const updateData: any = {};
+    const updateData: Prisma.OrderUpdateInput = {};
 
     if (status) {
       if (!VALID_STATUSES.includes(status)) {

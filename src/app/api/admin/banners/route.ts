@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 import { adminSessionOptions } from "@/lib/adminSession";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { BANNERS_CACHE_TAG } from "@/lib/banners";
@@ -43,6 +44,8 @@ export async function GET() {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     const banners = await prisma.banner.findMany({
       orderBy: { order: "asc" },
     });
@@ -61,6 +64,8 @@ export async function POST(request: Request) {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
     const body = await request.json();
     const parsed = BannerInput.safeParse(body);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 import { adminSessionOptions } from "@/lib/adminSession";
 import {
   createProductSchema,
@@ -28,6 +29,8 @@ export async function GET() {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -46,6 +49,8 @@ export async function POST(request: Request) {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const rate = await rateLimit(`admin-mutation:global`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rate.allowed) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
 
     let body: unknown;
     try {

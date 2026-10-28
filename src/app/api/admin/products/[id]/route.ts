@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -106,7 +107,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       }
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.ProductUpdateInput = {};
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined)

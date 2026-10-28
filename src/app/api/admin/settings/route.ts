@@ -1,9 +1,9 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 import { adminSessionOptions } from "@/lib/adminSession";
 
 type AdminSessionData = {
