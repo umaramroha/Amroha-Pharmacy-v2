@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Phone, Mail, MessageCircle } from "lucide-react";
+import { MapPin, Phone, Mail, MessageCircle, Lightbulb, Clock } from "lucide-react";
 import { getWhatsAppLink, getContactMessage } from "@/lib/whatsapp";
 
 export default function ContactPage() {
@@ -141,7 +141,7 @@ ${formData.message}`;
 
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
               <p className="text-xs text-green-800 leading-relaxed">
-                💡 <strong>Quick Response:</strong> WhatsApp pe sabse jaldi
+                <Lightbulb className="w-4 h-4 inline mr-1 text-yellow-500" /> <strong>Quick Response:</strong> WhatsApp pe sabse jaldi
                 reply milta hai. Order, product ya kisi bhi sawaal ke liye
                 message us directly.
               </p>
@@ -149,7 +149,7 @@ ${formData.message}`;
 
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <p className="text-xs text-blue-800 leading-relaxed">
-                🕐 <strong>Business Hours:</strong> Monday to Saturday, 9:00 AM
+                <Clock className="w-4 h-4 inline mr-1 text-blue-500" /> <strong>Business Hours:</strong> Monday to Saturday, 9:00 AM
                 – 8:00 PM IST
               </p>
             </div>
