@@ -25,8 +25,14 @@ export default function CartPage() {
     clearCart,
   } = useCart();
 
+  
   const deliveryFee = totalPrice >= 500 || totalPrice === 0 ? 0 : 50;
   const finalTotal = totalPrice + deliveryFee;
+  
+  const totalMrp = items.reduce((sum, item) => sum + ((item.mrp || item.price) * item.quantity), 0);
+  const productDiscount = totalMrp - totalPrice;
+  const totalSaved = productDiscount + deliveryFee;
+
 
   /* =======================================================
      EMPTY CART
@@ -193,17 +199,25 @@ export default function CartPage() {
 
               <div className="space-y-3 pb-5 border-b border-gray-100">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal</span>
-                  <span className="font-semibold text-gray-900">₹{totalPrice}</span>
+                  <span className="text-gray-500">Items (MRP)</span>
+                  <span className="font-medium text-gray-700 line-through">₹{totalMrp}</span>
                 </div>
+                {productDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Product Discount</span>
+                    <span className="font-semibold text-green-600">- ₹{productDiscount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Delivery Fee</span>
-                  {deliveryFee === 0 ? (
-                    <span className="font-semibold text-green-600">FREE</span>
-                  ) : (
-                    <span className="font-semibold text-gray-900">₹{deliveryFee}</span>
-                  )}
+                  <span className="font-semibold text-gray-900">₹{deliveryFee === 0 ? 50 : deliveryFee}</span>
                 </div>
+                {deliveryFee === 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">FREE Delivery</span>
+                    <span className="font-semibold text-green-600">- ₹50</span>
+                  </div>
+                )}
               </div>
 
               {deliveryFee > 0 && (
@@ -231,11 +245,17 @@ export default function CartPage() {
 
               <div className="flex items-end justify-between mt-5 mb-5">
                 <div>
-                  <p className="text-sm text-gray-500">Total Amount</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Inclusive of delivery charges</p>
+                  <p className="text-sm text-gray-500">Order Total</p>
                 </div>
                 <span className="text-2xl font-black text-primary">₹{finalTotal}</span>
               </div>
+
+              {totalSaved > 0 && (
+                <div className="mb-5 flex items-center justify-between rounded-xl bg-green-50 border border-green-100 p-3">
+                  <span className="text-sm font-bold text-green-700">₹{totalSaved} saved</span>
+                  <span className="text-xs font-semibold text-green-700">You saved on this order!</span>
+                </div>
+              )}
 
               <Link
                 href="/checkout"

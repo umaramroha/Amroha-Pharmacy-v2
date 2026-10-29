@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 const MAX_QTY_PER_PRODUCT = 10;
 
 export type CartItem = {
+  mrp?: number;
   id: string;
   slug: string;
   name: string;

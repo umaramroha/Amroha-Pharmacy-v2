@@ -338,6 +338,7 @@ export default function ProductDetailClient({
       slug: product.slug,
       name: product.name,
       price,
+      mrp: mrp > price ? mrp : undefined,
       image: product.image || undefined,
       quantity,
     });

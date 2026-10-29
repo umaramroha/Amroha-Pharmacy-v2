@@ -25,8 +25,7 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (!inStock) return;
-    addToCart({ id: product.id,
-      slug: product.slug, name: product.name, price, image: product.image || undefined, quantity: 1 });
+    addToCart({ id: product.id, slug: product.slug, name: product.name, price, mrp: mrp > price ? mrp : undefined, image: product.image || undefined, quantity: 1 });
     showToast("Added to Cart");
   };
 

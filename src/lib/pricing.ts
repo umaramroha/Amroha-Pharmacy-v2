@@ -22,6 +22,7 @@ export type PricedLine = {
   name: string;
   quantity: number;
   unitPrice: Prisma.Decimal;
+  mrp: Prisma.Decimal;
 };
 
 export type PricingFailure = { ok: false; status: number; error: string };
@@ -30,6 +31,8 @@ export type PricingSuccess = {
   ok: true;
   lines: PricedLine[];
   subtotal: Prisma.Decimal;
+  mrpTotal: Prisma.Decimal;
+  productDiscount: Prisma.Decimal;
   deliveryFee: Prisma.Decimal;
   total: Prisma.Decimal;
 };
@@ -77,18 +80,13 @@ export function checkCartLimits(
  * subtotal, delivery fee and total (Decimal = no floating point errors).
  * Delivery: subtotal >= freeAbove (500) ? 0 : fee (50)  — values from lib/config.ts
  */
-export function calculateTotals(
-  lines: { unitPrice: Prisma.Decimal; quantity: number }[]
-) {
-  const subtotal = lines.reduce(
-    (sum, l) => sum.plus(l.unitPrice.mul(l.quantity)),
-    new Prisma.Decimal(0)
-  );
-  const deliveryFee = subtotal.gte(deliveryConfig.freeAbove)
-    ? new Prisma.Decimal(0)
-    : new Prisma.Decimal(deliveryConfig.fee);
+export function calculateTotals(lines: PricedLine[]) {
+  const subtotal = lines.reduce((sum, l) => sum.plus(l.unitPrice.mul(l.quantity)), new Prisma.Decimal(0));
+  const mrpTotal = lines.reduce((sum, l) => sum.plus(l.mrp.mul(l.quantity)), new Prisma.Decimal(0));
+  const productDiscount = mrpTotal.minus(subtotal);
+  const deliveryFee = subtotal.gte(deliveryConfig.freeAbove) ? new Prisma.Decimal(0) : new Prisma.Decimal(deliveryConfig.fee);
   const total = subtotal.plus(deliveryFee);
-  return { subtotal, deliveryFee, total };
+  return { subtotal, mrpTotal, productDiscount, deliveryFee, total };
 }
 
 /**
@@ -106,6 +104,7 @@ export async function priceCart(
       id: true,
       name: true,
       price: true,
+      mrp: true,
       stock: true,
       isActive: true,
     },
@@ -141,6 +140,7 @@ export async function priceCart(
       name: product.name,
       quantity,
       unitPrice: product.price,
+      mrp: product.mrp && product.mrp.gt(product.price) ? product.mrp : product.price,
     });
   }
 
