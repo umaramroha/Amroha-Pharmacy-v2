@@ -61,7 +61,7 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
         </div>
 
         <div style="padding: 30px 25px;">
-          <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${escapeHtml(customerName)}</strong>,</p>
+          <p style="font-size: 16px; color: #1f2937;">Hello <strong>${escapeHtml(customerName)}</strong>,</p>
 
           <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
             Your order has been placed successfully. We will dispatch it shortly and send tracking details on WhatsApp.
@@ -181,7 +181,7 @@ export function getOrderStatusUpdateHTML(data: {
     <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;">
         <h2 style="color: #0F766E; margin-top: 0;">Order Update</h2>
-        <p style="font-size: 16px; color: #1f2937;">Namaste <strong>${data.customerName}</strong>,</p>
+        <p style="font-size: 16px; color: #1f2937;">Hello <strong>${escapeHtml(data.customerName)}</strong>,</p>
         <p style="font-size: 16px; color: #1f2937; font-weight: bold; background-color: #f0fdf4; padding: 10px; border-radius: 6px; text-align: center;">
           ${statusMessage}
         </p>

@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       data: {
         name: name.trim(), email: cleanEmail, mobile: mobile.trim(),
         password: hashedPassword, isVerified: false, verificationToken,
+        verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
