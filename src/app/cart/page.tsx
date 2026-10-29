@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { getCartOrderMessage, getWhatsAppLink } from "@/lib/whatsapp";
-import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ArrowLeft, Truck, ShieldCheck, MessageCircle, Clock } from "lucide-react";
+import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ArrowLeft, Truck, ShieldCheck, MessageCircle } from "lucide-react";
 
 // Helper for estimated delivery date
 const getEstimatedDelivery = () => {
@@ -59,7 +59,7 @@ export default function CartPage() {
       <section className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8">
           
-          {/* CART ITEMS (MYNTRA STYLE) */}
+          {/* CART ITEMS (Clean Pharmacy Style) */}
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-bold text-gray-900 text-lg">Cart Items</h2>
@@ -74,7 +74,7 @@ export default function CartPage() {
               return (
                 <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex gap-4 relative">
                   {/* Image */}
-                  <Link href={`/products/${item.slug}`} className="w-[88px] h-[110px] md:w-[120px] md:h-[150px] shrink-0 rounded-lg bg-[#f5f7f6] overflow-hidden border border-gray-100 flex items-center justify-center">
+                  <Link href={`/products/${item.slug}`} className="w-[88px] h-[110px] md:w-[100px] md:h-[120px] shrink-0 rounded-lg bg-[#f5f7f6] overflow-hidden border border-gray-100 flex items-center justify-center">
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
@@ -88,7 +88,7 @@ export default function CartPage() {
                       <h3 className="font-bold text-sm md:text-base text-gray-900 line-clamp-2 leading-tight">
                         {item.name}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-1">Amroha Pharmacy</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Amroha Pharmacy</p>
                     </div>
 
                     {/* Price */}
@@ -102,23 +102,21 @@ export default function CartPage() {
                       )}
                     </div>
 
-                    {/* Qty & Return */}
-                    <div className="flex items-center gap-3 mt-3">
+                    {/* Qty & Delivery Estimate */}
+                    <div className="flex items-center gap-4 mt-3 flex-wrap">
                       <div className="flex items-center border border-gray-300 rounded-md overflow-hidden h-8">
                         <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Minus className="w-3 h-3" /></button>
                         <span className="w-8 text-center text-sm font-semibold text-gray-800 bg-white border-x border-gray-300 py-1">{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Plus className="w-3 h-3" /></button>
                       </div>
-                      <span className="text-xs font-medium text-gray-500">7 days return</span>
+                      
+                      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-600 font-medium">
+                        <Truck className="w-3.5 h-3.5 text-primary" />
+                        Delivery by <span className="text-gray-900 font-bold">{getEstimatedDelivery()}</span>
+                      </div>
                     </div>
 
-                    {/* Delivery Estimate */}
-                    <div className="flex items-center gap-1.5 mt-2.5 text-xs text-gray-600 font-medium">
-                      <Truck className="w-3.5 h-3.5 text-primary" />
-                      Delivery by <span className="text-gray-900 font-bold">{getEstimatedDelivery()}</span>
-                    </div>
-
-                    {/* Remove Button (Bottom on Mobile, Top Right on Desktop) */}
+                    {/* Remove Button (Top Right) */}
                     <button 
                       onClick={() => removeFromCart(item.id)} 
                       className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition p-1"
@@ -181,14 +179,14 @@ export default function CartPage() {
               )}
 
               <Link href="/checkout" className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-bold text-sm transition shadow-sm active:scale-95">
-                Place Order <ArrowRight className="w-4 h-4" />
+                Proceed to Checkout <ArrowRight className="w-4 h-4" />
               </Link>
               <a href={getWhatsAppLink(getCartOrderMessage(items))} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full mt-3 bg-[#25D366] hover:bg-[#20bd5a] text-white py-3.5 rounded-xl font-bold text-sm transition active:scale-95">
                 <MessageCircle className="w-5 h-5" /> Order on WhatsApp
               </a>
 
               <div className="mt-5 pt-5 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                <ShieldCheck className="w-4 h-4 text-green-600" /> Safe and Secure Payments. Easy returns.
+                <ShieldCheck className="w-4 h-4 text-green-600" /> 100% Authentic Medicines
               </div>
             </div>
           </div>
