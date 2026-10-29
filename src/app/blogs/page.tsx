@@ -51,7 +51,7 @@ export default function BlogsPage() {
               No blogs found
             </h2>
             <p className="text-gray-500">
-              Is category me abhi blogs nahi hain.
+              No articles are currently available in this category.
             </p>
           </div>
         ) : (

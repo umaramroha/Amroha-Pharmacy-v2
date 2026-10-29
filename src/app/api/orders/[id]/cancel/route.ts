@@ -57,8 +57,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     });
 
     if (cancellation.error === "NOT_FOUND") return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    if (cancellation.error === "ALREADY_CANCELLED") return NextResponse.json({ error: "Ye order already cancel ho chuka hai." }, { status: 400 });
-    if (cancellation.error === "NOT_CANCELLABLE") return NextResponse.json({ error: `Order is currently "${cancellation.error}" and cannot be cancelled.` }, { status: 400 });
+    if (cancellation.error === "ALREADY_CANCELLED") return NextResponse.json({ error: "This order has already been cancelled." }, { status: 400 });
+    if (cancellation.error === "NOT_CANCELLABLE") return NextResponse.json({ error: "This order can no longer be cancelled." }, { status: 400 });
 
     const order = cancellation.order!;
     const shortId = order.id.slice(-8).toUpperCase();
@@ -69,7 +69,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
           from: FROM_EMAIL,
           to: session.email,
           subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
-          html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Aapka order <strong>#${shortId}</strong> cancel kar diya gaya hai.</p></div>`,
+          html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled.</p></div>`,
         });
       }
     } catch (e) {}

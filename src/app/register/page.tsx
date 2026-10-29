@@ -114,7 +114,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   setFormData({ ...formData, mobile: e.target.value })
                 }
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary"
-                placeholder="+91 XXXXXXXXXX"
+                placeholder="10-digit mobile number"
                 required
               />
             </div>

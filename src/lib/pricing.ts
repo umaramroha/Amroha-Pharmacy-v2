@@ -121,7 +121,7 @@ export async function priceCart(
       return fail(400, `Product not found: ${productId}`);
     }
     if (!product.isActive) {
-      return fail(400, `${product.name} abhi available nahi hai.`);
+      return fail(400, `${product.name} is currently unavailable.`);
     }
     if (product.stock < quantity) {
       return fail(

@@ -71,28 +71,28 @@ export default function AdminReportsPage() {
     {
       label: "Total Revenue",
       value: `₹${Number(data.totalRevenue).toLocaleString("en-IN")}`,
-      icon: "💰",
+      icon: "",
       color: "text-green-600",
       bg: "bg-green-100",
     },
     {
       label: "Total Orders",
       value: data.totalOrders,
-      icon: "📦",
+      icon: "",
       color: "text-blue-600",
       bg: "bg-blue-100",
     },
     {
       label: "Delivered",
       value: data.deliveredOrders,
-      icon: "✅",
+      icon: "",
       color: "text-primary",
       bg: "bg-primary/10",
     },
     {
       label: "Avg Order Value",
       value: `₹${Number(data.avgOrderValue).toFixed(0)}`,
-      icon: "📊",
+      icon: "",
       color: "text-purple-600",
       bg: "bg-purple-100",
     },
@@ -126,7 +126,7 @@ export default function AdminReportsPage() {
           Reports & Analytics
         </h1>
         <p className="text-gray-600 text-sm mt-1">
-          Sales performance aur business insights
+          Sales performance and business insights
         </p>
       </div>
 
@@ -159,7 +159,7 @@ export default function AdminReportsPage() {
             Order Status Breakdown
           </h2>
           {data.statusBreakdown.length === 0 ? (
-            <p className="text-gray-500 text-sm">Koi orders nahi hain.</p>
+            <p className="text-gray-500 text-sm">No orders yet.</p>
           ) : (
             <div className="space-y-3">
               {data.statusBreakdown.map((item) => (
@@ -191,7 +191,7 @@ export default function AdminReportsPage() {
           </h2>
           {Object.keys(data.dailyRevenue).length === 0 ? (
             <p className="text-gray-500 text-sm">
-              Pichle 7 din me koi order nahi aaya.
+              No orders were received in the past seven days.
             </p>
           ) : (
             <div className="space-y-3">
@@ -225,7 +225,7 @@ export default function AdminReportsPage() {
         </h2>
         {data.topProducts.length === 0 ? (
           <p className="text-gray-500 text-sm">
-            Abhi tak koi product sell nahi hua.
+            No products have been sold yet.
           </p>
         ) : (
           <div className="space-y-3">

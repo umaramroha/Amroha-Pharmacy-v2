@@ -430,7 +430,7 @@ export default function AdminProductsPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-xl">
-                              🖼
+                              
                             </div>
                           )}
                         </div>
@@ -453,7 +453,7 @@ export default function AdminProductsPage() {
                           className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-md transition text-sm font-semibold"
                           title="Remove image"
                         >
-                          ✕
+                          
                         </button>
                       </div>
                     ))}
@@ -504,7 +504,7 @@ export default function AdminProductsPage() {
       {/* Products List */}
       {products.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4">💊</div>
+          <div className="text-6xl mb-4"></div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">
             No products yet
           </h2>
@@ -536,7 +536,7 @@ export default function AdminProductsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">
-                    💊
+                    
                   </div>
                 )}
                 {/* Image count badge */}

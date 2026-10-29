@@ -124,7 +124,7 @@ order: banner.order.toString(),
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("❌ Image must be under 5MB");
+      setError(" Image must be under 5MB");
       return;
     }
 
@@ -149,10 +149,10 @@ order: banner.order.toString(),
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       setFormData((f) => ({ ...f, imageUrl: data.secure_url }));
-      setMessage("✅ Image uploaded");
+      setMessage(" Image uploaded");
     } catch (err) {
       console.error(err);
-      setError("❌ Upload failed. Check Cloudinary preset (must be Unsigned)");
+      setError(" Upload failed. Check Cloudinary preset (must be Unsigned)");
     } finally {
       setUploading(false);
     }
@@ -388,7 +388,7 @@ order: banner.order.toString(),
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Order (chhota number pehle)
+                  Display order (lowest number first)
                 </label>
                 <input
                   type="number"
@@ -495,7 +495,7 @@ layout={formData.layout}
       {/* Banners List */}
       {banners.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4">🖼️</div>
+          <div className="text-6xl mb-4">️</div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">
             No banners yet
           </h2>

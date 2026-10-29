@@ -110,7 +110,7 @@ export default function OrderDetailPage(
       const data = await res.json();
 
       if (!res.ok) {
-        setCancelError(data.error || "Order cancel nahi ho paya.");
+        setCancelError(data.error || "We could not cancel your order. Please try again.");
         setCancelling(false);
         return;
       }
@@ -185,7 +185,7 @@ export default function OrderDetailPage(
           <p className="text-xs text-green-700 mt-1">
             {order.paymentStatus === "PAID"
               ? "Refund will be processed within 5-7 business days. A confirmation email has been sent."
-              : "Koi payment nahi hui thi, isliye refund ki zaroorat nahi. Confirmation email bhej di gayi hai."}
+              : "No payment was made, so no refund is required. A confirmation email has been sent."}
           </p>
         </div>
       )}
@@ -405,7 +405,7 @@ export default function OrderDetailPage(
 
       {/* Help */}
       <div className="mt-6 text-center text-sm text-gray-500">
-        Koi sawaal hai?{" "}
+        Have any questions?{" "}
         <Link href="/contact" className="text-primary hover:underline">
           Contact us
         </Link>

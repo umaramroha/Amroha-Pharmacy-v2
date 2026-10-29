@@ -9,7 +9,7 @@ export default function NotFound() {
           Page Not Found
         </h1>
         <p className="text-gray-600 mb-8">
-          Ye page exist nahi karta. Shayad link purana hai ya galat type hua.
+          This page could not be found. The link may be outdated or incorrect.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
           <Link

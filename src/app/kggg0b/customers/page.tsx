@@ -62,9 +62,9 @@ export default function AdminCustomersPage() {
 
       {customers.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4">👥</div>
+          <div className="text-6xl mb-4"></div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">No customers found</h2>
-          <p className="text-gray-500">{search ? "Koi customer match nahi hua." : "Abhi tak koi customer register nahi hua."}</p>
+          <p className="text-gray-500">{search ? "No customers match your search." : "No customers have registered yet."}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -75,8 +75,8 @@ export default function AdminCustomersPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900 truncate">{customer.name}</h3>
-                <p className="text-sm text-gray-600 truncate">📧 {customer.email}</p>
-                {customer.mobile && <p className="text-sm text-gray-600">📱 {customer.mobile}</p>}
+                <p className="text-sm text-gray-600 truncate"> {customer.email}</p>
+                {customer.mobile && <p className="text-sm text-gray-600"> {customer.mobile}</p>}
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Joined</p>

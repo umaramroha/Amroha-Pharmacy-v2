@@ -288,7 +288,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
         {paymentMethod === "upi" && (
           <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
             <p className="font-semibold mb-2">
-              📸 Payment Screenshot Bhejna Na Bhoolen
+              Please remember to share your payment screenshot.
             </p>
             <p className="mb-3">
               Order confirm karne ke liye apna payment screenshot WhatsApp pe
@@ -643,7 +643,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
               </div>
 
               <p className="text-xs text-gray-500 text-center mt-3">
-                By placing order you agree to our Terms
+                By placing an order, you agree to our Terms and Conditions.
               </p>
             </div>
           </div>

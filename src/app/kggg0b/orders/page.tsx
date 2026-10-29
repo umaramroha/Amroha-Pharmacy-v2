@@ -95,7 +95,7 @@ function AdminOrdersContent() {
 
       {orders.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4">📦</div>
+          <div className="text-6xl mb-4"></div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">No orders found</h2>
         </div>
       ) : (
@@ -110,7 +110,7 @@ function AdminOrdersContent() {
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
-                  <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">🖨️ Print</button>
+                  <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">️ Print</button>
                 </div>
               </div>
               

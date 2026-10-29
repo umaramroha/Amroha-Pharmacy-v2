@@ -23,7 +23,7 @@ export default function BlogDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [lang, setLang] = useState<Lang>("hindi");
+  const [lang, setLang] = useState<Lang>("english");
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -225,7 +225,7 @@ export default function BlogDetailPage() {
                   Related Products
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Is blog se related products
+                  Products related to this article
                 </p>
               </div>
               <Link
@@ -247,7 +247,7 @@ export default function BlogDetailPage() {
         {/* CTA */}
         <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-8 md:p-10 mb-10 text-center">
           <h3 className="text-2xl md:text-3xl font-bold mb-3">
-            Koi Sawaal Hai?
+            Have any questions?
           </h3>
           <p className="text-white/90 mb-6 max-w-lg mx-auto">
             Is blog ke baare me ya apni health concern ke baare me expert se
@@ -255,7 +255,7 @@ export default function BlogDetailPage() {
           </p>
           <a
             href={getWhatsAppLink(
-              `Hello Amroha Pharmacy, mujhe is blog ke baare me sawaal hai: ${content.title}`
+              `Hello Amroha Pharmacy, I have a question about this article: ${content.title}`
             )}
             target="_blank"
             rel="noopener noreferrer"
@@ -269,7 +269,7 @@ export default function BlogDetailPage() {
         {relatedBlogs.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Aur Blogs Padhein
+              Read more articles
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {relatedBlogs.map((b) => (
@@ -281,7 +281,7 @@ export default function BlogDetailPage() {
                   <div className="aspect-video overflow-hidden bg-gray-100">
                     <img
                       src={b.image}
-                      alt={b.hindi.title}
+                      alt={b.english.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
                   </div>
@@ -290,7 +290,7 @@ export default function BlogDetailPage() {
                       {b.category}
                     </span>
                     <h3 className="text-sm font-bold text-gray-900 mt-2 line-clamp-2 group-hover:text-primary transition leading-snug">
-                      {b.hindi.title}
+                      {b.english.title}
                     </h3>
                     <p className="text-xs text-gray-500 mt-2">
                       ⏱ {b.readTime} min read

@@ -51,7 +51,7 @@ export default function AdminDashboard() {
       value: stats?.totalOrders ?? 0,
       color: "text-primary",
       bg: "bg-primary/10",
-      icon: "📦",
+      icon: "",
     },
     {
       label: "Pending Orders",
@@ -65,14 +65,14 @@ export default function AdminDashboard() {
       value: stats?.totalProducts ?? 0,
       color: "text-blue-600",
       bg: "bg-blue-100",
-      icon: "💊",
+      icon: "",
     },
     {
       label: "Total Revenue",
       value: `₹${Number(stats?.revenue ?? 0).toFixed(0)}`,
       color: "text-green-600",
       bg: "bg-green-100",
-      icon: "💰",
+      icon: "",
     },
   ];
 
@@ -80,36 +80,36 @@ export default function AdminDashboard() {
     {
       label: "Orders",
       href: "/kggg0b/orders",
-      icon: "📦",
+      icon: "",
       desc: "Manage customer orders",
     },
     {
       label: "Products",
       href: "/kggg0b/products",
-      icon: "💊",
+      icon: "",
       desc: "Add, edit, delete products",
     },
 {
   label: "Banners",
   href: "/kggg0b/banners",
-  icon: "🖼️",
+  icon: "️",
 },
    {
       label: "Customers",
       href: "/kggg0b/customers",
-      icon: "👥",
+      icon: "",
       desc: "View customer list",
     },
       {
     label: "Reports",
     href: "/kggg0b/reports",
-    icon: "📈",
+    icon: "",
     desc: "Sales & analytics",
   },
   {
     label: "Settings",
     href: "/kggg0b/settings",
-    icon: "⚙️",
+    icon: "️",
     desc: "Change email & password",
   },
 ];
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow-sm border p-5 mb-8">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl">👥</span>
+              <span className="text-2xl"></span>
             </div>
             <div>
               <p className="text-sm text-gray-600">Registered Customers</p>

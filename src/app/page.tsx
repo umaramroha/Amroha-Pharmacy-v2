@@ -170,7 +170,7 @@ export default async function Home() {
                 Best Selling Products
               </h2>
               <p className="text-xs md:text-sm text-gray-500 mt-1">
-                Hamare sabse popular products
+                Our most popular products
               </p>
             </div>
             <Link

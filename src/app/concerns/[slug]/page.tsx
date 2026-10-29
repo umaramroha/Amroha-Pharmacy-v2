@@ -114,7 +114,7 @@ export default async function ConcernDetailPage(
               No products found
             </h3>
             <p className="text-gray-500 mb-6">
-              Is concern ke liye abhi products available nahi hain.
+              No products are currently available for this concern.
             </p>
             <a
               href={getWhatsAppLink(getContactMessage(concern.name))}
@@ -122,7 +122,7 @@ export default async function ConcernDetailPage(
               rel="noopener noreferrer"
               className="inline-block bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-full font-semibold transition"
             >
-              💬 WhatsApp pe Puchhein
+              Ask us on WhatsApp
             </a>
           </div>
         ) : (
@@ -136,7 +136,7 @@ export default async function ConcernDetailPage(
 
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
         <h2 className="text-xl font-bold mb-4 text-primary">
-          Aur Concerns Dekhein
+          Explore other concerns
         </h2>
         <div className="flex flex-wrap gap-2">
           {concerns
@@ -156,10 +156,10 @@ export default async function ConcernDetailPage(
 
       <div className="bg-primary/5 rounded-lg p-6 text-center">
         <h3 className="text-xl font-bold mb-2 text-primary">
-          Guidance Chahiye?
+          Need guidance?
         </h3>
         <p className="text-gray-600 mb-4 text-sm">
-          Is concern ke baare me koi sawaal? WhatsApp pe expert se puchhein.
+          Have questions about this concern? Ask an expert on WhatsApp.
         </p>
         <a
           href={getWhatsAppLink(getContactMessage(concern.name))}

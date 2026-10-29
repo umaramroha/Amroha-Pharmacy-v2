@@ -112,7 +112,7 @@ export function getDeliveryInfo(pincode: string) {
   if (!zone) {
     return {
       available: false,
-      message: "❌ Is pincode pe delivery available nahi hai",
+      message: "Delivery is not available for this PIN code.",
     };
   }
 
@@ -129,7 +129,7 @@ export function getDeliveryInfo(pincode: string) {
     codAvailable: codAvailable,
     message: codAvailable
       ? `✅ Delivery available in ${zone.name}`
-      : `⚠️ Delivery available, par COD available nahi hai`,
+      : `Delivery is available, but Cash on Delivery is unavailable.`,
   };
 }
 
