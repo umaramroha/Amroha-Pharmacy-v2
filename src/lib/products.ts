@@ -49,3 +49,30 @@ export async function getFeaturedProducts(limit = 4): Promise<FeaturedProduct[]>
     return [];
   }
 }
+
+import { unstable_cache } from "next/cache";
+
+export const PRODUCTS_CACHE_TAG = "products";
+
+// Cache ALL active products so the DB doesn't wake up on every navigation.
+export const getCachedProducts = unstable_cache(
+  async () => {
+    return prisma.product.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        mrp: true,
+        image: true,
+        stock: true,
+        category: true,
+        description: true,
+      },
+    });
+  },
+  ["all-products"],
+  { revalidate: 3600, tags: [PRODUCTS_CACHE_TAG] }
+);

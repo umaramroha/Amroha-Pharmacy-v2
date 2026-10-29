@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { PRODUCTS_CACHE_TAG } from "@/lib/products";
+import { revalidateTag } from "next/cache";
 import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
 import {
@@ -103,6 +105,7 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateTag(PRODUCTS_CACHE_TAG);
     return NextResponse.json({ success: true, product });
   } catch (error: any) {
     console.error("Admin create product error:", error);

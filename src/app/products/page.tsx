@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { getCachedProducts } from "@/lib/products";
 import ProductListClient from "@/components/product/ProductListClient";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function ProductsPage({
   searchParams,
@@ -13,38 +13,34 @@ export default async function ProductsPage({
   const limit = 24;
   const skip = (page - 1) * limit;
 
-  const where: any = { isActive: true };
+  // Fetch all cached products (this is instantaneous after the first hit)
+  const allProducts = await getCachedProducts();
+
+  // Filter in memory (since we have cached all products)
+  let filteredProducts = allProducts;
   
   if (resolvedParams.category) {
-    where.category = resolvedParams.category;
+    filteredProducts = filteredProducts.filter(p => p.category === resolvedParams.category);
   }
   
   if (resolvedParams.q) {
-    where.OR = [
-      { name: { contains: resolvedParams.q, mode: "insensitive" } },
-      { description: { contains: resolvedParams.q, mode: "insensitive" } },
-    ];
+    const q = resolvedParams.q.toLowerCase();
+    filteredProducts = filteredProducts.filter(
+      p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q))
+    );
   }
 
-  const [products, totalCount] = await Promise.all([
-    prisma.product.findMany({ 
-      take: limit, 
-      skip, 
-      where, 
-      orderBy: { createdAt: "desc" } 
-    }),
-    prisma.product.count({ where })
-  ]);
-
+  const totalCount = filteredProducts.length;
   const totalPages = Math.ceil(totalCount / limit);
+  
+  // Paginate
+  const paginatedProducts = filteredProducts.slice(skip, skip + limit);
 
-  // Serialize Decimal and Date objects for the Client Component
-  const safeProducts = products.map(p => ({
+  // Serialize Decimal for Client Component
+  const safeProducts = paginatedProducts.map(p => ({
     ...p,
     price: p.price.toString(),
     mrp: p.mrp ? p.mrp.toString() : null,
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
   }));
 
   return (
