@@ -94,7 +94,7 @@ export default function BlogDetailPage() {
   }
 
   const content = lang === "hindi" ? blog.hindi : blog.english;
-  const shareMessage = `${content.title}\n\n${content.content.slice(0, 200)}...\n\nRead more: https://amrohapharmastore.vercel.app/blogs/${blog.slug}`;
+  const shareMessage = `${content.title}\n\n${content.content.slice(0, 200)}...\n\nRead more: https://amrohapharmacy.vercel.app/blogs/${blog.slug}`;
 
   const relatedBlogs = blogs
     .filter((b) => b.slug !== blog.slug)

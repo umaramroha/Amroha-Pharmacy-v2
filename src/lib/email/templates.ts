@@ -154,7 +154,7 @@ export function getAdminOrderNotificationHTML(data: {
         <p><strong>Total:</strong> ₹${data.total.toLocaleString("en-IN")}</p>
         <p><strong>Payment:</strong> ${data.paymentMethod === "cod" ? "COD" : "UPI"}</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;" />
-        <a href="https://amrohapharmastore.vercel.app/admin/orders" style="display: inline-block; background-color: #0F766E; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+        <a href="https://amrohapharmacy.vercel.app/kggg0b/orders" style="display: inline-block; background-color: #0F766E; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
           View in Admin Panel →
         </a>
       </div>

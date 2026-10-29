@@ -15,6 +15,7 @@ import {
 } from "@/lib/pricing";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { rateLimit } from "@/lib/rateLimit";
+import { isCodAvailable } from "@/data/delivery";
 
 // ==============================
 // CONSTANTS
@@ -209,6 +210,12 @@ export async function POST(request: Request) {
     // ==============================
     // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
     // ==============================
+    
+    // Enforce COD Blacklist
+    if (input.paymentMethod === "cod" && !isCodAvailable(input.pincode)) {
+      return NextResponse.json({ error: "Cash on Delivery is not available for this PIN code. Please choose UPI." }, { status: 400 });
+    }
+
     const customerEmail = input.customerEmail?.trim() || null;
 
     const order = await prisma.$transaction(async (tx) => {
