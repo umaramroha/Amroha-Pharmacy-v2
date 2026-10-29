@@ -121,7 +121,11 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
     if (data.images !== undefined) {
       updateData.images = data.images;
-      updateData.image = data.images[0] || null;
+      if (data.images.length > 0) {
+        updateData.image = data.images[0];
+      } else if (data.image !== undefined) {
+        updateData.image = data.image?.trim() || null;
+      }
     } else if (data.image !== undefined) {
       updateData.image = data.image?.trim() || null;
     }

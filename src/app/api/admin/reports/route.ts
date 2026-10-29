@@ -55,7 +55,7 @@ export async function GET() {
     // Top selling products
     const topProducts = await prisma.orderItem.groupBy({
       by: ["productId"],
-      _sum: { quantity: true },
+      _sum: { quantity: true, price: true },
       _count: { productId: true },
       orderBy: { _sum: { quantity: "desc" } },
       take: 5,
@@ -75,8 +75,7 @@ export async function GET() {
         image: product?.image || null,
         totalSold: tp._sum.quantity || 0,
         orderCount: tp._count.productId,
-        revenue:
-          Number(product?.price || 0) * (tp._sum.quantity || 0),
+        revenue: Number(tp._sum.price || 0),
       };
     });
 
