@@ -94,7 +94,7 @@ export default function Header() {
                   <button aria-label="Close wellness menu" className="fixed inset-0 z-40 cursor-default" onClick={() => setCategoryOpen(false)} />
                   <div className="absolute left-0 top-full z-50 mt-3 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
                     {categories.map((category) => (
-                      <Link key={category.slug} href={`/concerns/${category.slug}`} className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">{category.name}</Link>
+                      <Link key={category.slug} href={`/products?category=${category.slug}`} className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">{category.name}</Link>
                     ))}
                     <Link href="/concerns" className="mt-1 block rounded-xl border-t border-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700">Explore all concerns →</Link>
                   </div>

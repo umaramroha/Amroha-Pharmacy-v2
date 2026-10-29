@@ -440,7 +440,7 @@ export default function ProductDetailClient({
   /* ------------------------------------------------------------------------ */
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-gray-900 pb-24 lg:pb-0">
+    <main className="min-h-screen bg-[#f8fafc] text-gray-900 pb-[calc(68px+80px)] lg:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8">
 
         {/* ---------------------------------------------------------------- */}
@@ -1278,7 +1278,7 @@ export default function ProductDetailClient({
       {/* ------------------------------------------------------------------ */}
 
       {isInStock && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-3 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
+        <div className="lg:hidden fixed bottom-[68px] inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-3 shadow-[0_-6px_20px_rgba(0,0,0,0.08)]">
           <div className="max-w-7xl mx-auto flex items-center gap-2.5">
 
             <div className="min-w-0 flex-1">

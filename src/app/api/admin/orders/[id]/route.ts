@@ -77,50 +77,74 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     const { status, paymentStatus } = await request.json();
-
     const updateData: Prisma.OrderUpdateInput = {};
 
     if (status) {
       if (!VALID_STATUSES.includes(status)) {
-        return NextResponse.json(
-          { error: "Invalid status" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
       updateData.status = status;
     }
 
     if (paymentStatus) {
+      // FIX 1: Strict validation for payment status
+      if (!VALID_PAYMENT_STATUSES.includes(paymentStatus)) {
+        return NextResponse.json({ error: "Invalid payment status" }, { status: 400 });
+      }
       updateData.paymentStatus = paymentStatus;
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: "Nothing to update" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    const currentOrder = await prisma.order.findUnique({ where: { id: params.id } });
+    // FIX 2: Transaction to update order and handle stock correctly
+    const updated = await prisma.$transaction(async (tx) => {
+      const currentOrder = await tx.order.findUnique({
+        where: { id: params.id },
+        include: { items: true }, // Include items so we can restore stock
+      });
 
-    const updated = await prisma.order.update({
-      where: { id: params.id },
-      data: updateData,
-      include: {
-        items: {
-          include: {
-            product: {
-              select: { id: true, name: true, image: true, slug: true },
+      if (!currentOrder) {
+        throw new Error("Order not found");
+      }
+
+      const order = await tx.order.update({
+        where: { id: params.id },
+        data: updateData,
+        include: {
+          items: {
+            include: {
+              product: { select: { id: true, name: true, image: true, slug: true } },
             },
           },
         },
-      },
+      });
+
+      // Restore stock if status is changing TO "CANCELLED"
+      if (status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
+        for (const item of currentOrder.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
+      // Deduct stock if status is changing FROM "CANCELLED" to an active state
+      else if (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED") {
+        for (const item of currentOrder.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
+      }
+
+      return order;
     });
 
-    
-    
     // Send status update email to customer
-    if (status && status !== currentOrder?.status && updated.customerEmail) {
+    if (status && status !== updated.status && updated.customerEmail) {
       try {
         await transporter.sendMail({
           from: FROM_EMAIL,
