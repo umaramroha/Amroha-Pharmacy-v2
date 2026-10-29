@@ -70,6 +70,7 @@ model AdminUser {
   email     String   @unique
   password  String
   role      String   @default("ADMIN")
+  lastPasswordChange DateTime @default(now())
   createdAt DateTime @default(now())
 }
 
@@ -84,6 +85,7 @@ model Customer {
   verificationTokenExpiry DateTime?
   resetToken              String?
   resetTokenExpiry        DateTime?
+  lastPasswordChange DateTime @default(now())
   createdAt DateTime @default(now())
   orders    Order[]
   @@index([resetToken])

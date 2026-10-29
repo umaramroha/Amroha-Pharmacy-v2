@@ -8,6 +8,7 @@ type AdminSessionData = {
   email?: string;
   role?: string;
   isAdminLoggedIn: boolean;
+  lastPasswordChange?: string;
 };
 
 export async function POST() {

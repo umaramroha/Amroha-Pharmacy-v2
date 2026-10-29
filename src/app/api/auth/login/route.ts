@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     session.email = customer.email;
     session.name = customer.name;
     session.isLoggedIn = true;
+    session.lastPasswordChange = customer.lastPasswordChange.toISOString();
 
     await session.save();
 

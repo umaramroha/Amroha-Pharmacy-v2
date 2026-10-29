@@ -11,6 +11,7 @@ type AdminSessionData = {
   email?: string;
   role?: string;
   isAdminLoggedIn: boolean;
+  lastPasswordChange?: string;
 };
 
 async function getAdminSession() {
@@ -90,7 +91,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const updateData: { email?: string; password?: string } = {};
+    const updateData: { email?: string; password?: string; lastPasswordChange?: Date } = {};
 
     // Update email
     if (newEmail && newEmail.trim().toLowerCase() !== admin.email) {
@@ -137,6 +138,7 @@ if (newPassword) {
   }
 
   updateData.password = await bcrypt.hash(newPassword, 10);
+  updateData.lastPasswordChange = new Date();
 }
 
     if (Object.keys(updateData).length === 0) {

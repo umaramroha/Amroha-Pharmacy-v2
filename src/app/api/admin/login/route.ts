@@ -12,6 +12,7 @@ type AdminSessionData = {
   email?: string;
   role?: string;
   isAdminLoggedIn: boolean;
+  lastPasswordChange?: string;
 };
 
 export async function POST(request: Request) {
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
     session.email = admin.email;
     session.role = admin.role;
     session.isAdminLoggedIn = true;
+    session.lastPasswordChange = admin.lastPasswordChange.toISOString();
     await session.save();
 
     return NextResponse.json({

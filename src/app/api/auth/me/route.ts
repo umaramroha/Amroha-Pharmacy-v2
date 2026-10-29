@@ -23,8 +23,13 @@ export async function GET() {
         email: true,
         mobile: true,
         createdAt: true,
+        lastPasswordChange: true,
       },
-    });
+    })
+    if (customer && session.lastPasswordChange && new Date(session.lastPasswordChange) < customer.lastPasswordChange) {
+      session.destroy();
+      return NextResponse.json({ user: null });
+    };
 
     if (!customer) {
       // User deleted from DB but session exists — destroy session

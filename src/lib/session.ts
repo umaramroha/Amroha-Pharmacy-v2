@@ -5,6 +5,7 @@ export type SessionData = {
   email?: string;
   name?: string;
   isLoggedIn: boolean;
+  lastPasswordChange?: string;
 };
 
 export const defaultSession: SessionData = {

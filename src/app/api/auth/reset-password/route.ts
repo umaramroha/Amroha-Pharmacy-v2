@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // 3. Update password and clear the reset token
     const updated = await prisma.customer.updateMany({
       where: { id: customer.id, resetToken: token },
-      data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null },
+      data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null, lastPasswordChange: new Date() },
     });
     if (updated.count !== 1) {
       return NextResponse.json({ error: "Token already used or invalid." }, { status: 400 });

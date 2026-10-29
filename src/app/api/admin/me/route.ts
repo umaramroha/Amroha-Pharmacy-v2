@@ -9,6 +9,7 @@ type AdminSessionData = {
   email?: string;
   role?: string;
   isAdminLoggedIn: boolean;
+  lastPasswordChange?: string;
 };
 
 export async function GET() {
@@ -24,8 +25,12 @@ export async function GET() {
 
     const admin = await prisma.adminUser.findUnique({
       where: { id: session.adminId },
-      select: { id: true, email: true, role: true },
-    });
+      select: { id: true, email: true, role: true, lastPasswordChange: true },
+    })
+    if (admin && session.lastPasswordChange && new Date(session.lastPasswordChange) < admin.lastPasswordChange) {
+      session.destroy();
+      return NextResponse.json({ admin: null });
+    };
 
     if (!admin) {
       session.destroy();
