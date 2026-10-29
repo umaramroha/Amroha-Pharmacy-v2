@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Banknote, Smartphone, Camera, Send, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -276,7 +277,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
   if (orderPlaced) {
     return (
       <div className="container mx-auto px-4 py-12 md:py-16 text-center max-w-lg">
-        <div className="text-6xl mb-4">✅</div>
+        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
         <h1 className="text-2xl md:text-3xl font-bold mb-4 text-primary">
           Order Placed Successfully!
         </h1>
@@ -300,7 +301,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-full font-semibold transition"
             >
-              📤 Send Screenshot on WhatsApp
+              <Send className="w-4 h-4 inline mr-2" /> Send Screenshot on WhatsApp
             </a>
           </div>
         )}
@@ -494,7 +495,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                     className="w-4 h-4"
                   />
                   <div>
-                    <p className="font-semibold">💵 Cash on Delivery</p>
+                    <p className="font-semibold"><Banknote className="w-5 h-5 inline mr-2 text-green-600" /> Cash on Delivery</p>
                     <p className="text-xs text-gray-500">
                       Pay when you receive your order
                     </p>
@@ -511,7 +512,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                     className="w-4 h-4"
                   />
                   <div>
-                    <p className="font-semibold">📱 UPI Payment (Prepaid)</p>
+                    <p className="font-semibold"><Smartphone className="w-5 h-5 inline mr-2 text-blue-600" /> UPI Payment (Prepaid)</p>
                     <p className="text-xs text-gray-500">
                       Scan QR code or pay via UPI app
                     </p>

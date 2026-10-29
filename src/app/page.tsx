@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Star, MessageCircle } from "lucide-react";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import RevealSection from "@/components/home/RevealSection";
@@ -241,7 +242,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
             <div className="bg-background rounded-xl border p-4 md:p-6">
               <div className="flex gap-0.5 text-secondary mb-3 text-sm">
-                ⭐⭐⭐⭐⭐
+                <><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /></>
               </div>
               <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
                 &ldquo;Bahut achhi quality ki medicines hain. Delivery bhi fast
@@ -262,7 +263,7 @@ export default async function Home() {
 
             <div className="bg-background rounded-xl border p-4 md:p-6">
               <div className="flex gap-0.5 text-secondary mb-3 text-sm">
-                ⭐⭐⭐⭐⭐
+                <><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /></>
               </div>
               <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
                 &ldquo;WhatsApp pe order karna bahut aasan tha. Saath hi
@@ -285,7 +286,7 @@ export default async function Home() {
 
             <div className="bg-background rounded-xl border p-4 md:p-6">
               <div className="flex gap-0.5 text-secondary mb-3 text-sm">
-                ⭐⭐⭐⭐⭐
+                <><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /></>
               </div>
               <p className="text-xs md:text-sm text-gray-700 mb-4 leading-relaxed">
                 &ldquo;Genuine products aur reasonable price. Poore family ke
@@ -338,8 +339,7 @@ export default async function Home() {
             href="/contact"
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 md:px-8 py-3 rounded-full font-semibold text-sm transition shadow-md"
           >
-            <span>💬</span>
-            <span>Talk to an Expert</span>
+            <MessageCircle className="w-5 h-5" /> <span>Talk to an Expert</span>
           </Link>
         </div>
       </RevealSection>
