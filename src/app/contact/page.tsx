@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MapPin, Phone, Mail, MessageCircle } from "lucide-react";
 import { getWhatsAppLink, getContactMessage } from "@/lib/whatsapp";
 
 export default function ContactPage() {
@@ -70,7 +71,7 @@ ${formData.message}`;
             <div className="space-y-5">
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-xl">📍</span>
+                  <MapPin className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm">
@@ -86,7 +87,7 @@ ${formData.message}`;
 
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-xl">📞</span>
+                  <Phone className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm">
@@ -103,7 +104,7 @@ ${formData.message}`;
 
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-xl">✉️</span>
+                  <Mail className="w-6 h-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm">
@@ -120,7 +121,7 @@ ${formData.message}`;
 
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                  <span className="text-xl">💬</span>
+                  <MessageCircle className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm">
