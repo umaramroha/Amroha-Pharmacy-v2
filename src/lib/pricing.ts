@@ -124,9 +124,7 @@ export async function priceCart(
     }
   }
 
-  if (paymentMethod === "cod" && !codAvailable) {
-    return fail(400, "Cash on Delivery is not available for this pincode.");
-  }
+  // Note: COD unavailability is handled on the frontend via the codAvailable flag
 
   const total = subtotal.plus(deliveryFee);
 

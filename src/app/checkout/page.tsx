@@ -202,7 +202,7 @@ export default function CheckoutPage() {
       }
 
       setPlacedOrderId(data.order?.id || null);
-      setPlacedTotal(data.order?.total || null);
+      setPlacedTotal(data.order?.total != null ? Number(data.order.total) : null);
       setOrderPlaced(true);
       clearCart();
     } catch (err) {
