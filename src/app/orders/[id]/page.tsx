@@ -4,6 +4,8 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { siteConfig } from "@/lib/config";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 type OrderItem = {
   id: string;
@@ -136,9 +138,9 @@ export default function OrderDetailPage(
   const handleSwitchPayment = async (newMethod: "cod" | "upi") => {
     if (!order) return;
     
-    const msg = newMethod === "cod" 
-      ? "Switch to Cash on Delivery? You will pay when the order arrives." 
-      : "Switch to UPI Prepaid? You will get 5% off and need to pay immediately.";
+    const msg = newMethod === "cod"
+      ? "Switch to Cash on Delivery? The 5% prepaid discount will be removed and you will pay when the order arrives."
+      : "Switch to UPI Prepaid? You will get 5% off and need to pay by UPI.";
       
     if (!window.confirm(msg)) return;
 
@@ -160,7 +162,13 @@ export default function OrderDetailPage(
       }
 
       // Update local state with new total and method
-      setOrder({ ...order, paymentMethod: newMethod, total: data.order.total });
+      setOrder({
+        ...order,
+        paymentMethod: data.order.paymentMethod,
+        subtotal: String(data.order.subtotal),
+        deliveryFee: String(data.order.deliveryFee),
+        total: String(data.order.total),
+      });
       setIsSwitchingPayment(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -206,6 +214,26 @@ export default function OrderDetailPage(
   );
   const isCancelled = order.status === "CANCELLED";
   const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+
+  // Payment method can be changed only while the order is unpaid and not shipped.
+  const canSwitchPayment =
+    canCancel && !cancelSuccess && order.paymentStatus === "PENDING";
+  const needsUpiPayment =
+    canSwitchPayment && order.paymentMethod === "upi";
+
+  // 5% prepaid discount already included in the total (shown as its own line)
+  const subtotalNum = parseFloat(order.subtotal);
+  const deliveryFeeNum = parseFloat(order.deliveryFee);
+  const totalNum = parseFloat(order.total);
+  const prepaidDiscount =
+    order.paymentMethod === "upi"
+      ? Math.max(0, Math.round((subtotalNum + deliveryFeeNum - totalNum) * 100) / 100)
+      : 0;
+  const codTotal = Number((subtotalNum + deliveryFeeNum).toFixed(2));
+
+  const shortOrderId = order.id.slice(-8).toUpperCase();
+  const upiPayLink = `upi://pay?pa=${siteConfig.upiId}&pn=${encodeURIComponent(siteConfig.upiName)}&am=${totalNum.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${shortOrderId}`)}`;
+  const screenshotMessage = `📸 *Payment Screenshot*\n\n👤 Name: ${order.customerName}\n📱 Mobile: ${order.customerMobile}\n🔖 Order ID: #${shortOrderId}\n💰 Amount: ₹${order.total}\n💳 Payment Method: UPI\n\nPlease find my payment screenshot attached. Kindly confirm my order.`;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -273,8 +301,8 @@ export default function OrderDetailPage(
               {cancelling ? "Cancelling..." : "❌ Cancel Order"}
             </button>
             <p className="text-xs text-gray-500 mt-2">
-              Order abhi "{order.status}" status me hai, isliye cancel kar
-              This order can be cancelled as it is still in "{order.status}" status. Once shipped, orders cannot be cancelled.            </p>
+              This order can be cancelled as it is still in "{order.status}" status. Once shipped, orders cannot be cancelled.
+            </p>
           </div>
         )}
       </div>
@@ -388,6 +416,12 @@ export default function OrderDetailPage(
               )}
             </span>
           </div>
+          {prepaidDiscount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Prepaid Discount (5%)</span>
+              <span className="text-green-600">- ₹{prepaidDiscount}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-lg pt-2 border-t">
             <span>Total</span>
             <span className="text-primary">₹{order.total}</span>
@@ -441,6 +475,80 @@ export default function OrderDetailPage(
             </span>
           </div>
         </div>
+
+        {/* Pay now (UPI orders that are still unpaid) */}
+        {needsUpiPayment && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-amber-900">Payment pending</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Please pay <strong>₹{order.total}</strong> by UPI, then share the screenshot on WhatsApp.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-col gap-2 md:flex-row">
+              <a
+                href={upiPayLink}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition"
+              >
+                Pay ₹{order.total} via UPI App
+              </a>
+              <a
+                href={getWhatsAppLink(screenshotMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-lg bg-[#25D366] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#20bd5a] transition"
+              >
+                Share Screenshot on WhatsApp
+              </a>
+            </div>
+            <p className="mt-3 text-xs text-gray-600">
+              UPI ID: <span className="font-mono font-semibold text-gray-800">{siteConfig.upiId}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Change payment method (only while unpaid and not shipped) */}
+        {canSwitchPayment && (
+          <div className="mt-4 border-t pt-4">
+            {switchError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {switchError}
+              </div>
+            )}
+            {order.paymentMethod === "upi" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchPayment("cod")}
+                  disabled={isSwitchingPayment}
+                  className="w-full md:w-auto rounded-lg border-2 border-primary px-6 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSwitchingPayment ? "Updating..." : "💵 Switch to Cash on Delivery"}
+                </button>
+                <p className="mt-2 text-xs text-gray-500">
+                  The 5% prepaid discount will be removed. New total: ₹{codTotal}.
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchPayment("upi")}
+                  disabled={isSwitchingPayment}
+                  className="w-full md:w-auto rounded-lg border-2 border-primary px-6 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSwitchingPayment ? "Updating..." : "📱 Pay by UPI & Save 5%"}
+                </button>
+                <p className="mt-2 text-xs text-gray-500">
+                  Pay now by UPI and get 5% off your order.
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Help */}

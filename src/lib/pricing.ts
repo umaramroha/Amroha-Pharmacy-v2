@@ -6,6 +6,19 @@ import { getDeliveryZone, isCodAvailable } from "@/data/delivery";
 export const MAX_QTY_PER_PRODUCT = 10;
 export const MAX_TOTAL_ITEMS = 30;
 
+export const PREPAID_DISCOUNT_RATE = new Prisma.Decimal("0.05");
+
+// 5% off the product subtotal for prepaid (UPI) orders, rounded to paise.
+// Used by checkout/quote, order creation and the COD <-> UPI switch so all
+// three always agree on the amount.
+export function getPrepaidDiscount(
+  subtotal: Prisma.Decimal,
+  paymentMethod?: string
+): Prisma.Decimal {
+  if (paymentMethod !== "upi") return new Prisma.Decimal(0);
+  return subtotal.mul(PREPAID_DISCOUNT_RATE).toDecimalPlaces(2);
+}
+
 export type CartLineInput = { id: string; quantity: number };
 
 export type PricedLine = {
@@ -128,10 +141,7 @@ export async function priceCart(
   // Note: COD unavailability is handled on the frontend via the codAvailable flag
 
   // 5% Prepaid Discount
-  let prepaidDiscount = new Prisma.Decimal(0);
-  if (paymentMethod === "upi") {
-    prepaidDiscount = subtotal.mul(0.05); // 5% of subtotal
-  }
+  const prepaidDiscount = getPrepaidDiscount(subtotal, paymentMethod);
 
   const total = subtotal.plus(deliveryFee).minus(prepaidDiscount);
 
