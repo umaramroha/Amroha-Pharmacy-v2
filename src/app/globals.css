@@ -103,3 +103,8 @@ main .rounded-2xl { border-radius:1.35rem !important; }
   .cart-toast { animation:none; }
   .product-card:hover, main .product-card button:not(:disabled):hover { transform:none; }
 }
+
+/* Handle iPhone/Android bottom safe area for fixed nav */
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

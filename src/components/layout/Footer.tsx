@@ -126,7 +126,7 @@ export default function Footer() {
         <div className="border-t border-white/15 pt-4">
           
           {/* Policies — Smallest Line */}
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] leading-tight opacity-60 mb-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium leading-tight opacity-80 mb-4">
             <Link
               href="/policies/privacy"
               className="hover:opacity-100 hover:text-secondary transition"

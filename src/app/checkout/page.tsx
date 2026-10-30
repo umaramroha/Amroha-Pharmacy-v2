@@ -304,7 +304,7 @@ export default function CheckoutPage() {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {orderError && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{orderError}</div>}
+            {orderError && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 animate-pulse">{orderError}</div>}
 
             {/* Customer Info */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -436,8 +436,12 @@ export default function CheckoutPage() {
                   <p className="text-xs font-medium text-slate-500">Total Amount</p>
                   <p className="text-xl font-bold tabular-nums tracking-tight text-primary">₹{quote?.total.toLocaleString("en-IN") || totalPrice}</p>
                 </div>
-                <button type="submit" disabled={placingOrder} className="min-h-12 flex-1 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark disabled:opacity-50 md:w-full">
-                  {placingOrder ? "Placing Order..." : "Place Order"}
+                <button 
+                  type="submit" 
+                  disabled={placingOrder || (!quote && quoteStatus === "loading")} 
+                  className="min-h-12 flex-1 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark disabled:opacity-50 md:w-full"
+                >
+                  {placingOrder ? "Placing Order..." : (!quote && quoteStatus === "loading") ? "Updating Total..." : "Place Order"}
                 </button>
               </div>
               <p className="text-xs text-gray-500 text-center mt-3 hidden md:block">By placing order you agree to our Terms</p>
