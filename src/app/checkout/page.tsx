@@ -23,6 +23,8 @@ const validatePincode = (pincode: string): boolean => {
 // Prices calculated by the server (POST /api/orders/quote)
 type ServerQuote = {
   subtotal: number;
+  mrpTotal: number;
+  productDiscount: number;
   deliveryFee: number;
   total: number;
   items: {
@@ -53,6 +55,9 @@ export default function CheckoutPage() {
   const [placedTotal, setPlacedTotal] = useState<number | null>(null);
 
   const subtotal = quote ? quote.subtotal : totalPrice;
+  const fallbackMrp = items.reduce((sum, item) => sum + ((item.mrp || item.price) * item.quantity), 0);
+  const totalMrp = quote ? quote.mrpTotal : fallbackMrp;
+  const productDiscount = quote ? quote.productDiscount : (fallbackMrp - subtotal);
   const deliveryFee = quote
     ? quote.deliveryFee
     : totalPrice >= 500
@@ -646,24 +651,35 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
 
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-gray-600">
-                      {item.name} × {item.quantity}
+                  <div key={item.id} className="flex justify-between text-sm items-start">
+                    <span className="text-gray-600 line-clamp-1 flex-1 pr-2">
+                      {item.name} <span className="text-xs text-gray-400">× {item.quantity}</span>
                     </span>
-                    <span className="font-semibold">
-                      ₹{quoteLine(item.id)?.lineTotal ?? item.price * item.quantity}
-                    </span>
+                    <div className="text-right shrink-0">
+                      <span className="font-semibold text-gray-900">
+                        ₹{quoteLine(item.id)?.lineTotal ?? item.price * item.quantity}
+                      </span>
+                      {item.mrp && item.mrp > item.price && (
+                        <span className="block text-[10px] text-gray-400 line-through">
+                          ₹{(item.mrp * item.quantity).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    Subtotal ({totalItems} items)
-                  </span>
-                  <span className="font-semibold">₹{subtotal}</span>
+                  <span className="text-gray-600">Total MRP</span>
+                  <span className="font-medium text-gray-900">₹{totalMrp.toLocaleString("en-IN")}</span>
                 </div>
+                {productDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Discount on MRP</span>
+                    <span className="font-medium text-green-600">- ₹{productDiscount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Delivery Fee</span>
                   <span className="font-semibold">
@@ -677,11 +693,19 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
               </div>
 
               <div className="flex justify-between mt-4 pt-4 border-t">
-                <span className="font-bold text-lg">Total</span>
+                <span className="font-bold text-lg">Order Total</span>
                 <span className="font-bold text-2xl text-primary">
-                  ₹{finalTotal}
+                  ₹{finalTotal.toLocaleString("en-IN")}
                 </span>
               </div>
+              {(productDiscount > 0 || (deliveryFee === 0 && subtotal > 0)) && (
+                <div className="mt-3 flex items-center justify-between rounded-lg bg-green-50 border border-green-100 p-2.5">
+                  <span className="text-xs font-bold text-green-700">
+                    You save ₹{(productDiscount + (deliveryFee === 0 ? 50 : 0)).toLocaleString("en-IN")}
+                  </span>
+                  <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+              )}
 
               <div className="fixed bottom-[68px] left-0 right-0 z-[55] flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(16,35,30,0.08)] md:static md:mt-6 md:block md:border-0 md:bg-transparent md:p-0 md:shadow-none">
                 <div className="shrink-0 md:hidden">

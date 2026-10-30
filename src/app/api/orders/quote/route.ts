@@ -79,6 +79,8 @@ export async function POST(request: Request) {
       success: true,
       quote: {
         subtotal: Number(priced.subtotal),
+        mrpTotal: Number(priced.mrpTotal),
+        productDiscount: Number(priced.productDiscount),
         deliveryFee: Number(priced.deliveryFee),
         total: Number(priced.total),
         items: priced.lines.map((l) => ({
