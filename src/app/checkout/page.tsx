@@ -25,6 +25,7 @@ type ServerQuote = {
   subtotal: number;
   mrpTotal: number;
   productDiscount: number;
+  prepaidDiscount: number;
   deliveryFee: number;
   codAvailable: boolean;
   total: number;
@@ -373,7 +374,7 @@ export default function CheckoutPage() {
                 <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition">
                   <input type="radio" name="payment" value="upi" checked={paymentMethod === "upi"} onChange={() => setPaymentMethod("upi")} className="w-4 h-4" />
                   <div>
-                    <p className="font-semibold flex items-center gap-2">📱 UPI Payment (Prepaid)</p>
+                    <p className="font-semibold flex items-center gap-2">📱 UPI Payment (Prepaid) <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full uppercase">Save 5%</span></p>
                     <p className="text-xs text-gray-500">Pay via GPay, PhonePe, Paytm, or any UPI app</p>
                   </div>
                 </label>
@@ -413,6 +414,7 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Total MRP</span><span className="font-medium text-gray-900">₹{quote?.mrpTotal.toLocaleString("en-IN") || totalPrice}</span></div>
                 {quote && quote.productDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Discount on MRP</span><span className="font-medium text-green-600">- ₹{quote.productDiscount.toLocaleString("en-IN")}</span></div>}
+                {quote && quote.prepaidDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">5% Prepaid Discount</span><span className="font-medium text-green-600">- ₹{quote.prepaidDiscount.toLocaleString("en-IN")}</span></div>}
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : `₹${quote?.deliveryFee || 50}`}</span></div>
               </div>
 

@@ -24,6 +24,7 @@ export type PricingSuccess = {
   subtotal: Prisma.Decimal;
   mrpTotal: Prisma.Decimal;
   productDiscount: Prisma.Decimal;
+  prepaidDiscount: Prisma.Decimal;
   deliveryFee: Prisma.Decimal;
   codAvailable: boolean;
   total: Prisma.Decimal;
@@ -126,7 +127,13 @@ export async function priceCart(
 
   // Note: COD unavailability is handled on the frontend via the codAvailable flag
 
-  const total = subtotal.plus(deliveryFee);
+  // 5% Prepaid Discount
+  let prepaidDiscount = new Prisma.Decimal(0);
+  if (paymentMethod === "upi") {
+    prepaidDiscount = subtotal.mul(0.05); // 5% of subtotal
+  }
 
-  return { ok: true, lines, subtotal, mrpTotal, productDiscount, deliveryFee, codAvailable, total };
+  const total = subtotal.plus(deliveryFee).minus(prepaidDiscount);
+
+  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, deliveryFee, codAvailable, total };
 }

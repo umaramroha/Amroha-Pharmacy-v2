@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type OrderItem = {
@@ -59,6 +60,8 @@ export default function OrderDetailPage(
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [isSwitchingPayment, setIsSwitchingPayment] = useState(false);
+  const [switchError, setSwitchError] = useState("");
 
   useEffect(() => {
     fetchOrder();
@@ -126,6 +129,43 @@ export default function OrderDetailPage(
       console.error("Cancel error:", err);
       setCancelError("Network error. Please try again.");
       setCancelling(false);
+    }
+  };
+
+
+  const handleSwitchPayment = async (newMethod: "cod" | "upi") => {
+    if (!order) return;
+    
+    const msg = newMethod === "cod" 
+      ? "Switch to Cash on Delivery? You will pay when the order arrives." 
+      : "Switch to UPI Prepaid? You will get 5% off and need to pay immediately.";
+      
+    if (!window.confirm(msg)) return;
+
+    setIsSwitchingPayment(true);
+    setSwitchError("");
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}/switch-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newMethod }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSwitchError(data.error || "Failed to switch payment method.");
+        setIsSwitchingPayment(false);
+        return;
+      }
+
+      // Update local state with new total and method
+      setOrder({ ...order, paymentMethod: newMethod, total: data.order.total });
+      setIsSwitchingPayment(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setSwitchError("Network error. Please try again.");
+      setIsSwitchingPayment(false);
     }
   };
 
