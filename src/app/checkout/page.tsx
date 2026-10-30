@@ -121,6 +121,7 @@ export default function CheckoutPage() {
       setQuoteStatus("idle");
       return;
     }
+    if (formData.pincode.length > 0 && formData.pincode.length !== 6) return;
 
     const controller = new AbortController();
     setQuoteStatus("loading");
@@ -415,7 +416,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Total MRP</span><span className="font-medium text-gray-900">₹{quote?.mrpTotal.toLocaleString("en-IN") || totalPrice}</span></div>
                 {quote && quote.productDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Discount on MRP</span><span className="font-medium text-green-600">- ₹{quote.productDiscount.toLocaleString("en-IN")}</span></div>}
                 {quote && quote.prepaidDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">5% Prepaid Discount</span><span className="font-medium text-green-600">- ₹{quote.prepaidDiscount.toLocaleString("en-IN")}</span></div>}
-                <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : `₹${quote?.deliveryFee || 50}`}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : quote?.deliveryFee != null ? `₹${quote.deliveryFee}` : "—"}</span></div>
               </div>
 
               <div className="flex justify-between mt-4 pt-4 border-t">

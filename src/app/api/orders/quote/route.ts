@@ -84,6 +84,7 @@ export async function POST(request: Request) {
         mrpTotal: Number(priced.mrpTotal),
         productDiscount: Number(priced.productDiscount),
         prepaidDiscount: Number(priced.prepaidDiscount),
+        zoneDiscount: Number(priced.zoneDiscount),
         deliveryFee: Number(priced.deliveryFee),
         codAvailable: priced.codAvailable,
         total: Number(priced.total),

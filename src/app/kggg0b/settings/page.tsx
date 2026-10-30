@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
     }
 
     if (formData.newPassword) {
-      if (formData.newPassword.length < 6) {
+      if (formData.newPassword.length < 10) {
         setError("New password must be at least 10 characters.");
         return;
       }

@@ -162,6 +162,9 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         where: { id: params.id },
         data: { isActive: false },
       });
+      revalidateTag(PRODUCTS_CACHE_TAG);
+      revalidatePath("/products");
+      revalidatePath("/");
       return NextResponse.json({
         success: true,
         message: "Product deactivated (used in existing orders)",
@@ -170,6 +173,9 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
     await prisma.product.delete({
       where: { id: params.id },
     });
+    revalidateTag(PRODUCTS_CACHE_TAG);
+    revalidatePath("/products");
+    revalidatePath("/");
     return NextResponse.json({ success: true, message: "Product deleted" });
   } catch (error: any) {
     console.error("Admin delete product error:", error);

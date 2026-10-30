@@ -216,7 +216,7 @@ export default function OrderDetailPage(
     if (!order) return;
 
     const msg = newMethod === "cod"
-      ? `Switch to Cash on Delivery? The ${PREPAID_DISCOUNT_PERCENT}% prepaid discount will be removed and you will pay when the order arrives.`
+      ? `Switch to COD? The ${PREPAID_DISCOUNT_PERCENT}% discount will be removed. WARNING: If you have ALREADY paid via UPI, do NOT switch to COD.`
       : `Switch to UPI payment? You will get ${PREPAID_DISCOUNT_PERCENT}% off and need to pay by UPI.`;
 
     if (!window.confirm(msg)) return;

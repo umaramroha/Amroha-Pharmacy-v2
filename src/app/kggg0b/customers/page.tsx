@@ -63,7 +63,7 @@ export default function AdminCustomersPage() {
 
       {customers.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4"></div>
+          <div className="text-6xl mb-4">👥</div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">No customers found</h2>
           <p className="text-gray-500">{search ? "No customers match your search." : "No customers have registered yet."}</p>
         </div>

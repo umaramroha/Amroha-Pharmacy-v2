@@ -505,7 +505,7 @@ export default function AdminProductsPage() {
       {/* Products List */}
       {products.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4"></div>
+          <div className="text-6xl mb-4">📦</div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">
             No products yet
           </h2>

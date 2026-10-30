@@ -495,7 +495,7 @@ layout={formData.layout}
       {/* Banners List */}
       {banners.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4">️</div>
+          <div className="text-6xl mb-4">🖼️</div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">
             No banners yet
           </h2>

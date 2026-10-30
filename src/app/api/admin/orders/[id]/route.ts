@@ -99,7 +99,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     // FIX 2: Transaction to update order and handle stock correctly
-    const updated = await prisma.$transaction(async (tx) => {
+    const { order: updated, oldStatus } = await prisma.$transaction(async (tx) => {
       const currentOrder = await tx.order.findUnique({
         where: { id: params.id },
         include: { items: true }, // Include items so we can restore stock
@@ -122,7 +122,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       });
 
       // Restore stock if status is changing TO "CANCELLED"
-      if (status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
+      const CANCELLABLE = ["PENDING", "CONFIRMED", "PROCESSING"];
+      if (status === "CANCELLED" && CANCELLABLE.includes(currentOrder.status)) {
         for (const item of currentOrder.items) {
           await tx.product.update({
             where: { id: item.productId },
@@ -133,18 +134,21 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       // Deduct stock if status is changing FROM "CANCELLED" to an active state
       else if (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED") {
         for (const item of currentOrder.items) {
-          await tx.product.update({
-            where: { id: item.productId },
+          const res = await tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity } },
             data: { stock: { decrement: item.quantity } },
           });
+          if (res.count === 0) {
+            throw new Error(`Not enough stock to re-activate order. Product ID: ${item.productId}`);
+          }
         }
       }
 
-      return order;
+      return { order, oldStatus: currentOrder.status };
     });
 
     // Send status update email to customer
-    if (status && status !== updated.status && updated.customerEmail) {
+    if (status && status !== oldStatus && updated.customerEmail) {
       try {
         await transporter.sendMail({
           from: FROM_EMAIL,

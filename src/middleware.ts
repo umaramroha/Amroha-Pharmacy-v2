@@ -8,9 +8,15 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/kggg0b/login") return NextResponse.next();
   
   const res = NextResponse.next();
-  const session = await getIronSession<AdminSessionData>(req, res, adminSessionOptions);
+  let session;
+  try {
+    session = await getIronSession<AdminSessionData>(req, res, adminSessionOptions);
+  } catch (err) {
+    console.error("Admin session middleware error:", err);
+    return NextResponse.redirect(new URL("/kggg0b/login", req.url));
+  }
   
-  if (!session.isAdminLoggedIn) {
+  if (!session.isAdminLoggedIn || !session.adminId) {
     return NextResponse.redirect(new URL("/kggg0b/login", req.url));
   }
   res.headers.set("Cache-Control", "no-store");
