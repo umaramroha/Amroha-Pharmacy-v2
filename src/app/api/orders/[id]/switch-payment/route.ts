@@ -3,8 +3,22 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
-import { mergeCartItems, priceCart } from "@/lib/pricing";
+import { getPrepaidDiscount } from "@/lib/pricing";
 import { isCodAvailable } from "@/data/delivery";
+
+/**
+ * POST /api/orders/[id]/switch-payment   body: { newMethod: "cod" | "upi" }
+ *
+ * Lets a customer change an unpaid order between COD and UPI (prepaid).
+ *  - COD -> UPI : 5% prepaid discount is applied
+ *  - UPI -> COD : the 5% is added back
+ *
+ * The new total is calculated from the amounts saved on the ORDER (subtotal at
+ * the time of ordering + delivery fee). It deliberately does not re-price the
+ * cart from the products table: stock for this order was already deducted when
+ * it was placed, and the price may have changed since.
+ */
+const SWITCHABLE_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING"];
 
 export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -14,49 +28,67 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { newMethod } = await request.json();
+    let body: { newMethod?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    const newMethod = body?.newMethod;
     if (newMethod !== "cod" && newMethod !== "upi") {
       return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({
-      where: { id: params.id },
-      include: { items: true },
-    });
+    const order = await prisma.order.findUnique({ where: { id: params.id } });
 
     if (!order || order.customerId !== session.userId) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Only allow switching if order hasn't been shipped/delivered/cancelled
-    const allowedStatuses = ["PENDING", "CONFIRMED", "PROCESSING"];
-    if (!allowedStatuses.includes(order.status)) {
+    if (!SWITCHABLE_STATUSES.includes(order.status)) {
       return NextResponse.json({ error: "Cannot change payment method after shipping." }, { status: 400 });
     }
 
+    // Once money has been received (or a refund is in progress) the method is locked.
+    if (order.paymentStatus !== "PENDING") {
+      return NextResponse.json(
+        { error: "Payment method cannot be changed because this order is already paid. Please contact us on WhatsApp." },
+        { status: 400 }
+      );
+    }
+
+    if (order.paymentMethod === newMethod) {
+      return NextResponse.json({ success: true, order });
+    }
+
     if (newMethod === "cod" && !isCodAvailable(order.pincode)) {
-      return NextResponse.json({ error: "COD is not available for your pincode." }, { status: 400 });
+      return NextResponse.json({ error: "Cash on Delivery is not available for this pincode." }, { status: 400 });
     }
 
-    // Recalculate price to apply/remove 5% prepaid discount
-    const cartItems = order.items.map(item => ({ id: item.productId, quantity: item.quantity }));
-    const qtyByProduct = mergeCartItems(cartItems);
-    
-    const priced = await priceCart(qtyByProduct, order.pincode, newMethod);
-    if (!priced.ok) {
-      return NextResponse.json({ error: priced.error }, { status: priced.status });
-    }
+    // total = subtotal + delivery fee - (5% of subtotal, only for UPI)
+    const prepaidDiscount = getPrepaidDiscount(order.subtotal, newMethod);
+    const total = order.subtotal.plus(order.deliveryFee).minus(prepaidDiscount);
 
-    const updatedOrder = await prisma.order.update({
-      where: { id: params.id },
-      data: {
-        paymentMethod: newMethod,
-        subtotal: priced.subtotal,
-        deliveryFee: priced.deliveryFee,
-        total: priced.total,
+    // Guarded write: only if nothing changed (status / payment) since we read it.
+    const updated = await prisma.order.updateMany({
+      where: {
+        id: order.id,
+        status: { in: SWITCHABLE_STATUSES },
+        paymentStatus: "PENDING",
+        paymentMethod: order.paymentMethod,
       },
+      data: { paymentMethod: newMethod, total },
     });
 
+    if (updated.count === 0) {
+      return NextResponse.json(
+        { error: "This order was just updated. Please refresh the page and try again." },
+        { status: 409 }
+      );
+    }
+
+    const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } });
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (error: any) {
     console.error("Switch payment error:", error);
