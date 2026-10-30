@@ -4,7 +4,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { PRODUCTS_CACHE_TAG } from "@/lib/products";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { adminSessionOptions } from "@/lib/adminSession";
 import {
   updateProductSchema,
