@@ -198,7 +198,7 @@ export async function POST(request: Request) {
     //    subtotal / delivery fee / total. Shared with POST /api/orders/quote
     //    (the amount shown for UPI), so both always agree. See lib/pricing.ts
     // ==============================
-    const priced = await priceCart(qtyByProduct);
+    const priced = await priceCart(qtyByProduct, input.pincode, input.paymentMethod);
     if (!priced.ok) {
       return NextResponse.json(
         { error: priced.error },

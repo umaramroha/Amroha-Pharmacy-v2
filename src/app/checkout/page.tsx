@@ -26,6 +26,7 @@ type ServerQuote = {
   mrpTotal: number;
   productDiscount: number;
   deliveryFee: number;
+  codAvailable: boolean;
   total: number;
   items: {
     id: string;
@@ -90,6 +91,12 @@ export default function CheckoutPage() {
   const userId = user?.id;
 
   useEffect(() => {
+    if (quote && !quote.codAvailable && paymentMethod === "cod") {
+      setPaymentMethod("upi");
+    }
+  }, [quote, paymentMethod]);
+
+  useEffect(() => {
     if (orderPlaced) return; // cart is cleared after ordering — keep what we have
     if (!userId || cartKey === "") {
       setQuote(null);
@@ -108,6 +115,8 @@ export default function CheckoutPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+            pincode: formData.pincode.length === 6 ? formData.pincode : undefined,
+            paymentMethod
           }),
           signal: controller.signal,
         });
@@ -136,7 +145,7 @@ export default function CheckoutPage() {
     return () => controller.abort();
     // cartKey stands in for `items` (same ids + quantities => same quote)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartKey, userId, orderPlaced]);
+  }, [cartKey, userId, orderPlaced, formData.pincode, paymentMethod]);
 
   // The UPI link only exists once the SERVER has confirmed the amount
   const upiReady = quoteStatus === "ready" && quote !== null;

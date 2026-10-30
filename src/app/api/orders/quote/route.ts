@@ -16,6 +16,8 @@ import { mergeCartItems, checkCartLimits, priceCart } from "@/lib/pricing";
  * Nothing is created or changed in the database.
  */
 const QuoteInput = z.object({
+  pincode: z.string().length(6).optional(),
+  paymentMethod: z.enum(["cod", "upi"]).optional(),
   items: z
     .array(
       z.object({
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const priced = await priceCart(qtyByProduct);
+    const priced = await priceCart(qtyByProduct, parsed.data.pincode, parsed.data.paymentMethod);
     if (!priced.ok) {
       return NextResponse.json(
         { error: priced.error },
@@ -82,6 +84,7 @@ export async function POST(request: Request) {
         mrpTotal: Number(priced.mrpTotal),
         productDiscount: Number(priced.productDiscount),
         deliveryFee: Number(priced.deliveryFee),
+        codAvailable: priced.codAvailable,
         total: Number(priced.total),
         items: priced.lines.map((l) => ({
           id: l.productId,
