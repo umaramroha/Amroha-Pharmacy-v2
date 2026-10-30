@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { siteConfig } from "@/lib/config";
+import { validatePincode } from "@/data/delivery";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
 // ==============================
@@ -16,9 +17,7 @@ const validateMobile = (mobile: string): boolean => {
   return /^[6-9]\d{9}$/.test(cleaned);
 };
 
-const validatePincode = (pincode: string): boolean => {
-  return /^[1-9]\d{5}$/.test(pincode);
-};
+
 
 // Prices calculated by the server (POST /api/orders/quote)
 type ServerQuote = {
@@ -75,6 +74,10 @@ export default function CheckoutPage() {
     state: "",
     pincode: "",
   });
+
+  const [isPincodeLoading, setIsPincodeLoading] = useState(false);
+  const [isPincodeVerified, setIsPincodeVerified] = useState(false);
+  const [pincodeError, setPincodeError] = useState("");
 
   // ✅ FIX 1: Scroll to top when order placed
   useEffect(() => {
@@ -173,6 +176,53 @@ export default function CheckoutPage() {
 💳 Payment Method: UPI
 
 Please find my payment screenshot attached. Kindly confirm my order.`;
+
+
+  // AUTO-FILL CITY AND STATE FROM PINCODE
+  useEffect(() => {
+    if (formData.pincode.length !== 6) {
+      setIsPincodeVerified(false);
+      setPincodeError("");
+      return;
+    }
+
+    const controller = new AbortController();
+    
+    const fetchDetails = async () => {
+      setIsPincodeLoading(true);
+      setPincodeError("");
+      
+      try {
+        const res = await validatePincode(formData.pincode, controller.signal);
+        if (res.valid && res.city && res.state) {
+          setFormData((prev) => ({
+            ...prev,
+            city: res.city || "",
+            state: res.state || "",
+          }));
+          setIsPincodeVerified(true);
+        } else {
+          setFormData((prev) => ({ ...prev, city: "", state: "" }));
+          setIsPincodeVerified(false);
+          setPincodeError("Invalid Pincode. Please check and try again.");
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setPincodeError("Failed to verify pincode. You can enter it manually.");
+          setIsPincodeVerified(false);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsPincodeLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchDetails, 500);
+    
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [formData.pincode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -498,12 +548,13 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                     <input
                       type="text"
                       required
+                      readOnly={isPincodeVerified}
                       value={formData.city}
                       onChange={(e) =>
                         setFormData({ ...formData, city: e.target.value })
                       }
-                      className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary"
-                      placeholder="City"
+                      className={`w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary ${isPincodeVerified ? "bg-gray-100 text-gray-600 cursor-not-allowed" : ""}`}
+                      placeholder="Auto-filled or enter manually"
                     />
                   </div>
                   <div>
@@ -513,36 +564,53 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                     <input
                       type="text"
                       required
+                      readOnly={isPincodeVerified}
                       value={formData.state}
                       onChange={(e) =>
                         setFormData({ ...formData, state: e.target.value })
                       }
-                      className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary"
-                      placeholder="State"
+                      className={`w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary ${isPincodeVerified ? "bg-gray-100 text-gray-600 cursor-not-allowed" : ""}`}
+                      placeholder="Auto-filled or enter manually"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Pincode *
                     </label>
-                    <input
-                      type="text"
-                      required
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={formData.pincode}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          pincode: e.target.value.replace(/\D/g, ""),
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-primary"
-                      placeholder="244221"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      6-digit pincode
-                    </p>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={formData.pincode}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pincode: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className={`w-full border rounded-md px-4 py-2 focus:outline-none transition-colors ${pincodeError ? "border-red-500 focus:border-red-500" : isPincodeVerified ? "border-green-500 focus:border-green-500 bg-green-50/30" : "border-gray-300 focus:border-primary"}`}
+                        placeholder="244221"
+                      />
+                      {isPincodeLoading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                      {isPincodeVerified && !isPincodeLoading && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                      )}
+                    </div>
+                    {pincodeError ? (
+                      <p className="text-xs text-red-500 mt-1">{pincodeError}</p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {isPincodeVerified ? "Pincode verified successfully!" : "6-digit pincode"}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

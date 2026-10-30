@@ -1,7 +1,3 @@
-// ==============================
-// DELIVERY ZONES
-// ==============================
-
 export type DeliveryZone = {
   name: string;
   prefixes: string[];
@@ -14,7 +10,6 @@ export type DeliveryZone = {
 };
 
 export const deliveryZones: DeliveryZone[] = [
-  // ZONE 1: Amroha Local
   {
     name: "Amroha Local",
     prefixes: ["2442"],
@@ -25,28 +20,10 @@ export const deliveryZones: DeliveryZone[] = [
     discount: 5,
     offerMessage: "🎉 Amroha me FREE Delivery + 5% OFF!",
   },
-  // ZONE 2: Nearby — Delhi NCR, West UP, Delhi-Lucknow Highway Belt
   {
     name: "Nearby / Priority Zone",
     prefixes: [
-      "110", // Delhi
-      "201", // Noida, Greater Noida, Ghaziabad
-      "203", // Bulandshahr
-      "202", // Aligarh
-      "204", // Hathras
-      "205", // Firozabad
-      "207", // Etah
-      "244", // Moradabad, Rampur, Sambhal, Bijnor, Chandausi (Amroha already in Zone 1)
-      "243", // Bareilly, Pilibhit
-      "242", // Shahjahanpur
-      "245", // Hapur, Garhmukteshwar
-      "250", // Meerut, Baghpat, Muzaffarnagar, Saharanpur
-      "251", // Muzaffarnagar
-      "247", // Saharanpur
-      "226", // Lucknow
-      "121", // Faridabad (Haryana)
-      "122", // Gurgaon (Haryana)
-      "123", // Rewari (Haryana)
+      "110", "201", "203", "202", "204", "205", "207", "244", "243", "242", "245", "250", "251", "247", "226", "121", "122", "123",
     ],
     pincodes: [],
     deliveryDays: [2, 4],
@@ -55,7 +32,6 @@ export const deliveryZones: DeliveryZone[] = [
     discount: 0,
     offerMessage: "",
   },
-  // ZONE 3: Rest of India
   {
     name: "Standard Delivery",
     prefixes: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
@@ -68,37 +44,22 @@ export const deliveryZones: DeliveryZone[] = [
   },
 ];
 
-// ==============================
-// COD BLACKLIST
-// ==============================
-
 export const codBlacklistPincodes: string[] = [
-  // Haryana, Rajasthan, UP Border - High Fraud
   "122107", "122108", "122104", "122105", "321204", "281403",
-  // Remote Islands
   "744101", "744202", "744301", "744304", "682551", "682553", "682554", "682555",
-  // Extreme High-Altitude (Ladakh & J&K)
   "194101", "194102", "194301", "194302", "193222", "192230",
-  // Remote Mountain (Arunachal, Manipur, Nagaland)
   "791102", "791111", "792110", "795142", "797112",
-  // High RTO (Bihar, Jharkhand, Chhattisgarh)
   "855107", "855113", "854311", "829204", "822114", "494001", "494444",
 ];
-
-// ==============================
-// HELPER FUNCTIONS
-// ==============================
 
 export function isCodAvailable(pincode: string): boolean {
   return !codBlacklistPincodes.includes(pincode);
 }
 
 export function getDeliveryZone(pincode: string): DeliveryZone | null {
-  // Exact pincode match first
   for (const zone of deliveryZones) {
     if (zone.pincodes.includes(pincode)) return zone;
   }
-  // Then prefix match (order matters — Zone 1 first, then Zone 2, then Zone 3)
   for (const zone of deliveryZones) {
     for (const prefix of zone.prefixes) {
       if (pincode.startsWith(prefix)) return zone;
@@ -110,14 +71,9 @@ export function getDeliveryZone(pincode: string): DeliveryZone | null {
 export function getDeliveryInfo(pincode: string) {
   const zone = getDeliveryZone(pincode);
   if (!zone) {
-    return {
-      available: false,
-      message: "Delivery is not available for this PIN code.",
-    };
+    return { available: false, message: "Delivery is not available for this PIN code." };
   }
-
   const codAvailable = isCodAvailable(pincode);
-
   return {
     available: true,
     zone: zone.name,
@@ -129,24 +85,18 @@ export function getDeliveryInfo(pincode: string) {
     codAvailable: codAvailable,
     message: codAvailable
       ? `✅ Delivery available in ${zone.name}`
-      : `Delivery is available, but Cash on Delivery is unavailable.`,
+      : `⚠️ Delivery is available, but Cash on Delivery is unavailable.`,
   };
 }
 
-// ==============================
-// VALIDATE PINCODE (India Post API)
-// ==============================
-
-export async function validatePincode(pincode: string): Promise<{
+export async function validatePincode(pincode: string, signal?: AbortSignal): Promise<{
   valid: boolean;
   city?: string;
   district?: string;
   state?: string;
 }> {
   try {
-    const res = await fetch(
-      `https://api.postalpincode.in/pincode/${pincode}`
-    );
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, { signal });
     const data = await res.json();
 
     if (
@@ -159,27 +109,21 @@ export async function validatePincode(pincode: string): Promise<{
       const po = data[0].PostOffice[0];
       return {
         valid: true,
-        city: po.Name,
-        district: po.District,
+        city: po.Name,        // Area / Local Post Office name
+        district: po.District, // Actual District
         state: po.State,
       };
     }
     return { valid: false };
-  } catch (err) {
+  } catch (err: any) {
+    if (err.name === 'AbortError') throw err;
     console.error("Pincode validation error:", err);
-    return { valid: true };
+    return { valid: false }; // FAIL SAFE
   }
 }
-
-// ==============================
-// GET DELIVERY DATE
-// ==============================
 
 export function getDeliveryDate(daysFromNow: number): string {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
-  return date.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-  });
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
