@@ -2,11 +2,12 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deliveryConfig } from "@/lib/config";
 import { getDeliveryZone, isCodAvailable } from "@/data/delivery";
+import { PREPAID_DISCOUNT_PERCENT } from "@/lib/offers";
 
 export const MAX_QTY_PER_PRODUCT = 10;
 export const MAX_TOTAL_ITEMS = 30;
 
-export const PREPAID_DISCOUNT_RATE = new Prisma.Decimal("0.05");
+export const PREPAID_DISCOUNT_RATE = new Prisma.Decimal(PREPAID_DISCOUNT_PERCENT).div(100);
 
 // 5% off the product subtotal for prepaid (UPI) orders, rounded to paise.
 // Used by checkout/quote, order creation and the COD <-> UPI switch so all
