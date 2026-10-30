@@ -17,3 +17,5 @@ scripts/check-admin.js
 # TypeScript build metadata
 tsconfig.tsbuildinfo
 all-code.txt
+AP30oct.txt
+*.txt
