@@ -366,9 +366,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-3">
-                        Scan using GPay, PhonePe, Paytm, or any UPI app
-                      </p>
+                      <p className="hidden md:block text-xs text-gray-500 mt-3">Scan using GPay, PhonePe, Paytm, or any UPI app</p>
                     </div>
 
                     {/* DESKTOP ONLY: OR DIVIDER */}
@@ -658,9 +656,9 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
 
                 {paymentMethod === "upi" && (
                   <div className="mt-4 p-5 bg-gray-50 rounded-lg border space-y-4">
-                    <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">
-                        Scan to pay ₹{upiReady ? finalTotal : "…"}
+                    <div className="hidden md:block text-center">
+<p className="text-sm font-semibold text-gray-700 mb-3">
+Scan to pay ₹{upiReady ? finalTotal : "…"}
                       </p>
                       <div className="w-64 h-64 mx-auto bg-white border-2 border-primary/20 rounded-lg flex items-center justify-center p-2">
                         <img
@@ -669,9 +667,7 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
                           className="w-full h-full object-contain"
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-3">
-                        Scan using GPay, PhonePe, Paytm, or any UPI app
-                      </p>
+                      <p className="hidden md:block text-xs text-gray-500 mt-3">Scan using GPay, PhonePe, Paytm, or any UPI app</p>
                     </div>
 
                     <div className="flex items-center gap-3">
