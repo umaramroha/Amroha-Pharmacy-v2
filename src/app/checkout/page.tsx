@@ -106,6 +106,7 @@ export default function CheckoutPage() {
 
     const controller = new AbortController();
     setQuoteStatus("loading");
+    setQuote(null);          // <-- FIX: Clear old quote so stale delivery fee doesn't show
     setQuoteError("");
 
     (async () => {
