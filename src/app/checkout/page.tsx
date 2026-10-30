@@ -287,24 +287,78 @@ Please find my payment screenshot attached. Kindly confirm my order.`;
         </p>
 
         {paymentMethod === "upi" && (
-          <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
-            <p className="font-semibold mb-2">
-              Please remember to share your payment screenshot.
-            </p>
-            <p className="mb-3">
-              Order confirm karne ke liye apna payment screenshot WhatsApp pe
-              submit it.
-            </p>
-            <a
-              href={getWhatsAppLink(paymentScreenshotMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-full font-semibold transition"
-            >
-              <Send className="w-4 h-4 inline mr-2" /> Send Screenshot on WhatsApp
-            </a>
-          </div>
-        )}
+                  <div className="mt-4 p-5 bg-gray-50 rounded-xl border space-y-4">
+                    
+                    {/* DESKTOP ONLY: QR CODE */}
+                    <div className="hidden md:block text-center">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">
+                        Scan to pay ₹{upiReady ? finalTotal : "…"}
+                      </p>
+                      <div className="w-64 h-64 mx-auto bg-white border-2 border-primary/20 rounded-lg flex items-center justify-center p-2">
+                        <img
+                          src="/paytm-qr.png"
+                          alt="Paytm QR Code"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-3">
+                        Scan using GPay, PhonePe, Paytm, or any UPI app
+                      </p>
+                    </div>
+
+                    {/* DESKTOP ONLY: OR DIVIDER */}
+                    <div className="hidden md:flex items-center gap-3">
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                      <span className="text-xs text-gray-500 font-medium">OR</span>
+                      <div className="flex-1 h-px bg-gray-300"></div>
+                    </div>
+
+                    {/* MOBILE & DESKTOP: UPI LINK */}
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-700 mb-3 md:hidden">
+                        Pay ₹{upiReady ? finalTotal : "…"} using your UPI app
+                      </p>
+                      <p className="text-xs text-gray-600 mb-3 hidden md:block">
+                        Click the button below to open your payment app directly
+                      </p>
+                      
+                      <a
+                        href={upiLink}
+                        aria-disabled={upiReady ? undefined : true}
+                        className={`inline-flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3.5 rounded-xl font-bold text-sm transition ${
+                          upiReady
+                            ? "bg-primary hover:bg-primary-dark text-white shadow-sm active:scale-95"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                      >
+                        <Smartphone className="w-5 h-5" />
+                        Pay ₹{upiReady ? finalTotal : "…"} via UPI App
+                      </a>
+                      
+                      <div className="mt-4 p-2.5 bg-white rounded-lg border inline-block">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">UPI ID</p>
+                        <p className="text-sm font-bold text-gray-800 font-mono">
+                          {siteConfig.upiId}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* SCREENSHOT INSTRUCTION */}
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                      <p className="text-xs text-green-800 font-semibold mb-3 flex items-center justify-center gap-1.5">
+                        <Camera className="w-4 h-4" /> Please share your payment screenshot
+                      </p>
+                      <a
+                        href={getWhatsAppLink(paymentScreenshotMessage)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 py-2.5 rounded-full text-sm font-bold transition active:scale-95"
+                      >
+                        <Send className="w-4 h-4" /> Share on WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                )}
 
         <div className="flex gap-3 justify-center flex-wrap">
           <Link
