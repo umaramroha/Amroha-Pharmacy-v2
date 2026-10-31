@@ -175,8 +175,8 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
-                  {filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)}
+                <div className="flex flex-wrap justify-center gap-3 md:gap-5">
+                  {filteredProducts.map((product) => <div key={product.id} className="w-[calc(50%-6px)] md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)]"><ProductCard product={product} /></div>)}
                 </div>
 
                 {/* Pagination */}

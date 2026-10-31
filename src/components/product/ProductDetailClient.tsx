@@ -441,7 +441,7 @@ export default function ProductDetailClient({
   /* ------------------------------------------------------------------------ */
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-gray-900 pb-[calc(68px+80px)] lg:pb-0">
+    <main className="min-h-screen bg-[#f8fafc] text-gray-900 pb-[160px] md:pb-[80px] lg:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8">
 
         {/* ---------------------------------------------------------------- */}
@@ -507,7 +507,7 @@ export default function ProductDetailClient({
               )}
 
               {/* MAIN IMAGE */}
-              <div className="aspect-square bg-white">
+              <div className="aspect-[4/3] sm:aspect-square bg-white">
                 {gallery.length > 0 && gallery[activeImage] ? (
                   <img
                     src={gallery[activeImage]}
