@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { concerns } from "@/data/concerns";
-import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets } from "lucide-react";
+import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
 
 const getIcon = (slug: string) => {
   const p = { className: "w-10 h-10 transition-transform group-hover:scale-110" };
