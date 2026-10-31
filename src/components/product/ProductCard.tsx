@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -14,6 +14,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const showToast = useToast();
+  const [isAdded, setIsAdded] = useState(false);
 
   const price = parseFloat(product.price);
   const mrp = product.mrp ? parseFloat(product.mrp) : price;
@@ -27,6 +28,8 @@ export default function ProductCard({ product }: { product: Product }) {
     if (!inStock) return;
     addToCart({ id: product.id, slug: product.slug, name: product.name, price, mrp: mrp > price ? mrp : undefined, image: product.image || undefined, quantity: 1 });
     showToast("Added to Cart");
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleWishlist = (e: MouseEvent) => {
@@ -97,10 +100,12 @@ export default function ProductCard({ product }: { product: Product }) {
           className={`w-full rounded-xl px-3 py-3 text-sm font-semibold transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:scale-[0.98] ${
             !inStock
               ? "cursor-not-allowed bg-slate-100 text-slate-400"
-              : "bg-primary text-white shadow-sm shadow-primary/20 hover:bg-primary-dark hover:shadow-md hover:shadow-primary/25"
+              : isAdded
+                ? "bg-emerald-700 text-white"
+                : "bg-primary text-white shadow-sm shadow-primary/20 hover:bg-primary-dark hover:shadow-md hover:shadow-primary/25"
           }`}
         >
-          {!inStock ? "Out of stock" : "Add to cart"}
+          {!inStock ? "Out of stock" : isAdded ? "✓ Added to Cart" : "Add to cart"}
         </button>
       </div>
     </article>

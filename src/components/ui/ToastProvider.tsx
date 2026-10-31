@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 
 const ToastContext = createContext<((message: string) => void) | null>(null);
 
@@ -20,14 +21,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={showToast}>
       {children}
-      <div role="status" aria-live="polite" aria-atomic="true" className="pointer-events-none fixed inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-[80] flex justify-center">
+      <div role="status" aria-live="polite" aria-atomic="true" className="pointer-events-none fixed inset-x-4 bottom-20 md:bottom-8 z-[80] flex justify-center">
         {toast && (
-          <div key={toast.id} className="cart-toast pointer-events-auto flex max-w-sm items-center gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-xl shadow-emerald-950/10">
-            <svg aria-hidden="true" className="h-6 w-6 shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="m8 12 3 3 5-6"/></svg>
-            <span>{toast.message}</span>
-            <button type="button" onClick={() => setToast(null)} aria-label="Dismiss notification" className="-my-2 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-500 transition hover:bg-slate-50 hover:text-slate-900">
-              <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="m6 6 12 12M18 6 6 18"/></svg>
-            </button>
+          <div key={toast.id} className="cart-toast pointer-events-auto flex w-full max-w-sm items-center justify-between gap-3 rounded-xl bg-gray-900 px-4 py-3.5 text-sm font-semibold text-white shadow-2xl">
+            <span className="flex items-center gap-2"><svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> {toast.message}</span>
+            <Link href="/cart" onClick={() => setToast(null)} className="text-emerald-400 font-bold uppercase text-xs tracking-wider hover:text-emerald-300">View Cart</Link>
           </div>
         )}
       </div>

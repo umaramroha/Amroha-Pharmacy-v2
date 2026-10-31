@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/components/ui/ToastProvider";
 import {
   getWhatsAppLink,
   getProductOrderMessage,
@@ -278,6 +279,7 @@ export default function ProductDetailClient({
     useState(false);
 
   const { addToCart } = useCart();
+  const showToast = useToast();
 
   /* ------------------------------------------------------------------------ */
   /* FETCH PRODUCT                                                            */
@@ -343,6 +345,7 @@ export default function ProductDetailClient({
       quantity,
     });
 
+    showToast("Added to Cart");
     setAdded(true);
 
     window.setTimeout(() => {
