@@ -22,6 +22,7 @@ import {
 import { siteConfig } from "@/lib/config";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { PREPAID_DISCOUNT_PERCENT } from "@/lib/offers";
+import { getDeliveryZone } from "@/data/delivery";
 
 type OrderItem = {
   id: string;
@@ -300,9 +301,15 @@ export default function OrderDetailPage(
   const deliveryFeeNum = parseFloat(order.deliveryFee) || 0;
   const totalNum = parseFloat(order.total) || 0;
 
-  // Discount already included in the total of a prepaid order
-  const prepaidDiscount = isCod ? 0 : Math.max(0, round2(subtotalNum + deliveryFeeNum - totalNum));
-  const codTotal = round2(subtotalNum + deliveryFeeNum);
+  // Calculate Zone Discount based on Pincode
+  const zone = getDeliveryZone(order.pincode);
+  const zoneDiscountNum = zone?.discount ? round2(subtotalNum * (zone.discount / 100)) : 0;
+
+  // Total discount applied to the order
+  const totalDiscountApplied = Math.max(0, round2(subtotalNum + deliveryFeeNum - totalNum));
+  const prepaidDiscount = Math.max(0, round2(totalDiscountApplied - zoneDiscountNum));
+
+  const codTotal = round2(subtotalNum + deliveryFeeNum - zoneDiscountNum);
   const upiSaving = Math.round(subtotalNum * PREPAID_DISCOUNT_PERCENT) / 100;
   const upiTotal = round2(codTotal - upiSaving);
 
@@ -512,6 +519,12 @@ export default function OrderDetailPage(
                   )}
                 </dd>
               </div>
+              {zoneDiscountNum > 0 && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Local Zone Discount</dt>
+                  <dd className="font-medium text-green-600">− {inr(zoneDiscountNum)}</dd>
+                </div>
+              )}
               {prepaidDiscount > 0 && (
                 <div className="flex justify-between gap-3">
                   <dt className="text-gray-600">Prepaid discount ({PREPAID_DISCOUNT_PERCENT}%)</dt>
@@ -525,7 +538,7 @@ export default function OrderDetailPage(
             </div>
             {prepaidDiscount > 0 && (
               <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                You saved {inr(prepaidDiscount)} by paying online
+                You saved {inr(totalDiscountApplied)} on this order
               </p>
             )}
           </section>
