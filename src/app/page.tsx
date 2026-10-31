@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, MessageCircle } from "lucide-react";
+import { Star, MessageCircle, Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Pill, Flower2, Leaf } from "lucide-react";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import RevealSection from "@/components/home/RevealSection";
@@ -10,6 +10,24 @@ import { getFeaturedProducts } from "@/lib/products";
 
 // Pre-render this page on the server and refresh it at most once a minute.
 export const revalidate = 60;
+
+
+const renderConcernIcon = (slug: string) => {
+  const p = { className: "w-7 h-7 md:w-9 md:h-9 text-primary transition-transform group-hover:scale-110" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Zap {...p} />;
+  }
+};
 
 export default async function Home() {
   // Both queries run at the same time, on the server, before any HTML is sent.
@@ -92,7 +110,7 @@ export default async function Home() {
                 className="group flex flex-col items-center text-center p-2 rounded-xl hover:bg-primary/5 transition"
               >
                 <div className="w-14 h-14 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-2 group-hover:bg-primary group-hover:scale-105 transition duration-300">
-                  <span className="text-2xl md:text-3xl">{concern.icon}</span>
+                  <div className="text-primary group-hover:text-white transition-colors">{renderConcernIcon(concern.slug)}</div>
                 </div>
                 <h3 className="text-[10px] md:text-sm font-semibold text-gray-800 group-hover:text-primary transition leading-tight">
                   {concern.name}
@@ -117,7 +135,7 @@ export default async function Home() {
               className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-primary"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-2xl md:text-3xl">💊</span>
+                <Pill className="w-7 h-7 md:w-9 md:h-9 text-primary" />
               </div>
               <h3 className="text-sm md:text-lg font-bold text-primary">
                 Male
@@ -132,7 +150,7 @@ export default async function Home() {
               className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-secondary"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-secondary/10 rounded-full flex items-center justify-center">
-                <span className="text-2xl md:text-3xl">🌸</span>
+                <Flower2 className="w-7 h-7 md:w-9 md:h-9 text-secondary" />
               </div>
               <h3 className="text-sm md:text-lg font-bold text-secondary">
                 Female
@@ -147,7 +165,7 @@ export default async function Home() {
               className="group p-4 md:p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition text-center border-t-4 border-green-600"
             >
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl md:text-3xl">🌿</span>
+                <Leaf className="w-7 h-7 md:w-9 md:h-9 text-green-600" />
               </div>
               <h3 className="text-sm md:text-lg font-bold text-green-700">
                 General
