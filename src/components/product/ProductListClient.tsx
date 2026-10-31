@@ -3,6 +3,24 @@
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { concerns } from "@/data/concerns";
+import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
+
+const getSmallIcon = (slug: string) => {
+  const p = { className: "w-4 h-4" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Activity {...p} />;
+  }
+};
 import ProductCard from "@/components/product/ProductCard";
 
 type Product = {
@@ -83,7 +101,7 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
         <div className="space-y-1">
           {concerns.map((concern) => (
             <Link key={concern.slug} href={`/concerns/${concern.slug}`} onClick={() => setMobileFilterOpen(false)} className="flex items-center gap-2.5 py-2 px-2.5 rounded-xl text-xs md:text-sm text-gray-600 hover:bg-[#f0f7f4] hover:text-primary transition">
-              <span className="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-primary shrink-0 text-xs">{concern.icon}</span>
+              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">{getSmallIcon(concern.slug)}</span>
               <span className="truncate">{concern.name}</span>
             </Link>
           ))}

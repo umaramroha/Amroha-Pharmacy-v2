@@ -1,5 +1,23 @@
 import Link from "next/link";
 import { concerns } from "@/data/concerns";
+import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets } from "lucide-react";
+
+const getIcon = (slug: string) => {
+  const p = { className: "w-10 h-10 transition-transform group-hover:scale-110" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Activity {...p} />;
+  }
+};
 
 export const metadata = {
   title: "Shop by Concern - Amroha Pharmacy",
@@ -29,7 +47,7 @@ export default function ConcernsPage() {
           >
             <div className="p-5 flex flex-col items-center text-center">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-105 transition duration-300">
-                <span className="text-4xl">{concern.icon}</span>
+                <div className="text-primary group-hover:text-white transition-colors">{getIcon(concern.slug)}</div>
               </div>
               <h2 className="text-base md:text-lg font-bold mb-1 text-gray-800 group-hover:text-primary transition">
                 {concern.name}

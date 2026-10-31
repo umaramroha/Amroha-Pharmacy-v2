@@ -2,6 +2,24 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { concerns, getConcernBySlug } from "@/data/concerns";
+import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
+
+const getIcon = (slug: string) => {
+  const p = { className: "w-12 h-12 md:w-16 md:h-16" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Activity {...p} />;
+  }
+};
 import { getWhatsAppLink, getContactMessage } from "@/lib/whatsapp";
 import ProductCard from "@/components/product/ProductCard";
 
@@ -75,7 +93,7 @@ export default async function ConcernDetailPage(
       <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-8 md:p-12 mb-10">
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-            <span className="text-5xl md:text-6xl">{concern.icon}</span>
+            <div className="text-white">{getIcon(concern.slug)}</div>
           </div>
           <div className="text-center md:text-left">
             <p className="text-sm opacity-90 mb-1">{concern.hindiName}</p>
