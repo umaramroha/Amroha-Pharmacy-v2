@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/kggg0b/', '/api/', '/checkout'],
+      disallow: ['/api/', '/checkout'],
     },
     sitemap: 'https://amrohapharmacy.vercel.app/sitemap.xml',
   };

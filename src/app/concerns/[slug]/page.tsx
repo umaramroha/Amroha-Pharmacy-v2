@@ -40,7 +40,7 @@ export async function generateMetadata(
   const concern = getConcernBySlug(params.slug);
   if (!concern) return { title: "Concern Not Found" };
   return {
-    title: `${concern.name} - Amroha Pharmacy`,
+    title: concern.name,
     description: concern.description,
   };
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Shipping & Delivery Policy - Amroha Pharmacy",
+  title: "Shipping & Delivery Policy",
   description: "Shipping and delivery information for Amroha Pharmacy orders.",
 };
 

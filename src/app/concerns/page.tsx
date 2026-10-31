@@ -20,7 +20,7 @@ const getIcon = (slug: string) => {
 };
 
 export const metadata = {
-  title: "Shop by Concern - Amroha Pharmacy",
+  title: "Shop by Health Concern",
   description:
     "Natural solutions for every health concern. Browse products by Ayurvedic and Unani expert-approved concerns.",
 };

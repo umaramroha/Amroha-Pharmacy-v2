@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms & Conditions - Amroha Pharmacy",
+  title: "Terms & Conditions",
   description:
     "Terms and Conditions governing the use of Amroha Pharmacy website and services.",
 };

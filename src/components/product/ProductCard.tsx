@@ -6,6 +6,13 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/components/ui/ToastProvider";
 
+
+const categoryLabels: Record<string, string> = {
+  "male-problems": "Men's Wellness",
+  "female-problems": "Women's Wellness",
+  "general-problems": "General Wellness",
+};
+
 type Product = { id: string; name: string; slug: string; price: string; mrp: string | null; image: string | null; stock?: number; category?: string | null };
 
 function Heart({ active }: { active: boolean }) { return <svg className={`h-4 w-4 ${active ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.8 8.8c0 5.4-8.8 10.2-8.8 10.2S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z"/></svg>; }
@@ -81,7 +88,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="px-4 pb-2 pt-4 flex-1">
           {product.category && (
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-700">
-              {product.category}
+              {categoryLabels[product.category] ?? product.category}
             </p>
           )}
           <h3 className="line-clamp-2 min-h-[3rem] text-sm font-semibold leading-6 sm:text-base text-slate-800 transition-colors group-hover:text-emerald-800">

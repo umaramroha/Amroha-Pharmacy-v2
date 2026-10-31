@@ -387,7 +387,7 @@ export default function CheckoutPage() {
                     <div>
                       <h3 className="text-sm font-bold text-amber-900">Payment Instructions</h3>
                       <p className="text-sm text-amber-700 mt-1 leading-relaxed">
-                        You will be redirected to the payment page <strong>after</strong> placing the order. Please pay and share the screenshot on WhatsApp to confirm.
+                        After you place the order you will see the UPI payment details. Pay, then send the screenshot on WhatsApp.
                       </p>
                     </div>
                   </div>

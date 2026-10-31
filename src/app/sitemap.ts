@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from "@/lib/prisma";
+import { blogs } from "@/data/blogs";
+import { concerns } from "@/data/concerns";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://amrohapharmacy.vercel.app';
@@ -42,5 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1.0 : 0.7,
   }));
 
-  return [...staticRoutes, ...productUrls];
+  const blogUrls = blogs.map(b => ({ url: `${baseUrl}/blogs/${b.slug}`, lastModified: new Date(), priority: 0.6 }));
+  const concernUrls = concerns.map(c => ({ url: `${baseUrl}/concerns/${c.slug}`, lastModified: new Date(), priority: 0.7 }));
+  return [...staticRoutes, ...productUrls, ...blogUrls, ...concernUrls];
 }

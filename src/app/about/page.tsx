@@ -3,7 +3,7 @@ import { getWhatsAppLink, getContactMessage } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/config";
 
 export const metadata = {
-  title: "About Us - Amroha Pharmacy",
+  title: "About Us",
   description:
     "Learn about Amroha Pharmacy - your trusted source for authentic Ayurvedic and Unani medicines in Amroha, Uttar Pradesh.",
 };

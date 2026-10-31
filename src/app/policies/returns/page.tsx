@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Cancellation, Return & Refund Policy - Amroha Pharmacy",
+  title: "Cancellation, Return & Refund Policy",
   description:
     "Cancellation, Return and Refund Policy for orders placed on Amroha Pharmacy.",
 };

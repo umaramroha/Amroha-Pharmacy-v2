@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Medical & Product Disclaimer - Amroha Pharmacy",
+  title: "Medical & Product Disclaimer",
   description:
     "Medical and Product Disclaimer for products sold on Amroha Pharmacy.",
 };

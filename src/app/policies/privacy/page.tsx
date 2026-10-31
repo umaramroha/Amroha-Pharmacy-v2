@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Privacy Policy - Amroha Pharmacy",
+  title: "Privacy Policy",
   description:
     "Privacy Policy for Amroha Pharmacy - How we collect, use, and protect your personal information.",
 };
