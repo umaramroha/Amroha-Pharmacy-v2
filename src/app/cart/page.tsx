@@ -18,11 +18,10 @@ export default function CartPage() {
   // AMAZON-STYLE CALCULATIONS
   const totalMrp = items.reduce((sum, item) => sum + ((item.mrp || item.price) * item.quantity), 0);
   const discountOnMrp = totalMrp - totalPrice;
-  const baseDeliveryFee = 50;
-  const isFreeDelivery = totalPrice >= 500;
-  const deliveryFee = isFreeDelivery ? 0 : baseDeliveryFee;
+  const deliveryFee = 0; // Calculated at checkout based on pincode
+  const isFreeDelivery = false;
   const finalTotal = totalPrice + deliveryFee;
-  const totalSaved = discountOnMrp + (isFreeDelivery ? baseDeliveryFee : 0);
+  const totalSaved = discountOnMrp;
 
   if (items.length === 0) {
     return (
@@ -152,18 +151,9 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Delivery Fee</span>
-                  {isFreeDelivery ? (
-                    <span className="font-medium text-green-600">FREE</span>
-                  ) : (
-                    <span className="font-medium text-gray-900">₹{baseDeliveryFee}</span>
-                  )}
+                  <span className="font-medium text-gray-900 text-xs">Calculated at checkout</span>
                 </div>
-                {isFreeDelivery && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">FREE Delivery Discount</span>
-                    <span className="font-medium text-green-600">- ₹{baseDeliveryFee}</span>
-                  </div>
-                )}
+                
               </div>
 
               <div className="flex items-center justify-between mt-5 mb-5">

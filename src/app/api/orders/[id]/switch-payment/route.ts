@@ -1,10 +1,11 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { getPrepaidDiscount } from "@/lib/pricing";
-import { isCodAvailable } from "@/data/delivery";
+import { isCodAvailable, getDeliveryZone } from "@/data/delivery";
 
 /**
  * POST /api/orders/[id]/switch-payment   body: { newMethod: "cod" | "upi" }
@@ -66,9 +67,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Cash on Delivery is not available for this pincode." }, { status: 400 });
     }
 
-    // total = subtotal + delivery fee - (5% of subtotal, only for UPI)
+    // Recalculate discounts based on original pincode
+    const zone = getDeliveryZone(order.pincode);
+    const zoneDiscount = zone?.discount ? order.subtotal.mul(zone.discount).div(100).toDecimalPlaces(2) : new Prisma.Decimal(0);
+    
     const prepaidDiscount = getPrepaidDiscount(order.subtotal, newMethod);
-    const total = order.subtotal.plus(order.deliveryFee).minus(prepaidDiscount);
+    const total = order.subtotal.plus(order.deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
 
     // Guarded write: only if nothing changed (status / payment) since we read it.
     const updated = await prisma.order.updateMany({

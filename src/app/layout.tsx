@@ -16,7 +16,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://amrohapharmacy.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app"),
   title: {
     default: "Amroha Pharmacy - Ayurvedic & Unani Care",
     template: "%s | Amroha Pharmacy"
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Amroha Pharmacy | Ayurvedic & Unani Wellness",
     description: "Authentic Ayurvedic and Unani wellness products from Amroha.",
-    url: "https://amrohapharmacy.vercel.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app",
     siteName: "Amroha Pharmacy",
     images: [
       {
@@ -73,6 +73,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/logo.png" />
+      </head>
       <body
         className={`${poppins.className} bg-background text-gray-800 antialiased`}
       >

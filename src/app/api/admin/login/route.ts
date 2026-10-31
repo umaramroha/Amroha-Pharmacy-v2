@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
-import { checkRateLimit, resetRateLimit } from "@/lib/rateLimit";
+import { resetRateLimit } from "@/lib/rateLimit";
 
 type AdminSessionData = {
   adminId?: string;

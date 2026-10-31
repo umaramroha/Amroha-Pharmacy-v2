@@ -65,7 +65,7 @@ export default function AdminReportsPage() {
     );
   }
 
-  if (!data) return null;
+  if (!data) return <div className="p-8 text-center text-red-500 font-bold">Failed to load reports. Please refresh.</div>;
 
   const stats = [
     {

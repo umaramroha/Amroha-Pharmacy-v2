@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     // Send verification email
     try {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app";
+      // Ensure NEXT_PUBLIC_SITE_URL is set in Vercel for production
       const verifyUrl = `${siteUrl}/verify-email?token=${verificationToken}`;
       
       await transporter.sendMail({

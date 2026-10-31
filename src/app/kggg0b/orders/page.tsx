@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
-import { Printer, Package } from "lucide-react";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -96,7 +96,7 @@ function AdminOrdersContent() {
 
       {orders.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
-          <div className="text-6xl mb-4"></div>
+          <div className="text-6xl mb-4">📦</div>
           <h2 className="text-xl font-bold mb-2 text-gray-700">No orders found</h2>
         </div>
       ) : (

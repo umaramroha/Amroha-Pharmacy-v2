@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       });
 
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app";
+      // Ensure NEXT_PUBLIC_SITE_URL is set in Vercel for production
       const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`;
 
       try {

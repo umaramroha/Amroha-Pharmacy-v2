@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { siteConfig } from "@/lib/config";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { validatePincode } from "@/data/delivery";
-import { Smartphone, Camera, Send, AlertTriangle, ShoppingBag, Truck, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Smartphone, Camera, Send, AlertTriangle, ShoppingBag, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 // ==============================
 // VALIDATION HELPERS
@@ -25,6 +25,7 @@ type ServerQuote = {
   subtotal: number;
   mrpTotal: number;
   productDiscount: number;
+  zoneDiscount: number;
   prepaidDiscount: number;
   deliveryFee: number;
   codAvailable: boolean;
@@ -33,7 +34,7 @@ type ServerQuote = {
 };
 
 export default function CheckoutPage() {
-  const { items, totalPrice, totalItems, clearCart } = useCart();
+  const { items, totalPrice, clearCart } = useCart();
   const { user, loading } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -415,6 +416,7 @@ export default function CheckoutPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Total MRP</span><span className="font-medium text-gray-900">₹{quote?.mrpTotal.toLocaleString("en-IN") || totalPrice}</span></div>
                 {quote && quote.productDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Discount on MRP</span><span className="font-medium text-green-600">- ₹{quote.productDiscount.toLocaleString("en-IN")}</span></div>}
+                {quote && quote.zoneDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Local Zone Discount</span><span className="font-medium text-green-600">- ₹{quote.zoneDiscount.toLocaleString("en-IN")}</span></div>}
                 {quote && quote.prepaidDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">5% Prepaid Discount</span><span className="font-medium text-green-600">- ₹{quote.prepaidDiscount.toLocaleString("en-IN")}</span></div>}
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : quote?.deliveryFee != null ? `₹${quote.deliveryFee}` : (quoteStatus === "loading" ? "Calculating..." : "—")}</span></div>
               </div>
