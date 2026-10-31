@@ -59,10 +59,29 @@ export default async function ProductDetailPage({ params }: PageProps) {
     stock: item.stock,
   });
 
+  
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images?.length ? product.images : [product.image],
+    description: product.description,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price: product.price.toString(),
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: `https://amrohapharmacy.vercel.app/products/${product.slug}`
+    }
+  };
+
   return (
-    <ProductDetailClient
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <ProductDetailClient
       product={serializeProduct(product)}
       similar={relatedProducts.map(serializeProduct)}
-    />
+      />
+    </>
   );
 }

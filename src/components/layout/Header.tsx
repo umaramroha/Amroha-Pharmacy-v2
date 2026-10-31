@@ -86,7 +86,7 @@ export default function Header() {
             <Link href="/" className={`nav-link ${pathname === "/" ? "nav-link-active" : ""}`}>Home</Link>
             <Link href="/products" className={`nav-link ${pathname.startsWith("/products") ? "nav-link-active" : ""}`}>Shop</Link>
             <div className="relative">
-              <button onClick={() => setCategoryOpen((v) => !v)} className={`nav-link inline-flex items-center gap-1 ${pathname.startsWith("/concerns") ? "nav-link-active" : ""}`}>
+              <button aria-expanded={categoryOpen} aria-haspopup="true" onClick={() => setCategoryOpen((v) => !v)} className={`nav-link inline-flex items-center gap-1 ${pathname.startsWith("/concerns") ? "nav-link-active" : ""}`}>
                 Wellness <Icon name="chevron" className="h-3.5 w-3.5" />
               </button>
               {categoryOpen && (
@@ -125,7 +125,7 @@ export default function Header() {
             </Link>
             {isLoggedIn && user ? (
               <div className="relative hidden sm:block">
-                <button onClick={() => setUserOpen((v) => !v)} className="flex h-10 items-center gap-2 rounded-xl px-2 transition hover:bg-slate-50">
+                <button aria-expanded={userOpen} aria-haspopup="true" onClick={() => setUserOpen((v) => !v)} className="flex h-10 items-center gap-2 rounded-xl px-2 transition hover:bg-slate-50">
                   <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-700 text-xs font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
                   <span className="max-w-20 truncate text-xs font-bold text-slate-700">{user.name.split(" ")[0]}</span>
                   <Icon name="chevron" className="h-3.5 w-3.5 text-slate-400" />

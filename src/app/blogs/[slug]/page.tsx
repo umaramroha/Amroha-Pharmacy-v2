@@ -73,7 +73,7 @@ export default function BlogDetailPage() {
 
   if (!blog) {
     return (
-      <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">📖</div>
           <h1 className="text-2xl font-bold mb-3 text-gray-900">
@@ -89,7 +89,7 @@ export default function BlogDetailPage() {
             ← Back to Blogs
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -101,7 +101,7 @@ export default function BlogDetailPage() {
     .slice(0, 3);
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center flex-wrap gap-2 text-sm text-gray-500 mb-6">
@@ -312,7 +312,7 @@ export default function BlogDetailPage() {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

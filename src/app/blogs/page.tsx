@@ -13,7 +13,7 @@ export default function BlogsPage() {
       : blogs.filter((b) => b.category === activeCategory);
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
         {/* Header */}
         <div className="text-center mb-10">
@@ -117,6 +117,6 @@ export default function BlogsPage() {
           {activeCategory !== "All" && `in ${activeCategory}`}
         </p>
       </div>
-    </main>
+    </div>
   );
 }

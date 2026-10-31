@@ -25,7 +25,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-[70vh] bg-[#f8faf9] flex items-center justify-center px-4 py-16">
+      <div className="min-h-[70vh] bg-[#f8faf9] flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-md text-center">
           <div className="w-20 h-20 mx-auto rounded-3xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-primary mb-6">
             <ShoppingBag className="w-9 h-9" />
@@ -36,12 +36,12 @@ export default function CartPage() {
             Start Shopping <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="bg-[#f8faf9] min-h-screen pb-16">
+    <div className="bg-[#f8faf9] min-h-screen pb-16">
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <div className="flex items-center gap-3">
@@ -104,9 +104,9 @@ export default function CartPage() {
                     {/* Qty & Delivery Estimate */}
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
                       <div className="flex items-center border border-gray-300 rounded-md overflow-hidden h-8">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Minus className="w-3 h-3" /></button>
+                        <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Minus className="w-3 h-3" /></button>
                         <span className="w-8 text-center text-sm font-semibold text-gray-800 bg-white border-x border-gray-300 py-1">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Plus className="w-3 h-3" /></button>
+                        <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-50 bg-white transition"><Plus className="w-3 h-3" /></button>
                       </div>
                       
                       <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-gray-600 font-medium">
@@ -171,7 +171,7 @@ export default function CartPage() {
               <Link href="/checkout" className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-bold text-sm transition shadow-sm active:scale-95">
                 Proceed to Checkout <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href={getWhatsAppLink(getCartOrderMessage(items))} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full mt-3 bg-[#25D366] hover:bg-[#20bd5a] text-white py-3.5 rounded-xl font-bold text-sm transition active:scale-95">
+              <a href={getWhatsAppLink(getCartOrderMessage(items))} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full mt-3 bg-[#128C7E] hover:bg-[#20bd5a] text-white py-3.5 rounded-xl font-bold text-sm transition active:scale-95">
                 <MessageCircle className="w-5 h-5" /> Order on WhatsApp
               </a>
 
@@ -182,6 +182,6 @@ export default function CartPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

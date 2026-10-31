@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f8fafc]">
+      <div className="min-h-screen bg-[#f8fafc]">
         <div className="max-w-md mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-6 bg-gray-200 rounded-lg w-32" />
@@ -61,7 +61,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -134,7 +134,7 @@ export default function ProfilePage() {
       : "N/A";
 
   return (
-    <main className="min-h-screen bg-[#f7f9f8]">
+    <div className="min-h-screen bg-[#f7f9f8]">
       <div className="max-w-md mx-auto px-4 pt-5 pb-24 md:pb-10">
 
         {/* Page Header */}
@@ -735,6 +735,6 @@ export default function ProfilePage() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

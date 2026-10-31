@@ -139,7 +139,7 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
   );
 
   return (
-    <main className="min-h-screen bg-[#f8faf9]">
+    <div className="min-h-screen bg-[#f8faf9]">
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -201,11 +201,11 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-10">
                     {currentPage > 1 && (
-                      <a href={`/products?page=${currentPage - 1}${categoryParam ? `&category=${categoryParam}` : ''}${query ? `&q=${query}` : ''}`} className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">Previous</a>
+                      <Link href={`/products?page=${currentPage - 1}${categoryParam ? `&category=${categoryParam}` : ''}${query ? `&q=${encodeURIComponent(query)}` : ''}`} className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-sm font-semibold">Previous</Link>
                     )}
                     <span className="text-sm font-semibold text-gray-700">Page {currentPage} of {totalPages}</span>
                     {currentPage < totalPages && (
-                      <a href={`/products?page=${currentPage + 1}${categoryParam ? `&category=${categoryParam}` : ''}${query ? `&q=${query}` : ''}`} className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition text-sm font-semibold">Next</a>
+                      <Link href={`/products?page=${currentPage + 1}${categoryParam ? `&category=${categoryParam}` : ''}${query ? `&q=${encodeURIComponent(query)}` : ''}`} className="px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition text-sm font-semibold">Next</Link>
                     )}
                   </div>
                 )}
@@ -221,7 +221,7 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
           <div className="fixed right-0 top-0 bottom-0 w-[330px] max-w-[88vw] bg-white z-50 shadow-2xl lg:hidden flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">Filters</h2>
-              <button onClick={() => setMobileFilterOpen(false)} className="text-gray-500 hover:text-gray-800"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M6 6l12 12M18 6 6 18"/></svg></button>
+              <button aria-label="Close filters" onClick={() => setMobileFilterOpen(false)} className="text-gray-500 hover:text-gray-800"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M6 6l12 12M18 6 6 18"/></svg></button>
             </div>
             <div className="flex-1 overflow-y-auto p-5"><FilterContent /></div>
             <div className="p-4 border-t border-gray-100 bg-white">
@@ -230,6 +230,6 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
           </div>
         </>
       )}
-    </main>
+    </div>
   );
 }

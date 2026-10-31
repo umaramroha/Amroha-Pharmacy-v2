@@ -164,7 +164,7 @@ export default function Footer() {
           </div>
 
           {/* Copyright — Even Smaller */}
-          <p className="text-center text-[9px] opacity-50 leading-tight">
+          <p className="text-center text-xs opacity-80 leading-tight">
             © {new Date().getFullYear()} Amroha Pharmacy. All rights reserved.
           </p>
         </div>

@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc]">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary to-primary-dark text-white py-14 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -324,6 +324,6 @@ export default function AboutPage() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

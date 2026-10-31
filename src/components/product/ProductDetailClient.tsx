@@ -444,7 +444,7 @@ export default function ProductDetailClient({
   /* ------------------------------------------------------------------------ */
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-gray-900 pb-[160px] md:pb-[80px] lg:pb-0">
+    <div className="min-h-screen bg-[#f8fafc] text-gray-900 pb-[160px] md:pb-[80px] lg:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 md:py-8">
 
         {/* ---------------------------------------------------------------- */}
@@ -1319,6 +1319,6 @@ export default function ProductDetailClient({
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

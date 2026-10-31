@@ -35,6 +35,19 @@ type Order = {
   items: OrderItem[];
 };
 
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "PENDING": return "Order received";
+      case "CONFIRMED": return "Confirmed";
+      case "PROCESSING": return "Being packed";
+      case "SHIPPED": return "On the way";
+      case "DELIVERED": return "Delivered";
+      case "CANCELLED": return "Cancelled";
+      default: return status;
+    }
+  };
+  
 export default function OrdersPage() {
   const router = useRouter();
   const { isLoggedIn, loading: authLoading } = useAuth();
@@ -146,7 +159,7 @@ export default function OrdersPage() {
       statusColors[order.status] || "bg-gray-100 text-gray-800"
     }`}
   >
-    {order.status}
+    {getStatusLabel(order.status)}
   </span>
   <span className="text-xs text-primary font-medium">
     View Details →

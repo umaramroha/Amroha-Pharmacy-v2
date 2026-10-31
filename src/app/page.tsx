@@ -49,8 +49,25 @@ export default async function Home() {
     { name: "Diabetes", icon: "🩸", slug: "diabetes" },
   ];
 
+  
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Pharmacy",
+    name: "Amroha Pharmacy",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Mohalla Nal",
+      addressLocality: "Amroha",
+      addressRegion: "Uttar Pradesh",
+      addressCountry: "IN"
+    },
+    telephone: "+91-8077988509",
+    openingHours: "Mo-Sa 09:00-20:00"
+  };
+
   return (
     <div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <h1 className="sr-only">Amroha Pharmacy – Authentic Ayurvedic & Unani medicines</h1>
       {/* Trust badges */}
       <RevealSection className="border-b border-slate-200/70 bg-white py-4 md:py-5">
@@ -132,7 +149,7 @@ export default async function Home() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
-        className="md:hidden fixed right-4 bottom-20 z-40 w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition transform hover:scale-110"
+        className="md:hidden fixed right-4 bottom-20 z-40 w-14 h-14 bg-green-700 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition transform hover:scale-110"
       >
         <svg
           className="w-7 h-7 text-white"

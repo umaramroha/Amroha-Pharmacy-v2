@@ -275,7 +275,7 @@ export default function CheckoutPage() {
                 <p className="text-sm text-green-800 font-semibold mb-3 flex items-center justify-center gap-2">
                   <Camera className="w-5 h-5" /> Paid successfully? Send us the screenshot.
                 </p>
-                <a href={getWhatsAppLink(finalScreenshotMessage)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-sm active:scale-95 w-full md:w-auto">
+                <a href={getWhatsAppLink(finalScreenshotMessage)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-[#128C7E] hover:bg-[#20bd5a] text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-sm active:scale-95 w-full md:w-auto">
                   <Send className="w-4 h-4" /> Share Screenshot on WhatsApp
                 </a>
               </div>
@@ -446,7 +446,7 @@ export default function CheckoutPage() {
                   {placingOrder ? "Placing Order..." : (!quote && quoteStatus === "loading") ? "Updating Total..." : "Place Order"}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 text-center mt-3 hidden md:block">By placing order you agree to our Terms</p>
+              <p className="text-xs text-gray-500 text-center mt-3 hidden md:block">By placing your order you agree to our <a href="/policies/terms" target="_blank" className="text-primary underline">Terms & Conditions</a></p>
             </div>
           </div>
         </div>
