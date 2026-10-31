@@ -48,7 +48,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
         {cartQty > 0 && (
-          <span className="absolute right-3 top-14 z-10 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm flex items-center gap-1">
+          <span className="absolute right-3 top-14 z-10 rounded-full bg-amber-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm flex items-center gap-1 border border-amber-400">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             {cartQty} in cart
           </span>
@@ -109,10 +109,12 @@ export default function ProductCard({ product }: { product: Product }) {
               ? "cursor-not-allowed bg-slate-100 text-slate-400"
               : isAdded
                 ? "bg-emerald-700 text-white"
-                : "bg-primary text-white shadow-sm shadow-primary/20 hover:bg-primary-dark hover:shadow-md hover:shadow-primary/25"
+                : cartQty > 0
+                  ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20 hover:bg-emerald-700"
+                  : "bg-primary text-white shadow-sm shadow-primary/20 hover:bg-primary-dark hover:shadow-md hover:shadow-primary/25"
           }`}
         >
-          {!inStock ? "Out of stock" : isAdded ? "✓ Added to Cart" : cartQty > 0 ? `Add to cart (${cartQty} in cart)` : "Add to cart"}
+          {!inStock ? "Out of stock" : isAdded ? "✓ Added" : cartQty > 0 ? "Add more" : "Add to cart"}
         </button>
       </div>
     </article>
