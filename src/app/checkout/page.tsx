@@ -298,7 +298,7 @@ export default function CheckoutPage() {
   // CHECKOUT FORM
   // ==========================================
   return (
-    <div className="container mx-auto px-4 pt-8 pb-32 md:pb-8">
+    <div className="container mx-auto px-4 pt-8 pb-[180px] md:pb-8">
       <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary">Checkout</h1>
 
       <form onSubmit={handleSubmit}>
@@ -416,7 +416,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Total MRP</span><span className="font-medium text-gray-900">₹{quote?.mrpTotal.toLocaleString("en-IN") || totalPrice}</span></div>
                 {quote && quote.productDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Discount on MRP</span><span className="font-medium text-green-600">- ₹{quote.productDiscount.toLocaleString("en-IN")}</span></div>}
                 {quote && quote.prepaidDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">5% Prepaid Discount</span><span className="font-medium text-green-600">- ₹{quote.prepaidDiscount.toLocaleString("en-IN")}</span></div>}
-                <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : quote?.deliveryFee != null ? `₹${quote.deliveryFee}` : "—"}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : quote?.deliveryFee != null ? `₹${quote.deliveryFee}` : (quoteStatus === "loading" ? "Calculating..." : "—")}</span></div>
               </div>
 
               <div className="flex justify-between mt-4 pt-4 border-t">
