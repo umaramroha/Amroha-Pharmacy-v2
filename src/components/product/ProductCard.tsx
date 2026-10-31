@@ -11,7 +11,8 @@ type Product = { id: string; name: string; slug: string; price: string; mrp: str
 function Heart({ active }: { active: boolean }) { return <svg className={`h-4 w-4 ${active ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.8 8.8c0 5.4-8.8 10.2-8.8 10.2S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z"/></svg>; }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
+  const cartQty = items.find((i) => i.id === product.id)?.quantity || 0;
   const { toggleWishlist, isInWishlist } = useWishlist();
   const showToast = useToast();
   const [isAdded, setIsAdded] = useState(false);
@@ -44,6 +45,12 @@ export default function ProductCard({ product }: { product: Product }) {
         {discount > 0 && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-emerald-700 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm">
             {discount}% OFF
+          </span>
+        )}
+        {cartQty > 0 && (
+          <span className="absolute right-3 top-14 z-10 rounded-full bg-amber-500 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white shadow-sm flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            {cartQty} in cart
           </span>
         )}
         <button
@@ -105,7 +112,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 : "bg-primary text-white shadow-sm shadow-primary/20 hover:bg-primary-dark hover:shadow-md hover:shadow-primary/25"
           }`}
         >
-          {!inStock ? "Out of stock" : isAdded ? "✓ Added to Cart" : "Add to cart"}
+          {!inStock ? "Out of stock" : isAdded ? "✓ Added to Cart" : cartQty > 0 ? `Add to cart (${cartQty} in cart)` : "Add to cart"}
         </button>
       </div>
     </article>
