@@ -68,6 +68,19 @@ function AdminOrdersContent() {
     } catch (err) { console.error("Update error:", err); } finally { setUpdating(null); }
   };
 
+  const updatePaymentStatus = async (orderId: string, paymentStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus }),
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, paymentStatus } : o)));
+      }
+    } catch (err) { console.error(err); }
+  };
+
   const statusColors: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-800", CONFIRMED: "bg-blue-100 text-blue-800",
     PROCESSING: "bg-purple-100 text-purple-800", SHIPPED: "bg-indigo-100 text-indigo-800",
@@ -111,6 +124,11 @@ function AdminOrdersContent() {
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
+                  {order.paymentStatus === "PENDING" && (
+                    <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">
+                      Mark as PAID
+                    </button>
+                  )}
                   <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">🖨️ Print</button>
                 </div>
               </div>

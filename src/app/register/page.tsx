@@ -45,7 +45,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLoading(false);
 
     if (result.success) {
-      router.push("/profile");
+      setShowSuccess(true);
     } else {
       setError(result.message);
     }

@@ -173,7 +173,7 @@ order: banner.order.toString(),
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, order: parseInt(formData.order) || 0 }),
       });
 
       const data = await res.json();

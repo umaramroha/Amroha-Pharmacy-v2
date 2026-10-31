@@ -161,7 +161,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
             total: updated.total.toString(),
           }),
         });
-        console.log(`Status update email sent to ${updated.customerEmail}`);
+        console.log(`Status update email sent for order #${updated.id.slice(-8).toUpperCase()}`);
       } catch (err) {
         console.error("Failed to send status update email:", err);
       }

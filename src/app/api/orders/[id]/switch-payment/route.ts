@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
@@ -29,17 +30,18 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let body: { newMethod?: unknown };
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const newMethod = body?.newMethod;
-    if (newMethod !== "cod" && newMethod !== "upi") {
+    const parsed = z.object({ newMethod: z.enum(["cod", "upi"]) }).strict().safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
     }
+    const newMethod = parsed.data.newMethod;
 
     const order = await prisma.order.findUnique({ where: { id: params.id } });
 

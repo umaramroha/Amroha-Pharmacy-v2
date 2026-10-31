@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: data.error || "Registration failed" };
       }
 
-      setUser(data.user);
+      // Do NOT set user. User must verify email first.
       return { success: true, message: "Registration successful" };
     } catch (err) {
       console.error("Register error:", err);
