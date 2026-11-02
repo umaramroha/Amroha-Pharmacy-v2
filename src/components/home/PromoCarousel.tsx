@@ -1,13 +1,9 @@
 "use client";
-
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import RevealSection from "@/components/home/RevealSection";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { BannerDTO } from "@/lib/banners";
 
-// Theme -> Tailwind classes. Kept in /components (not /lib) on purpose:
-// tailwind.config.ts only scans src/app and src/components, so classes
-// written anywhere else would be purged from the CSS.
 const THEME_MAP: Record<string, { bg: string; brandColor: string; text: string }> = {
   teal: { bg: "bg-gradient-to-r from-teal-50 to-teal-100", brandColor: "text-teal-700", text: "text-gray-900" },
   blue: { bg: "bg-gradient-to-r from-blue-50 to-blue-100", brandColor: "text-blue-700", text: "text-gray-900" },
@@ -18,131 +14,95 @@ const THEME_MAP: Record<string, { bg: string; brandColor: string; text: string }
 };
 
 export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
-  const [bannerIndex, setBannerIndex] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const promos = banners.map((b) => {
     const t = THEME_MAP[b.theme] || THEME_MAP.teal;
-    return {
-      brand: b.brand,
-      title: b.title,
-      subtitle: b.subtitle || "",
-      brandColor: t.brandColor,
-      bg: t.bg,
-      text: t.text,
-      image: b.imageUrl,
-      href: b.linkUrl || "",
-      layout: b.layout || "split",
-    };
+    return { ...b, ...t, href: b.linkUrl || "" };
   });
+
+  useEffect(() => {
+    if (paused || promos.length <= 1) return;
+    const timer = setInterval(() => setIndex((prev) => (prev + 1) % promos.length), 5000);
+    return () => clearInterval(timer);
+  }, [paused, promos.length]);
 
   if (promos.length === 0) return null;
 
+  const next = () => setIndex((prev) => (prev + 1) % promos.length);
+  const prev = () => setIndex((prev) => (prev - 1 + promos.length) % promos.length);
+
   return (
-<RevealSection className="py-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className="relative px-4 md:px-6"
-            onTouchStart={(e) => {
-              touchStartX.current = e.touches[0].clientX;
-            }}
-            onTouchEnd={(e) => {
-              const start = touchStartX.current;
-              if (start === null) return;
-              const diff = start - e.changedTouches[0].clientX;
-              if (diff > 50) {
-                setBannerIndex((prev) => (prev + 1) % promos.length);
-              } else if (diff < -50) {
-                setBannerIndex(
-                  (prev) => (prev - 1 + promos.length) % promos.length
-                );
-              }
-            }}
-          >
-            <div className="overflow-hidden">
-              <div
-                className="flex transition-transform duration-500 ease-out"
-                style={{
-                  transform: `translateX(-${bannerIndex * 100}%)`,
-                }}
-              >
-                {promos.map((promo, idx) => {
-                let content;
-
-                if (promo.layout === "image-only") {
-                  content = (
-                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
-                      {promo.image ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={promo.image} alt={promo.title || "Banner"} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">Banner</div>
-                      )}
-                    </div>
-                  );
-                } else if (promo.layout === "overlay") {
-                  content = (
-                    <div className="relative rounded-2xl overflow-hidden aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
-                      {promo.image && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={promo.image} alt={promo.title} className="w-full h-full object-cover" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center p-4 md:p-6 text-white">
-                        <p className="text-[10px] md:text-xs font-bold tracking-wide uppercase opacity-90 mb-1">{promo.brand}</p>
-                        <h3 className="text-2xl md:text-4xl font-black leading-tight mb-1">{promo.title}</h3>
-                        <p className="text-xs md:text-base opacity-90">{promo.subtitle}</p>
-                      </div>
-                    </div>
-                  );
-                } else {
-                  content = (
-                    <div className={`${promo.bg} rounded-2xl p-4 md:p-6 flex items-center justify-between gap-4 hover:shadow-md transition`}>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-[10px] md:text-xs font-bold ${promo.brandColor} mb-1 tracking-wide uppercase`}>{promo.brand}</p>
-                        <h3 className={`text-2xl md:text-4xl font-black ${promo.text} leading-tight mb-1`}>{promo.title}</h3>
-                        <p className={`text-xs md:text-base ${promo.text} opacity-80`}>{promo.subtitle}</p>
-                      </div>
-                      <div className="shrink-0 w-28 h-28 md:w-44 md:h-44 relative">
-                        {promo.image ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={promo.image} alt={promo.title} className="w-full h-full object-contain" />
-                        ) : (
-                          <div className="w-full h-full bg-white/50 rounded flex items-center justify-center text-gray-400 text-xs">Image</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={idx} className="shrink-0 w-full">
-                    {promo.href ? (
-                      <Link href={promo.href} target={promo.href.startsWith("http") ? "_blank" : undefined} rel={promo.href.startsWith("http") ? "noopener noreferrer" : undefined} className="block">
-                        {content}
-                      </Link>
-                    ) : (content)}
+    <div className="py-6 bg-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 relative"
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; setPaused(true); }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const diff = touchStartX.current - e.changedTouches[0].clientX;
+          if (diff > 50) next(); else if (diff < -50) prev();
+          touchStartX.current = null; setPaused(false);
+        }}
+      >
+        <div className="overflow-hidden rounded-3xl">
+          <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${index * 100}%)` }}>
+            {promos.map((promo, idx) => {
+              let content;
+              if (promo.layout === "image-only") {
+                content = (
+                  <div className="relative aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+                    <img src={promo.imageUrl} alt={promo.title} className="w-full h-full object-cover" />
                   </div>
                 );
-              })}
-              </div>
-            </div>
-
-            <div className="flex justify-center items-center gap-2 mt-3">
-              {promos.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setBannerIndex(idx)}
-                  aria-label={`Go to banner ${idx + 1}`}
-                  className={`transition-all duration-300 rounded-full ${
-                    bannerIndex === idx
-                      ? "w-7 h-2 bg-teal-700"
-                      : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-                  }`}
-                />
-              ))}
-            </div>
+              } else if (promo.layout === "overlay") {
+                content = (
+                  <div className="relative aspect-[16/7] sm:aspect-[16/5] bg-gray-100">
+                    <img src={promo.imageUrl} alt={promo.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent flex flex-col justify-center p-6 md:p-12 text-white">
+                      <p className="text-xs md:text-sm font-bold tracking-wide uppercase opacity-90 mb-2">{promo.brand}</p>
+                      <h3 className="text-2xl md:text-5xl font-black leading-tight mb-2">{promo.title}</h3>
+                      <p className="text-sm md:text-lg opacity-90 max-w-lg">{promo.subtitle}</p>
+                    </div>
+                  </div>
+                );
+              } else {
+                content = (
+                  <div className={`${promo.bg} aspect-[16/7] sm:aspect-[16/5] p-6 md:p-12 flex items-center justify-between gap-4`}>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs md:text-sm font-bold ${promo.brandColor} mb-2 tracking-wide uppercase`}>{promo.brand}</p>
+                      <h3 className={`text-2xl md:text-5xl font-black ${promo.text} leading-tight mb-2`}>{promo.title}</h3>
+                      <p className={`text-sm md:text-lg ${promo.text} opacity-80 max-w-lg`}>{promo.subtitle}</p>
+                    </div>
+                    <div className="shrink-0 w-32 h-32 md:w-64 md:h-64 relative hidden sm:block">
+                      <img src={promo.imageUrl} alt={promo.title} className="w-full h-full object-contain drop-shadow-xl" />
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={idx} className="shrink-0 w-full">
+                  {promo.href ? <Link href={promo.href} className="block">{content}</Link> : content}
+                </div>
+              );
+            })}
           </div>
         </div>
-      </RevealSection>
+
+        {promos.length > 1 && (
+          <>
+            <button onClick={prev} className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white text-gray-800 z-10 hidden md:flex"><ChevronLeft className="w-5 h-5" /></button>
+            <button onClick={next} className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white text-gray-800 z-10 hidden md:flex"><ChevronRight className="w-5 h-5" /></button>
+            
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+              {promos.map((_, idx) => (
+                <button key={idx} onClick={() => setIndex(idx)} className={`transition-all duration-300 rounded-full ${index === idx ? "w-8 h-2 bg-primary" : "w-2 h-2 bg-white/60 hover:bg-white"}`} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
