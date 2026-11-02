@@ -69,6 +69,25 @@ export default async function Home() {
     <div>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <h1 className="sr-only">Amroha Pharmacy – Authentic Ayurvedic & Unani medicines</h1>
+      
+      {/* HERO SECTION */}
+      <section className="bg-gradient-to-b from-primary/10 to-transparent pt-10 pb-6 md:pt-16 md:pb-10 text-center px-4">
+        <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+          Authentic Ayurvedic & Unani Medicines
+        </h2>
+        <p className="text-sm md:text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+          Delivering natural wellness from Amroha to your doorstep. Trusted by families across India.
+        </p>
+        <div className="flex justify-center gap-4">
+          <a href="/products" className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary-dark transition shadow-md">
+            Shop All Products
+          </a>
+          <a href="/concerns" className="bg-white text-primary border-2 border-primary px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary/5 transition">
+            Shop by Concern
+          </a>
+        </div>
+      </section>
+
       {/* Trust badges */}
       <RevealSection className="border-b border-slate-200/70 bg-white py-4 md:py-5">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
