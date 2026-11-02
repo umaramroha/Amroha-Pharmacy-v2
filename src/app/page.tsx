@@ -79,12 +79,12 @@ export default async function Home() {
           Delivering natural wellness from Amroha to your doorstep. Trusted by families across India.
         </p>
         <div className="flex justify-center gap-4">
-          <a href="/products" className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary-dark transition shadow-md">
+          <Link href="/products" className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary-dark transition shadow-md">
             Shop All Products
-          </a>
-          <a href="/concerns" className="bg-white text-primary border-2 border-primary px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary/5 transition">
+          </Link>
+          <Link href="/concerns" className="bg-white text-primary border-2 border-primary px-6 py-3 rounded-full font-bold text-sm md:text-base hover:bg-primary/5 transition">
             Shop by Concern
-          </a>
+          </Link>
         </div>
       </section>
 
