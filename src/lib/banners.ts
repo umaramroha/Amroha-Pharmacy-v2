@@ -17,6 +17,8 @@ export type BannerDTO = {
   linkUrl: string | null;
   theme: string;
   layout: string;
+  width: number | null;
+  height: number | null;
   order: number;
 };
 
@@ -41,6 +43,8 @@ export const fetchActiveBanners = unstable_cache(
         linkUrl: true,
         theme: true,
         layout: true,
+        width: true,
+        height: true,
         order: true,
       },
     }),
