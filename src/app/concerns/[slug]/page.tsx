@@ -45,6 +45,24 @@ export async function generateMetadata(
   };
 }
 
+
+const getConcernIcon = (slug: string) => {
+  const p = { className: "w-10 h-10 md:w-14 md:h-14" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Activity {...p} />;
+  }
+};
+
 export default async function ConcernDetailPage(
   props: {
     params: Promise<{ slug: string }>;
@@ -165,7 +183,7 @@ export default async function ConcernDetailPage(
                 href={`/concerns/${c.slug}`}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition"
               >
-                <span>{c.icon}</span>
+                <span className="text-primary">{getConcernIcon(c.slug)}</span>
                 <span>{c.name}</span>
               </Link>
             ))}
