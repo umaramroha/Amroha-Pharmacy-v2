@@ -2,40 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { concerns, getConcernBySlug } from "@/data/concerns";
-import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
-
-const getIcon = (slug: string) => {
-  const p = { className: "w-12 h-12 md:w-16 md:h-16" };
-  switch (slug) {
-    case "mens-vitality": return <Zap {...p} />;
-    case "sexual-health": return <ShieldCheck {...p} />;
-    case "male-fertility": return <Baby {...p} />;
-    case "womens-health": return <Heart {...p} />;
-    case "white-discharge": return <Stethoscope {...p} />;
-    case "gastric-digestion": return <Flame {...p} />;
-    case "weight-loss": return <TrendingDown {...p} />;
-    case "weight-gain": return <Dumbbell {...p} />;
-    case "joints-pain": return <Bone {...p} />;
-    case "diabetes": return <Droplets {...p} />;
-    default: return <Activity {...p} />;
-  }
-};
 import { getWhatsAppLink, getContactMessage } from "@/lib/whatsapp";
 import ProductCard from "@/components/product/ProductCard";
+import { Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
 
 export async function generateStaticParams() {
   return concerns.map((c) => ({ slug: c.slug }));
 }
 
-// Force dynamic rendering — products always fresh from DB
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function generateMetadata(
-  props: {
-    params: Promise<{ slug: string }>;
-  }
-) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
   const concern = getConcernBySlug(params.slug);
   if (!concern) return { title: "Concern Not Found" };
@@ -45,9 +23,8 @@ export async function generateMetadata(
   };
 }
 
-
-const getConcernIcon = (slug: string) => {
-  const p = { className: "w-10 h-10 md:w-14 md:h-14" };
+const getConcernIcon = (slug: string, size: string = "w-10 h-10 md:w-14 md:h-14") => {
+  const p = { className: size };
   switch (slug) {
     case "mens-vitality": return <Zap {...p} />;
     case "sexual-health": return <ShieldCheck {...p} />;
@@ -63,11 +40,7 @@ const getConcernIcon = (slug: string) => {
   }
 };
 
-export default async function ConcernDetailPage(
-  props: {
-    params: Promise<{ slug: string }>;
-  }
-) {
+export default async function ConcernDetailPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
   const concern = getConcernBySlug(params.slug);
 
@@ -97,21 +70,17 @@ export default async function ConcernDetailPage(
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-sm text-gray-500 mb-6">
-        <Link href="/" className="hover:text-primary">
-          Home
-        </Link>
+        <Link href="/" className="hover:text-primary">Home</Link>
         <span className="mx-2">/</span>
-        <Link href="/concerns" className="hover:text-primary">
-          Concerns
-        </Link>
+        <Link href="/concerns" className="hover:text-primary">Concerns</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-700">{concern.name}</span>
       </div>
 
       <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-8 md:p-12 mb-10">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-            <div className="text-white">{getIcon(concern.slug)}</div>
+          <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-full flex items-center justify-center shrink-0 text-white">
+            {getConcernIcon(concern.slug, "w-12 h-12 md:w-16 md:h-16")}
           </div>
           <div className="text-center md:text-left">
             <p className="text-sm opacity-90 mb-1">{concern.hindiName}</p>
@@ -181,10 +150,10 @@ export default async function ConcernDetailPage(
               <Link
                 key={c.slug}
                 href={`/concerns/${c.slug}`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-primary hover:text-white rounded-full text-sm font-medium transition text-primary"
               >
-                <span className="text-primary">{getConcernIcon(c.slug)}</span>
-                <span>{c.name}</span>
+                {getConcernIcon(c.slug, "w-5 h-5")}
+                <span className="text-gray-700 hover:text-white">{c.name}</span>
               </Link>
             ))}
         </div>
