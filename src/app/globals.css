@@ -137,3 +137,13 @@ main .rounded-2xl { border-radius:1.35rem !important; }
   .animate-marquee { animation: none; }
 }
 /* --- /TRUST MARQUEE --- */
+
+
+/* Hide scrollbar for horizontal marquee */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

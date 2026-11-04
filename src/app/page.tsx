@@ -119,8 +119,8 @@ export default async function Home() {
           <div className="mx-auto max-w-7xl px-3 md:px-6">
             <div className="mb-4 md:mb-6 flex items-end justify-between">
               <div>
-                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">New Arrivals</h2>
-                <p className="mt-0.5 text-xs md:text-sm text-gray-500">Our latest products</p>
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Best Selling Products</h2>
+                <p className="mt-0.5 text-xs md:text-sm text-gray-500">Our most popular products</p>
               </div>
               <Link href="/products" className="text-xs md:text-sm font-semibold text-primary hover:underline">View all</Link>
             </div>
@@ -132,6 +132,27 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* SHOP BY CONCERN - HORIZONTAL MARQUEE (Swipeable) */}
+      <section className="py-8 bg-white border-t border-gray-100">
+        <div className="mx-auto max-w-7xl md:px-6">
+          <div className="flex items-center justify-between px-4 md:px-0 mb-4">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Shop by Concern</h2>
+            <Link href="/concerns" className="text-xs md:text-sm font-semibold text-primary hover:underline">View all</Link>
+          </div>
+          
+          <div className="flex overflow-x-auto gap-4 px-4 md:px-0 pb-2 snap-x snap-mandatory scrollbar-hide">
+            {concerns.map((c) => (
+              <Link key={c.slug} href={`/concerns/${c.slug}`} className="group flex flex-col items-center shrink-0 w-20 md:w-28 snap-start">
+                <div className="w-14 h-14 md:w-20 md:h-20 bg-primary/5 rounded-full flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-white transition duration-300 text-primary shadow-sm">
+                  {getConcernIcon(c.slug)}
+                </div>
+                <h3 className="text-[10px] md:text-xs font-semibold text-center text-gray-800 group-hover:text-primary leading-tight line-clamp-2">{c.name}</h3>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* FLOATING WHATSAPP */}
       <a href={helpLink} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="fixed bottom-[88px] right-4 z-50 grid h-12 w-12 place-items-center rounded-full bg-green-600 text-white shadow-lg md:hidden">
