@@ -13,8 +13,6 @@ type Banner = {
   linkUrl: string | null;
   theme: string;
   layout: string;
-  width: number | null;
-  height: number | null;
   order: number;
   isActive: boolean;
 };
@@ -43,8 +41,6 @@ const EMPTY_FORM = {
   linkUrl: "",
   theme: "teal",
 layout: "split",
-  width: "",
-  height: "",
   order: "0",
   isActive: true,
 };
@@ -97,9 +93,7 @@ export default function AdminBannersPage() {
       imageUrl: banner.imageUrl,
       linkUrl: banner.linkUrl || "",
       theme: banner.theme,
-layout: banner.layout || "split",
-      width: banner.width ? banner.width.toString() : "",
-      height: banner.height ? banner.height.toString() : "",      
+layout: banner.layout || "split",      
 order: banner.order.toString(),
       isActive: banner.isActive,
     });
@@ -179,7 +173,7 @@ order: banner.order.toString(),
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, order: parseInt(formData.order) || 0, width: formData.width ? parseInt(formData.width) : null, height: formData.height ? parseInt(formData.height) : null }),
+        body: JSON.stringify({ ...formData, order: parseInt(formData.order) || 0 }),
       });
 
       const data = await res.json();
@@ -376,16 +370,6 @@ order: banner.order.toString(),
       </option>
     ))}
   </select>
-</div>
-<div className="flex gap-2">
-  <div className="flex-1">
-    <label className="block text-sm font-medium text-gray-700 mb-1">Width (px)</label>
-    <input type="number" value={formData.width} onChange={(e) => setFormData({ ...formData, width: e.target.value })} className="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="e.g. 1200" />
-  </div>
-  <div className="flex-1">
-    <label className="block text-sm font-medium text-gray-700 mb-1">Height (px)</label>
-    <input type="number" value={formData.height} onChange={(e) => setFormData({ ...formData, height: e.target.value })} className="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="e.g. 400" />
-  </div>
 </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

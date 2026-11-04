@@ -82,7 +82,7 @@ export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
                 );
               }
               return (
-                <div key={idx} className="shrink-0 w-full" style={{ aspectRatio: promo.width && promo.height ? `${promo.width}/${promo.height}` : undefined }}>
+                <div key={idx} className="shrink-0 w-full">
                   {promo.href ? <Link href={promo.href} className="block">{content}</Link> : content}
                 </div>
               );
