@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
 import HomeProductCard from "@/components/home/HomeProductCard";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import TrustIcon from "@/components/ui/TrustIcon";
@@ -10,6 +10,24 @@ import { getFeaturedProducts } from "@/lib/products";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
 export const revalidate = 60;
+
+
+const getConcernIcon = (slug: string) => {
+  const p = { className: "w-6 h-6 md:w-8 md:h-8" };
+  switch (slug) {
+    case "mens-vitality": return <Zap {...p} />;
+    case "sexual-health": return <ShieldCheck {...p} />;
+    case "male-fertility": return <Baby {...p} />;
+    case "womens-health": return <Heart {...p} />;
+    case "white-discharge": return <Stethoscope {...p} />;
+    case "gastric-digestion": return <Flame {...p} />;
+    case "weight-loss": return <TrendingDown {...p} />;
+    case "weight-gain": return <Dumbbell {...p} />;
+    case "joints-pain": return <Bone {...p} />;
+    case "diabetes": return <Droplets {...p} />;
+    default: return <Activity {...p} />;
+  }
+};
 
 export default async function Home() {
   const [banners, featuredProducts] = await Promise.all([
@@ -86,7 +104,7 @@ export default async function Home() {
           <div className="grid grid-cols-5 gap-4">
             {concerns.map((c) => (
               <Link key={c.slug} href={`/concerns/${c.slug}`} className="group flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-4 text-center transition hover:shadow-md">
-                <span className="mb-2 text-3xl">{c.icon}</span>
+                <div className="text-primary group-hover:text-white transition-colors">{getConcernIcon(c.slug)}</div>
                 <h3 className="text-xs font-bold text-gray-900 group-hover:text-primary">{c.name}</h3>
                 <p className="mt-0.5 text-[10px] text-gray-500">{c.hindiName}</p>
               </Link>
