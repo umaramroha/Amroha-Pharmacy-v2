@@ -43,18 +43,33 @@ export default async function Home() {
       <PromoCarousel banners={banners} />
 
       {/* THIN TRUST STRIP */}
-      <div className="border-y border-gray-100 bg-white py-3">
-        <div className="mx-auto max-w-7xl px-4 md:px-6">
-          <ul className="flex flex-wrap justify-center gap-4 md:gap-8">
+      <div className="border-y border-gray-100 bg-white py-3 overflow-hidden">
+        <div className="mx-auto max-w-7xl md:px-6">
+          
+          {/* Mobile: Marquee (Scrolling) */}
+          <div className="flex w-max animate-marquee md:hidden">
+            {[...trust, ...trust, ...trust].map((item, i) => (
+              <div key={i} className="flex items-center gap-1.5 px-4 shrink-0">
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
+                  <TrustIcon name={item.icon} className="h-3.5 w-3.5" />
+                </span>
+                <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Static Flex */}
+          <ul className="hidden md:flex justify-center gap-8">
             {trust.map((item) => (
               <li key={item.label} className="flex items-center gap-2">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
                   <TrustIcon name={item.icon} className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-[11px] font-semibold text-gray-700 md:text-xs">{item.label}</span>
+                <span className="text-xs font-semibold text-gray-700">{item.label}</span>
               </li>
             ))}
           </ul>
+
         </div>
       </div>
 

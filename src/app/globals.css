@@ -123,3 +123,17 @@ main .rounded-2xl { border-radius:1.35rem !important; }
   .hp-lift:hover { transform:none; }
 }
 /* --- /HOMEPAGE v2 --- */
+
+
+/* --- TRUST MARQUEE --- */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+}
+/* --- /TRUST MARQUEE --- */
