@@ -133,8 +133,8 @@ export default async function Home() {
         </section>
       )}
 
-      {/* SHOP BY CONCERN - HORIZONTAL MARQUEE (Swipeable) */}
-      <section className="py-8 bg-white border-t border-gray-100">
+      {/* SHOP BY CONCERN - HORIZONTAL MARQUEE (Swipeable) - MOBILE ONLY */}
+      <section className="py-8 bg-white border-t border-gray-100 md:hidden">
         <div className="mx-auto max-w-7xl md:px-6">
           <div className="flex items-center justify-between px-4 md:px-0 mb-4">
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Shop by Concern</h2>
