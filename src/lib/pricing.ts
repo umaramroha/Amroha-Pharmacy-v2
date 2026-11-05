@@ -40,6 +40,7 @@ export type PricingSuccess = {
   productDiscount: Prisma.Decimal;
   prepaidDiscount: Prisma.Decimal;
   zoneDiscount: Prisma.Decimal;
+  deliveryZone: string | null;
   deliveryFee: Prisma.Decimal;
   codAvailable: boolean;
   total: Prisma.Decimal;
@@ -130,10 +131,12 @@ export async function priceCart(
   let deliveryFee = new Prisma.Decimal(50);
   let codAvailable = true;
   let zoneDiscount = new Prisma.Decimal(0);
+  let deliveryZone: string | null = null;
 
   if (pincode) {
     const zone = getDeliveryZone(pincode);
     if (zone) {
+      deliveryZone = zone.name;
       deliveryFee = subtotal.gte(zone.freeAbove) ? new Prisma.Decimal(0) : new Prisma.Decimal(zone.deliveryFee);
       codAvailable = isCodAvailable(pincode);
       if (zone.discount && zone.discount > 0) {
@@ -151,5 +154,5 @@ export async function priceCart(
 
   const total = subtotal.plus(deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
 
-  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryFee, codAvailable, total };
+  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryZone, deliveryFee, codAvailable, total };
 }

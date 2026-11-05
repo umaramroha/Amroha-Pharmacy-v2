@@ -205,7 +205,7 @@ export async function POST(request: Request) {
         { status: priced.status }
       );
     }
-    const { lines, subtotal, deliveryFee, total } = priced;
+    const { lines, subtotal, deliveryFee, total, zoneDiscount, prepaidDiscount, deliveryZone } = priced;
 
     // ==============================
     // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
@@ -231,6 +231,9 @@ export async function POST(request: Request) {
           pincode: input.pincode,
           subtotal,
           deliveryFee,
+          zoneDiscount,
+          prepaidDiscount,
+          deliveryZone,
           total,
           status: "PENDING",
           paymentMethod: input.paymentMethod,

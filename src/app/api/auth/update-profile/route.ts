@@ -15,14 +15,24 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, mobile } = await request.json();
+    const body = await request.json();
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const rawMobile = typeof body?.mobile === "string" ? body.mobile : "";
+    const cleanMobile = rawMobile.replace(/[\s\-()]/g, "").replace(/^\+?91/, "");
 
-    if (!name || !mobile) {
+    if (!name) {
       return NextResponse.json(
-        { error: "Name and mobile are required" },
+        { error: "Please enter your name" },
         { status: 400 }
       );
     }
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      return NextResponse.json(
+        { error: "Please enter a valid 10-digit Indian mobile number" },
+        { status: 400 }
+      );
+    }
+    const mobile = cleanMobile;
 
     const updated = await prisma.customer.update({
       where: { id: session.userId },

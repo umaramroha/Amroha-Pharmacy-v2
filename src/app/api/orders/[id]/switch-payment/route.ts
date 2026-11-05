@@ -69,10 +69,21 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Cash on Delivery is not available for this pincode." }, { status: 400 });
     }
 
-    // Recalculate discounts based on original pincode
-    const zone = getDeliveryZone(order.pincode);
-    const zoneDiscount = zone?.discount ? order.subtotal.mul(zone.discount).div(100).toDecimalPlaces(2) : new Prisma.Decimal(0);
-    
+    // Use SAVED zone discount from the moment the order was placed.
+    // Legacy orders (created before the snapshot migration) have 0/0/null saved
+    // values — detect that and re-derive from config only in that case.
+    let zoneDiscount = order.zoneDiscount ?? new Prisma.Decimal(0);
+    const actualDiscount = order.subtotal.plus(order.deliveryFee).minus(order.total);
+    const savedTotalDiscount = zoneDiscount.plus(order.prepaidDiscount ?? new Prisma.Decimal(0));
+    const isLegacyOrder = actualDiscount.minus(savedTotalDiscount).abs().gt(new Prisma.Decimal("0.01"));
+
+    if (isLegacyOrder) {
+      const zone = getDeliveryZone(order.pincode);
+      zoneDiscount = zone?.discount
+        ? order.subtotal.mul(zone.discount).div(100).toDecimalPlaces(2)
+        : new Prisma.Decimal(0);
+    }
+
     const prepaidDiscount = getPrepaidDiscount(order.subtotal, newMethod);
     const total = order.subtotal.plus(order.deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
 
@@ -84,7 +95,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         paymentStatus: "PENDING",
         paymentMethod: order.paymentMethod,
       },
-      data: { paymentMethod: newMethod, total },
+      data: {
+        paymentMethod: newMethod,
+        total,
+        zoneDiscount,
+        prepaidDiscount,
+      },
     });
 
     if (updated.count === 0) {

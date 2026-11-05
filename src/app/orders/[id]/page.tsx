@@ -47,6 +47,9 @@ type Order = {
   pincode: string;
   subtotal: string;
   deliveryFee: string;
+  zoneDiscount: string;
+  prepaidDiscount: string;
+  deliveryZone: string | null;
   total: string;
   status: string;
   paymentMethod: string;
@@ -301,13 +304,28 @@ export default function OrderDetailPage(
   const deliveryFeeNum = parseFloat(order.deliveryFee) || 0;
   const totalNum = parseFloat(order.total) || 0;
 
-  // Calculate Zone Discount based on Pincode
-  const zone = getDeliveryZone(order.pincode);
-  const zoneDiscountNum = zone?.discount ? round2(subtotalNum * (zone.discount / 100)) : 0;
+  // Prefer the discount snapshot captured at order-creation time.
+  // Legacy orders (pre-migration) have 0/0/null — fall back to deriving from
+  // current zone config only when the saved total clearly doesn't match.
+  const actualDiscountApplied = Math.max(0, round2(subtotalNum + deliveryFeeNum - totalNum));
+  const savedZoneDiscount = Number(order.zoneDiscount ?? 0) || 0;
+  const savedPrepaidDiscount = Number(order.prepaidDiscount ?? 0) || 0;
+  const savedTotalDiscount = round2(savedZoneDiscount + savedPrepaidDiscount);
+  const hasSnapshot = Math.abs(savedTotalDiscount - actualDiscountApplied) < 0.01;
 
-  // Total discount applied to the order
-  const totalDiscountApplied = Math.max(0, round2(subtotalNum + deliveryFeeNum - totalNum));
-  const prepaidDiscount = Math.max(0, round2(totalDiscountApplied - zoneDiscountNum));
+  let zoneDiscountNum: number;
+  let prepaidDiscount: number;
+
+  if (hasSnapshot) {
+    zoneDiscountNum = savedZoneDiscount;
+    prepaidDiscount = savedPrepaidDiscount;
+  } else {
+    const zone = getDeliveryZone(order.pincode);
+    zoneDiscountNum = zone?.discount ? round2(subtotalNum * (zone.discount / 100)) : 0;
+    prepaidDiscount = Math.max(0, round2(actualDiscountApplied - zoneDiscountNum));
+  }
+
+  const totalDiscountApplied = actualDiscountApplied;
 
   const codTotal = round2(subtotalNum + deliveryFeeNum - zoneDiscountNum);
   const upiSaving = Math.round(subtotalNum * PREPAID_DISCOUNT_PERCENT) / 100;

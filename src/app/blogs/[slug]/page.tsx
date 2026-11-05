@@ -54,13 +54,13 @@ export default function BlogDetailPage() {
     const fetchProducts = async () => {
       setLoadingProducts(true);
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch("/api/products/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: blog.relatedProducts }),
+        });
         const data = await res.json();
-        const all = data.products || [];
-        const matched = all.filter((p: Product) =>
-          blog.relatedProducts.includes(p.id)
-        );
-        setRelatedProducts(matched);
+        setRelatedProducts(data.products || []);
       } catch (err) {
         console.error("Failed to fetch related products", err);
       } finally {

@@ -23,10 +23,13 @@ export default function WishlistPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/products");
+        const res = await fetch("/api/products/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: items }),
+        });
         const data = await res.json();
-        const all = data.products || [];
-        setProducts(all.filter((p: Product) => items.includes(p.id)));
+        setProducts(data.products || []);
       } catch (err) {
         console.error("Failed to fetch wishlist products", err);
       } finally {

@@ -52,32 +52,39 @@ export async function GET() {
       _count: { status: true },
     });
 
-    // Top selling products
-    const topProducts = await prisma.orderItem.groupBy({
-      by: ["productId"],
-      _sum: { quantity: true, price: true },
-      _count: { productId: true },
-      orderBy: { _sum: { quantity: "desc" } },
-      take: 5,
-    });
-
-    const productIds = topProducts.map((p) => p.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true, price: true, image: true },
-    });
-
-    const topProductsWithDetails = topProducts.map((tp) => {
-      const product = products.find((p) => p.id === tp.productId);
-      return {
-        id: tp.productId,
-        name: product?.name || "Unknown",
-        image: product?.image || null,
-        totalSold: tp._sum.quantity || 0,
-        orderCount: tp._count.productId,
-        revenue: Number(tp._sum.price || 0),
-      };
-    });
+    // Top selling products — revenue = SUM(price × quantity), excluding cancelled orders
+    type TopProductRow = {
+      id: string;
+      name: string;
+      image: string | null;
+      totalSold: bigint;
+      revenue: string;
+      orderCount: bigint;
+    };
+    const topProductRows = await prisma.$queryRaw<TopProductRow[]>`
+      SELECT
+        oi."productId" AS id,
+        p.name,
+        p.image,
+        SUM(oi.quantity)::bigint AS "totalSold",
+        SUM(oi.price * oi.quantity)::text AS revenue,
+        COUNT(DISTINCT o.id)::bigint AS "orderCount"
+      FROM "OrderItem" oi
+      JOIN "Order" o ON o.id = oi."orderId"
+      JOIN "Product" p ON p.id = oi."productId"
+      WHERE o.status != 'CANCELLED'
+      GROUP BY oi."productId", p.name, p.image
+      ORDER BY SUM(oi.quantity) DESC
+      LIMIT 5
+    `;
+    const topProductsWithDetails = topProductRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      image: r.image,
+      totalSold: Number(r.totalSold),
+      orderCount: Number(r.orderCount),
+      revenue: Number(r.revenue),
+    }));
 
     // Recent 7 days revenue
     const sevenDaysAgo = new Date();
