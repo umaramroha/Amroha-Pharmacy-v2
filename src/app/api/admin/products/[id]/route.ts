@@ -127,6 +127,9 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         updateData.image = data.images[0];
       } else if (data.image !== undefined) {
         updateData.image = data.image?.trim() || null;
+      } else {
+        // If all images are removed and no new primary image is provided, clear the primary image
+        updateData.image = null;
       }
     } else if (data.image !== undefined) {
       updateData.image = data.image?.trim() || null;
