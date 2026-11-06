@@ -128,9 +128,13 @@ export async function POST(request: Request) {
     const userId = session.userId;
 
     // Verify user account
-    const customer = await prisma.customer.findUnique({ where: { id: userId }, select: { isVerified: true } });
+    const customer = await prisma.customer.findUnique({ where: { id: userId }, select: { isVerified: true, lastPasswordChange: true } });
     if (!customer?.isVerified) {
       return NextResponse.json({ error: "Please verify your email address before placing an order." }, { status: 403 });
+    }
+    if (session.lastPasswordChange && new Date(session.lastPasswordChange) < customer.lastPasswordChange) {
+      session.destroy();
+      return NextResponse.json({ error: "Session expired. Please login again." }, { status: 401 });
     }
 
     // Check pending order limit (Max 3)

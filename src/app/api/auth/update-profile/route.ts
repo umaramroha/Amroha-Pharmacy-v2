@@ -14,6 +14,11 @@ export async function PATCH(request: Request) {
     if (!session.isLoggedIn || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const dbCustomer = await prisma.customer.findUnique({ where: { id: session.userId }, select: { lastPasswordChange: true } });
+    if (!dbCustomer || (session.lastPasswordChange && new Date(session.lastPasswordChange) < dbCustomer.lastPasswordChange)) {
+      session.destroy();
+      return NextResponse.json({ error: "Session expired. Please login again." }, { status: 401 });
+    }
 
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";

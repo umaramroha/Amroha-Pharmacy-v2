@@ -5,7 +5,8 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
 import { getOrderStatusUpdateHTML } from "@/lib/email/templates";
-import { adminSessionOptions } from "@/lib/adminSession";
+import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
+import { rateLimit } from "@/lib/rateLimit";
 
 type AdminSessionData = {
   adminId?: string;
@@ -74,6 +75,11 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
   try {
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const session = await getAdminSession();
+    const rateCheck = await rateLimit(`admin-mutation:${session.adminId}`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Admin rate limit exceeded" }, { status: 429 });
     }
 
     let body: any;

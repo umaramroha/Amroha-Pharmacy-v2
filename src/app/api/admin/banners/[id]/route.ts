@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { adminSessionOptions } from "@/lib/adminSession";
+import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
+import { rateLimit } from "@/lib/rateLimit";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { BANNERS_CACHE_TAG } from "@/lib/banners";
 import { z } from "zod";
@@ -45,8 +46,18 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (!(await isAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const session = await getAdminSession();
+    const rateCheck = await rateLimit(`admin-mutation:${session.adminId}`, 50, 60 * 60 * 1000, { failOpen: false });
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Admin rate limit exceeded" }, { status: 429 });
+    }
 
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
     const parsed = updateBannerSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });

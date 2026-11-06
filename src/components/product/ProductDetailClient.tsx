@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -62,20 +62,6 @@ const categoryLabels: Record<string, string> = {
 /* -------------------------------------------------------------------------- */
 /* ICONS                                                                      */
 /* -------------------------------------------------------------------------- */
-
-function ChevronLeftIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      className="w-4 h-4"
-      strokeWidth="2"
-    >
-      <path d="m15 18-6-6 6-6" />
-    </svg>
-  );
-}
 
 function ChevronRightIcon() {
   return (

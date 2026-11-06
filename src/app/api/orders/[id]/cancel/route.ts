@@ -15,6 +15,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (!session.isLoggedIn || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const user = await prisma.customer.findUnique({ where: { id: session.userId }, select: { lastPasswordChange: true } });
+    if (!user || (session.lastPasswordChange && new Date(session.lastPasswordChange) < user.lastPasswordChange)) {
+      session.destroy();
+      return NextResponse.json({ error: "Session expired. Please login again." }, { status: 401 });
+    }
 
     // Atomic Transaction: Status update + Stock restore
     const cancellation = await prisma.$transaction(async (tx) => {

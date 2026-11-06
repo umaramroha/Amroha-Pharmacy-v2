@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { deliveryConfig } from "@/lib/config";
 import { getDeliveryZone, isCodAvailable } from "@/data/delivery";
 import { PREPAID_DISCOUNT_PERCENT } from "@/lib/offers";
 

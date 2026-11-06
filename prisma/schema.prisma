@@ -116,4 +116,5 @@ model RateLimit {
   key       String   @id
   count     Int
   resetAt   DateTime
+  @@index([resetAt])
 }
