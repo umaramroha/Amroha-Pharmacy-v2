@@ -123,7 +123,11 @@ export default function CheckoutPage() {
       setQuoteStatus("idle");
       return;
     }
-    if (formData.pincode.length > 0 && formData.pincode.length !== 6) return;
+    if (formData.pincode.length > 0 && formData.pincode.length !== 6) {
+      setQuote(null);
+      setQuoteStatus("idle");
+      return;
+    }
 
     const controller = new AbortController();
     setQuoteStatus("loading");
