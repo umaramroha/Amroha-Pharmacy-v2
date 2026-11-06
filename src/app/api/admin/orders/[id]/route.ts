@@ -76,7 +76,14 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { status, paymentStatus } = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Request body must be valid JSON" }, { status: 400 });
+    }
+    
+    const { status, paymentStatus } = body;
     const updateData: Prisma.OrderUpdateInput = {};
 
     if (status) {
