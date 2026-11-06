@@ -98,54 +98,92 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
-    // FIX 2: Transaction to update order and handle stock correctly
-    const { order: updated, oldStatus } = await prisma.$transaction(async (tx) => {
-      const currentOrder = await tx.order.findUnique({
-        where: { id: params.id },
-        include: { items: true }, // Include items so we can restore stock
-      });
+    // FIX 2: Transaction to update order, handle refund status, and stock safely
+    let updated, oldStatus;
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const currentOrder = await tx.order.findUnique({
+          where: { id: params.id },
+          include: { items: true },
+        });
 
-      if (!currentOrder) {
-        throw new Error("Order not found");
-      }
+        if (!currentOrder) {
+          throw new Error("Order not found");
+        }
 
-      const order = await tx.order.update({
-        where: { id: params.id },
-        data: updateData,
-        include: {
-          items: {
-            include: {
-              product: { select: { id: true, name: true, image: true, slug: true } },
+        // Case 1: Cancelling the order
+        if (status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
+          const updatedRes = await tx.order.updateMany({
+            where: { id: params.id, status: currentOrder.status }, // Guard: Only update if status hasn't changed concurrently
+            data: {
+              status: "CANCELLED",
+              paymentStatus: currentOrder.paymentStatus === "PAID" ? "REFUND_PENDING" : "CANCELLED",
+            },
+          });
+
+          if (updatedRes.count === 0) {
+            throw new Error("Order was updated by someone else. Please refresh.");
+          }
+
+          // Restore stock safely
+          for (const item of currentOrder.items) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
+        } 
+        // Case 2: Re-activating a cancelled order
+        else if (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED") {
+          const updatedRes = await tx.order.updateMany({
+            where: { id: params.id, status: "CANCELLED" },
+            data: { status, paymentStatus: "PENDING" },
+          });
+
+          if (updatedRes.count === 0) {
+            throw new Error("Order was updated by someone else. Please refresh.");
+          }
+
+          // Deduct stock safely
+          for (const item of currentOrder.items) {
+            const res = await tx.product.updateMany({
+              where: { id: item.productId, stock: { gte: item.quantity } },
+              data: { stock: { decrement: item.quantity } },
+            });
+            if (res.count === 0) {
+              throw new Error(`Not enough stock to re-activate order. Product ID: ${item.productId}`);
+            }
+          }
+        } 
+        // Case 3: Normal status update (e.g. PENDING -> SHIPPED)
+        else {
+          await tx.order.update({
+            where: { id: params.id },
+            data: updateData,
+          });
+        }
+
+        // Fetch the fully updated order for the response
+        const finalOrder = await tx.order.findUnique({
+          where: { id: params.id },
+          include: {
+            items: {
+              include: {
+                product: { select: { id: true, name: true, image: true, slug: true } },
+              },
             },
           },
-        },
+        });
+
+        return { order: finalOrder!, oldStatus: currentOrder.status };
       });
-
-      // Restore stock if status is changing TO "CANCELLED"
-      const CANCELLABLE = ["PENDING", "CONFIRMED", "PROCESSING"];
-      if (status === "CANCELLED" && CANCELLABLE.includes(currentOrder.status)) {
-        for (const item of currentOrder.items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } },
-          });
-        }
-      }
-      // Deduct stock if status is changing FROM "CANCELLED" to an active state
-      else if (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED") {
-        for (const item of currentOrder.items) {
-          const res = await tx.product.updateMany({
-            where: { id: item.productId, stock: { gte: item.quantity } },
-            data: { stock: { decrement: item.quantity } },
-          });
-          if (res.count === 0) {
-            throw new Error(`Not enough stock to re-activate order. Product ID: ${item.productId}`);
-          }
-        }
-      }
-
-      return { order, oldStatus: currentOrder.status };
-    });
+      
+      updated = result.order;
+      oldStatus = result.oldStatus;
+    } catch (err: any) {
+      console.error("Admin transaction error:", err);
+      return NextResponse.json({ error: err.message || "Failed to update order" }, { status: 400 });
+    }
 
     // Send status update email to customer
     if (status && status !== oldStatus && updated.customerEmail) {
