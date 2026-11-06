@@ -21,7 +21,7 @@ const getSmallIcon = (slug: string) => {
     default: return <Activity {...p} />;
   }
 };
-import ProductCard from "@/components/product/ProductCard";
+import HomeProductCard from "@/components/home/HomeProductCard";
 
 type Product = {
   id: string; name: string; slug: string; price: string; mrp: string | null;
@@ -193,8 +193,8 @@ export default function ProductListClient({ initialProducts, categoryParam, quer
               </div>
             ) : (
               <>
-                <div className="flex flex-wrap justify-center gap-3 md:gap-5">
-                  {filteredProducts.map((product) => <div key={product.id} className="w-[calc(50%-6px)] md:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)]"><ProductCard product={product} /></div>)}
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+                  {filteredProducts.map((product) => <HomeProductCard key={product.id} product={product} />)}
                 </div>
 
                 {/* Pagination */}

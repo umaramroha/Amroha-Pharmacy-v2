@@ -1,7 +1,8 @@
 import { getCachedProducts } from "@/lib/products";
 import ProductListClient from "@/components/product/ProductListClient";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ProductsPage({
   searchParams,

@@ -3,12 +3,15 @@ import Link from "next/link";
 import { useState, type MouseEvent } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/components/ui/ToastProvider";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 type Product = { id: string; name: string; slug: string; price: string; mrp: string | null; image: string | null; stock?: number; };
 
 export default function HomeProductCard({ product }: { product: Product }) {
   const { addToCart, items } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const showToast = useToast();
+  const inWishlist = isInWishlist(product.id);
   const [isAdded, setIsAdded] = useState(false);
   const cartQty = items.find((i) => i.id === product.id)?.quantity || 0;
 
@@ -28,6 +31,15 @@ export default function HomeProductCard({ product }: { product: Product }) {
 
   return (
     <article className="bg-white rounded-2xl border border-gray-100 p-3 flex flex-col h-full shadow-sm">
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.id); }}
+        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/95 shadow-sm ring-1 ring-slate-200 transition hover:scale-110 active:scale-95"
+      >
+        <svg className={`h-4 w-4 ${inWishlist ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.8 8.8c0 5.4-8.8 10.2-8.8 10.2S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z" />
+        </svg>
+      </button>
       <Link href={`/products/${product.slug}`} className="relative block aspect-square overflow-hidden rounded-xl bg-gray-50 mb-3">
         {discount > 0 && (
           <span className="absolute left-2 top-2 z-10 rounded bg-primary/90 px-1.5 py-0.5 text-[10px] font-bold text-white">
