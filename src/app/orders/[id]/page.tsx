@@ -298,7 +298,9 @@ export default function OrderDetailPage(
 
   // Payment method can be changed only while the order is unpaid and not shipped.
   const canSwitchPayment = canCancel && !cancelSuccess && order.paymentStatus === "PENDING";
-  const needsUpiPayment = canSwitchPayment && !isCod;
+  
+  // Show UPI pending banner even if the order is shipped, as long as it's not cancelled and payment is pending.
+  const needsUpiPayment = !isCod && order.paymentStatus === "PENDING" && order.status !== "CANCELLED";
 
   const subtotalNum = parseFloat(order.subtotal) || 0;
   const deliveryFeeNum = parseFloat(order.deliveryFee) || 0;
