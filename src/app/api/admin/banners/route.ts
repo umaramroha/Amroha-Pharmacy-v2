@@ -13,7 +13,10 @@ const BannerInput = z.object({
   title: z.string().trim().min(1).max(100),
   subtitle: z.string().trim().max(200).optional().nullable(),
   imageUrl: z.string().url("Must be a valid URL"),
-  linkUrl: z.string().url().optional().nullable().or(z.literal("")),
+  linkUrl: z.string().trim().max(500).optional().nullable().refine(
+    (val) => !val || val === "" || val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://"),
+    "Must be a valid URL (http/https) or a relative path starting with /"
+  ),
   theme: z.string().default("teal"),
   layout: z.string().default("split"),
   order: z.number().int().default(0),
