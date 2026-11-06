@@ -64,10 +64,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const shortId = order.id.slice(-8).toUpperCase();
 
     try {
-      if (session.email) {
+      const emailToNotify = order.customerEmail || session.email;
+      if (emailToNotify) {
         await transporter.sendMail({
           from: FROM_EMAIL,
-          to: session.email,
+          to: emailToNotify,
           subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
           html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled.</p></div>`,
         });
