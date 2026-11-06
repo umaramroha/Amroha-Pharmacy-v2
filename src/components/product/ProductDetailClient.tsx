@@ -628,6 +628,16 @@ export default function ProductDetailClient({
               )}
             </div>
 
+            {!isInStock && (
+              <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-100 text-sm">
+                <p className="font-semibold text-red-800 mb-1">Out of Stock</p>
+                <p className="text-red-700 mb-3">This product is currently unavailable. Contact us on WhatsApp to check if it can be special ordered.</p>
+                <a href={getWhatsAppLink(`Hello Amroha Pharmacy, I am looking for ${product.name} but it is out of stock. When will it be available?`)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 rounded-lg font-semibold transition">
+                  <WhatsAppIcon /> Contact on WhatsApp
+                </a>
+              </div>
+            )}
+
             {/* QUANTITY */}
 
             {isInStock && (
