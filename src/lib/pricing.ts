@@ -41,6 +41,7 @@ export type PricingSuccess = {
   prepaidDiscount: Prisma.Decimal;
   zoneDiscount: Prisma.Decimal;
   deliveryZone: string | null;
+  originalDeliveryFee: Prisma.Decimal;
   deliveryFee: Prisma.Decimal;
   codAvailable: boolean;
   total: Prisma.Decimal;
@@ -129,6 +130,7 @@ export async function priceCart(
 
   // Dynamic Delivery & COD Logic
   let deliveryFee = new Prisma.Decimal(50);
+  let originalDeliveryFee = new Prisma.Decimal(50);
   let codAvailable = true;
   let zoneDiscount = new Prisma.Decimal(0);
   let deliveryZone: string | null = null;
@@ -137,13 +139,15 @@ export async function priceCart(
     const zone = getDeliveryZone(pincode);
     if (zone) {
       deliveryZone = zone.name;
-      deliveryFee = subtotal.gte(zone.freeAbove) ? new Prisma.Decimal(0) : new Prisma.Decimal(zone.deliveryFee);
+      originalDeliveryFee = new Prisma.Decimal(zone.deliveryFee);
+      deliveryFee = subtotal.gte(zone.freeAbove) ? new Prisma.Decimal(0) : originalDeliveryFee;
       codAvailable = isCodAvailable(pincode);
       if (zone.discount && zone.discount > 0) {
         zoneDiscount = subtotal.mul(zone.discount).div(100).toDecimalPlaces(2);
       }
     } else {
-      deliveryFee = subtotal.gte(800) ? new Prisma.Decimal(0) : new Prisma.Decimal(80);
+      originalDeliveryFee = new Prisma.Decimal(80);
+      deliveryFee = subtotal.gte(800) ? new Prisma.Decimal(0) : originalDeliveryFee;
     }
   }
 
@@ -154,5 +158,5 @@ export async function priceCart(
 
   const total = subtotal.plus(deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
 
-  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryZone, deliveryFee, codAvailable, total };
+  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryZone, originalDeliveryFee, deliveryFee, codAvailable, total };
 }

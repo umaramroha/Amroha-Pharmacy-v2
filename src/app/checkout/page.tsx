@@ -27,6 +27,7 @@ type ServerQuote = {
   productDiscount: number;
   zoneDiscount: number;
   prepaidDiscount: number;
+  originalDeliveryFee: number;
   deliveryFee: number;
   codAvailable: boolean;
   total: number;
@@ -428,7 +429,7 @@ export default function CheckoutPage() {
 
               {quote && (quote.productDiscount > 0 || (quote.deliveryFee === 0 && quote.subtotal > 0)) && (
                 <div className="mt-3 flex items-center justify-between rounded-lg bg-green-50 border border-green-100 p-2.5">
-                  <span className="text-xs font-bold text-green-700">You save ₹{(quote.productDiscount + (quote.deliveryFee === 0 ? 50 : 0)).toLocaleString("en-IN")}</span>
+                  <span className="text-xs font-bold text-green-700">You save ₹{(quote.productDiscount + (quote.deliveryFee === 0 ? quote.originalDeliveryFee : 0)).toLocaleString("en-IN")}</span>
                   <ShieldCheck className="w-4 h-4 text-green-600" />
                 </div>
               )}
