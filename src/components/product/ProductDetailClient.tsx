@@ -40,6 +40,7 @@ type DeliveryInfo = {
   zone?: string;
   days?: [number, number] | number[];
   fee?: number;
+  freeAbove?: number;
   codAvailable?: boolean;
   discount?: number;
   offerMessage?: string;
@@ -406,6 +407,7 @@ export default function ProductDetailClient({
         zone: info.zone,
         days: info.deliveryDays,
         fee: info.deliveryFee,
+        freeAbove: info.freeAbove,
         codAvailable: info.codAvailable,
         discount: info.discount,
         offerMessage: info.offerMessage,
@@ -855,24 +857,28 @@ export default function ProductDetailClient({
                           </div>
                         )}
 
-                      {deliveryInfo.fee !==
-                        undefined && (
-                        <div className="p-4 flex items-center justify-between gap-4 text-sm">
-                          <span className="text-gray-600">
-                            Delivery fee
-                          </span>
-
-                          <strong
-                            className={
-                              deliveryInfo.fee === 0
-                                ? "text-green-700"
-                                : "text-gray-900"
-                            }
-                          >
-                            {deliveryInfo.fee === 0
-                              ? "FREE"
-                              : `₹${deliveryInfo.fee}`}
-                          </strong>
+                      {deliveryInfo.fee !== undefined && (
+                        <div className="p-4 flex flex-col gap-1 text-sm">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-gray-600">
+                              Delivery fee
+                            </span>
+                            {(() => {
+                              const currentSubtotal = price * quantity;
+                              const isFree = deliveryInfo.freeAbove !== undefined && currentSubtotal >= deliveryInfo.freeAbove;
+                              const finalFee = isFree ? 0 : deliveryInfo.fee;
+                              return (
+                                <strong className={finalFee === 0 ? "text-green-700" : "text-gray-900"}>
+                                  {finalFee === 0 ? "FREE" : `₹${finalFee}`}
+                                </strong>
+                              );
+                            })()}
+                          </div>
+                          {deliveryInfo.freeAbove !== undefined && deliveryInfo.freeAbove > 0 && (price * quantity) < deliveryInfo.freeAbove && (
+                            <span className="text-xs text-primary font-medium">
+                              Add ₹{deliveryInfo.freeAbove - (price * quantity)} more for FREE delivery
+                            </span>
+                          )}
                         </div>
                       )}
 
