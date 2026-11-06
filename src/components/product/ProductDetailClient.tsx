@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/components/ui/ToastProvider";
 import {
   getWhatsAppLink,
@@ -195,6 +196,14 @@ function PackageIcon({ className = "w-10 h-10" }: { className?: string }) {
   );
 }
 
+function HeartIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg className={`w-5 h-5 ${filled ? "fill-current" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z" />
+    </svg>
+  );
+}
+
 function CheckIcon() {
   return (
     <svg
@@ -266,7 +275,10 @@ export default function ProductDetailClient({
     useState(false);
 
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const showToast = useToast();
+  
+  const inWishlist = isInWishlist(product.id);
 
   /* ------------------------------------------------------------------------ */
   /* FETCH PRODUCT                                                            */
@@ -692,52 +704,79 @@ export default function ProductDetailClient({
 
             <div className="mt-6 space-y-3">
 
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!isInStock}
-                className={`w-full h-12 sm:h-[52px] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
-                  !isInStock
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : added
-                    ? "bg-green-600 text-white"
-                    : "bg-primary hover:bg-primary-dark text-white shadow-sm hover:shadow-md"
-                }`}
-              >
-                {added ? (
-                  <>
-                    <CheckIcon />
-                    Added to Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBagIcon className="w-5 h-5" />
-                    {isInStock
-                      ? "Add to Cart"
-                      : "Out of Stock"}
-                  </>
-                )}
-              </button>
-
-              {isInStock && (
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-12 sm:h-[52px] rounded-xl border border-green-600 text-green-700 bg-white hover:bg-green-50 flex items-center justify-center gap-2 font-semibold text-sm transition"
+              {isInStock ? (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className={`w-full h-12 sm:h-[52px] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+                    added
+                      ? "bg-green-600 text-white"
+                      : "bg-primary hover:bg-primary-dark text-white shadow-sm hover:shadow-md"
+                  }`}
                 >
-                  <WhatsAppIcon />
-                  Order on WhatsApp
-                </a>
+                  {added ? (
+                    <>
+                      <CheckIcon />
+                      Added to Cart
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBagIcon className="w-5 h-5" />
+                      Add to Cart
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className="p-4 rounded-xl border border-red-200 bg-red-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4M12 16h.01"/></svg>
+                    <p className="font-bold text-red-800">Out of Stock</p>
+                  </div>
+                  <p className="text-sm text-red-700">This product is currently unavailable. Save it to your waitlist or contact us on WhatsApp to order.</p>
+                </div>
               )}
 
-              <Link
-                href="/cart"
-                className="w-full flex items-center justify-center gap-1 text-sm font-semibold text-gray-500 hover:text-primary transition py-2"
+              {!isInStock && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleWishlist(product.id);
+                    showToast(inWishlist ? "Removed from Waitlist" : "Added to Waitlist");
+                  }}
+                  className={`w-full h-12 sm:h-[52px] rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
+                    inWishlist
+                      ? "bg-rose-600 text-white"
+                      : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                  }`}
+                >
+                  <HeartIcon filled={inWishlist} />
+                  {inWishlist ? "In Waitlist" : "Add to Waitlist"}
+                </button>
+              )}
+
+              <a
+                href={isInStock ? whatsappLink : getWhatsAppLink(`Hello Amroha Pharmacy, I want to order ${product.name} but it is out of stock. Please let me know when it becomes available.`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full h-12 sm:h-[52px] rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition ${
+                  isInStock 
+                    ? "border border-green-600 text-green-700 bg-white hover:bg-green-50" 
+                    : "bg-[#25D366] text-white hover:bg-[#20bd5a]"
+                }`}
               >
-                View Cart
-                <ChevronRightIcon />
-              </Link>
+                <WhatsAppIcon />
+                {isInStock ? "Order on WhatsApp" : "Contact on WhatsApp"}
+              </a>
+
+              {isInStock && (
+                <Link
+                  href="/cart"
+                  className="w-full flex items-center justify-center gap-1 text-sm font-semibold text-gray-500 hover:text-primary transition py-2"
+                >
+                  View Cart
+                  <ChevronRightIcon />
+                </Link>
+              )}
             </div>
 
             {/* DELIVERY */}
