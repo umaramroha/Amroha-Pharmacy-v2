@@ -151,12 +151,18 @@ if (newPassword) {
     const updated = await prisma.adminUser.update({
       where: { id: admin.id },
       data: updateData,
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, lastPasswordChange: true },
     });
 
-    // Update session if email changed
+    // Update session if email or password changed
     if (updateData.email) {
       session.email = updateData.email;
+    }
+    if (updateData.password && updated.lastPasswordChange) {
+      session.lastPasswordChange = updated.lastPasswordChange.toISOString();
+    }
+    
+    if (updateData.email || updateData.password) {
       await session.save();
     }
 
