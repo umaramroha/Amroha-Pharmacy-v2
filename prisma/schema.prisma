@@ -40,6 +40,9 @@ model Order {
   deliveryFee     Decimal     @default(0)
   zoneDiscount    Decimal     @default(0)
   prepaidDiscount Decimal     @default(0)
+  couponCode      String?
+  couponDiscount  Decimal     @default(0)
+  @@index([couponCode])
   deliveryZone    String?
   total           Decimal
   status         String      @default("PENDING")
@@ -117,4 +120,20 @@ model RateLimit {
   count     Int
   resetAt   DateTime
   @@index([resetAt])
+}
+
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  type          String
+  value         Decimal
+  minCartValue  Decimal   @default(0)
+  maxDiscount   Decimal?
+  usageLimit    Int?
+  perUserLimit  Int?
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
