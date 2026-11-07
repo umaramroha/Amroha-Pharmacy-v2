@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Package, Clock, Pill, IndianRupee, Users, ShoppingBag, 
-  Image as ImageIcon, BarChart, Settings, LogOut 
+  Image as ImageIcon, BarChart, Settings, LogOut, Ticket 
 } from "lucide-react";
 
 type Stats = {
@@ -81,6 +81,7 @@ export default function AdminDashboard() {
     { label: "Orders", href: "/kggg0b/orders", icon: ShoppingBag, desc: "Manage customer orders" },
     { label: "Products", href: "/kggg0b/products", icon: Pill, desc: "Add, edit, delete products" },
     { label: "Banners", href: "/kggg0b/banners", icon: ImageIcon, desc: "Manage homepage banners" },
+    { label: "Coupons", href: "/kggg0b/coupons", icon: Ticket, desc: "Create discount codes" },
     { label: "Customers", href: "/kggg0b/customers", icon: Users, desc: "View customer list" },
     { label: "Reports", href: "/kggg0b/reports", icon: BarChart, desc: "Sales & analytics" },
     { label: "Settings", href: "/kggg0b/settings", icon: Settings, desc: "Change email & password" },
