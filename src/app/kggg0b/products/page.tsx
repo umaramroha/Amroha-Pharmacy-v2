@@ -269,7 +269,12 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm("Delete \"" + name + "\"? This action cannot be undone.")) return;
+    if (
+      !confirm(
+        "Remove \"" + name + "\"? If it has past orders it will only be deactivated (hidden from the store) so order history stays safe."
+      )
+    )
+      return;
 
     try {
       const res = await fetch("/api/admin/products/" + id, {
@@ -280,20 +285,7 @@ export default function AdminProductsPage() {
         alert(data.error || "Failed to delete product");
         return;
       }
-      if (data.deactivated) {
-        const typed = prompt(
-          "\"" + name + "\" is used in " + data.orderCount + " order item(s), so it was only deactivated.\n\n" +
-            "To delete it permanently, those orders will ALSO be deleted (they will vanish from Reports and revenue). " +
-            "Type DELETE to confirm, or press Cancel to keep it deactivated."
-        );
-        if (typed === "DELETE") {
-          const res2 = await fetch("/api/admin/products/" + id + "?force=true", {
-            method: "DELETE",
-          });
-          const data2 = await res2.json().catch(() => ({}));
-          alert(data2.message || data2.error || "Request finished");
-        }
-      }
+      alert(data.message || "Done");
       await fetchProducts();
     } catch (err) {
       console.error("Delete error:", err);
