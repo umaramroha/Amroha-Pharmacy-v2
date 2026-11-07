@@ -87,6 +87,29 @@ export default function AdminProductsPage() {
     }
   };
 
+  const [multiProgress, setMultiProgress] = useState("");
+
+  const handleMultiGalleryUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const input = e.target;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    setUploadingKey("multi");
+    const urls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      setMultiProgress("Uploading " + (i + 1) + " of " + files.length + "...");
+      const url = await uploadToCloudinary(files[i]);
+      if (url) urls.push(url);
+    }
+    if (urls.length > 0) {
+      setFormData((f) => ({ ...f, images: [...f.images, ...urls] }));
+    }
+    setMultiProgress("");
+    setUploadingKey(null);
+    input.value = "";
+  };
+
   const handleMainUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const file = input.files?.[0];
@@ -246,17 +269,35 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    if (!confirm("Delete \"" + name + "\"? This action cannot be undone.")) return;
 
     try {
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await fetch("/api/admin/products/" + id, {
         method: "DELETE",
       });
-      if (res.ok) {
-        await fetchProducts();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "Failed to delete product");
+        return;
       }
+      if (data.deactivated) {
+        const typed = prompt(
+          "\"" + name + "\" is used in " + data.orderCount + " order item(s), so it was only deactivated.\n\n" +
+            "To delete it permanently, those orders will ALSO be deleted (they will vanish from Reports and revenue). " +
+            "Type DELETE to confirm, or press Cancel to keep it deactivated."
+        );
+        if (typed === "DELETE") {
+          const res2 = await fetch("/api/admin/products/" + id + "?force=true", {
+            method: "DELETE",
+          });
+          const data2 = await res2.json().catch(() => ({}));
+          alert(data2.message || data2.error || "Request finished");
+        }
+      }
+      await fetchProducts();
     } catch (err) {
       console.error("Delete error:", err);
+      alert("Delete failed. Check your connection and try again.");
     }
   };
 
@@ -482,6 +523,18 @@ export default function AdminProductsPage() {
                   <label className="block text-sm font-medium text-gray-700">
                     Additional Images (Gallery)
                   </label>
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full font-semibold transition">
+                      {uploadingKey === "multi" ? multiProgress || "Uploading..." : "Upload Images"}
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleMultiGalleryUpload}
+                        disabled={uploadingKey !== null}
+                        className="hidden"
+                      />
+                    </label>
                   <button
                     type="button"
                     onClick={handleAddImage}
@@ -489,6 +542,7 @@ export default function AdminProductsPage() {
                   >
                     + Add Image
                   </button>
+                  </div>
                 </div>
 
                 {formData.images.length === 0 ? (
