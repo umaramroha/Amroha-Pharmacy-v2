@@ -49,6 +49,8 @@ type Order = {
   deliveryFee: string;
   zoneDiscount: string;
   prepaidDiscount: string;
+  couponCode: string | null;
+  couponDiscount: string;
   deliveryZone: string | null;
   total: string;
   status: string;
@@ -312,7 +314,8 @@ export default function OrderDetailPage(
   const actualDiscountApplied = Math.max(0, round2(subtotalNum + deliveryFeeNum - totalNum));
   const savedZoneDiscount = Number(order.zoneDiscount ?? 0) || 0;
   const savedPrepaidDiscount = Number(order.prepaidDiscount ?? 0) || 0;
-  const savedTotalDiscount = round2(savedZoneDiscount + savedPrepaidDiscount);
+  const savedCouponDiscount = Number(order.couponDiscount ?? 0) || 0;
+  const savedTotalDiscount = round2(savedZoneDiscount + savedPrepaidDiscount + savedCouponDiscount);
   const hasSnapshot = Math.abs(savedTotalDiscount - actualDiscountApplied) < 0.01;
 
   let zoneDiscountNum: number;
@@ -324,12 +327,12 @@ export default function OrderDetailPage(
   } else {
     const zone = getDeliveryZone(order.pincode);
     zoneDiscountNum = zone?.discount ? round2(subtotalNum * (zone.discount / 100)) : 0;
-    prepaidDiscount = Math.max(0, round2(actualDiscountApplied - zoneDiscountNum));
+    prepaidDiscount = Math.max(0, round2(actualDiscountApplied - zoneDiscountNum - savedCouponDiscount));
   }
 
   const totalDiscountApplied = actualDiscountApplied;
 
-  const codTotal = round2(subtotalNum + deliveryFeeNum - zoneDiscountNum);
+  const codTotal = round2(subtotalNum + deliveryFeeNum - zoneDiscountNum - savedCouponDiscount);
   const upiSaving = Math.round(subtotalNum * PREPAID_DISCOUNT_PERCENT) / 100;
   const upiTotal = round2(codTotal - upiSaving);
 
@@ -551,12 +554,18 @@ export default function OrderDetailPage(
                   <dd className="font-medium text-green-600">− {inr(prepaidDiscount)}</dd>
                 </div>
               )}
+              {savedCouponDiscount > 0 && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Coupon{order.couponCode ? " (" + order.couponCode + ")" : ""}</dt>
+                  <dd className="font-medium text-green-600">− {inr(savedCouponDiscount)}</dd>
+                </div>
+              )}
             </dl>
             <div className="mt-4 flex items-center justify-between border-t border-dashed border-gray-200 pt-4">
               <span className="text-sm font-semibold text-gray-900">Total Amount</span>
               <span className="text-lg font-bold text-gray-900">{inr(order.total)}</span>
             </div>
-            {prepaidDiscount > 0 && (
+            {(prepaidDiscount > 0 || savedCouponDiscount > 0) && (
               <p className="mt-3 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
                 You saved {inr(totalDiscountApplied)} on this order
               </p>

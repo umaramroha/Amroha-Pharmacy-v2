@@ -10,7 +10,7 @@ type OrderItem = {
 };
 type Order = {
   id: string; customerName: string; customerMobile: string; customerEmail: string | null;
-  address: string; city: string; state: string; pincode: string; total: string;
+  address: string; city: string; state: string; pincode: string; total: string; couponCode: string | null; couponDiscount: string;
   status: string; paymentMethod: string; paymentStatus: string; createdAt: string;
   items: OrderItem[]; customer: { id: string; name: string; email: string; mobile: string | null; } | null;
 };
@@ -120,6 +120,7 @@ function AdminOrdersContent() {
                 <div className="flex items-center gap-4">
                   <div><p className="text-xs text-gray-500">Order ID</p><p className="font-mono text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
+                  {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
@@ -216,6 +217,7 @@ function AdminOrdersContent() {
                 </tbody>
               </table>
               <div className="flex justify-end text-sm"><div className="w-full sm:w-1/2">
+                {printOrder.couponCode && (<div className="flex justify-between py-2 text-sm text-gray-600"><span>Coupon ({printOrder.couponCode}):</span><span>− ₹{printOrder.couponDiscount}</span></div>)}
                 <div className="flex justify-between py-3 border-b-2 border-gray-800 font-bold text-lg text-gray-900"><span>Grand Total:</span><span>₹{printOrder.total}</span></div>
               </div></div>
             </div>
