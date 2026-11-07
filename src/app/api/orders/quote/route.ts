@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { mergeCartItems, checkCartLimits, priceCart } from "@/lib/pricing";
+import { rateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/orders/quote
@@ -18,6 +19,7 @@ import { mergeCartItems, checkCartLimits, priceCart } from "@/lib/pricing";
 const QuoteInput = z.object({
   pincode: z.string().length(6).optional(),
   paymentMethod: z.enum(["cod", "upi"]).optional(),
+  couponCode: z.string().trim().max(30).optional(),
   items: z
     .array(
       z.object({
@@ -69,7 +71,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const priced = await priceCart(qtyByProduct, parsed.data.pincode, parsed.data.paymentMethod);
+    // Coupon (optional). Every coupon check counts toward a small rate limit so
+    // codes cannot be guessed. If the limit is hit, the cart is still priced
+    // normally, just without the coupon.
+    let couponInput: { code: string; userId: string } | null = null;
+    let couponLimitError: string | null = null;
+    const rawCoupon = parsed.data.couponCode;
+    if (rawCoupon) {
+      const rate = await rateLimit(`coupon:${session.userId}`, 30, 10 * 60 * 1000);
+      if (rate.allowed) {
+        couponInput = { code: rawCoupon, userId: session.userId };
+      } else {
+        couponLimitError = "Too many coupon attempts. Please try again in a few minutes.";
+      }
+    }
+
+    const priced = await priceCart(
+      qtyByProduct,
+      parsed.data.pincode,
+      parsed.data.paymentMethod,
+      couponInput
+    );
     if (!priced.ok) {
       return NextResponse.json(
         { error: priced.error },
@@ -89,6 +111,9 @@ export async function POST(request: Request) {
         deliveryFee: Number(priced.deliveryFee),
         codAvailable: priced.codAvailable,
         total: Number(priced.total),
+        couponCode: priced.couponCode,
+        couponDiscount: Number(priced.couponDiscount),
+        couponError: couponLimitError ?? priced.couponError,
         items: priced.lines.map((l) => ({
           id: l.productId,
           name: l.name,

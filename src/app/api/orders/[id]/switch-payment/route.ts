@@ -74,7 +74,9 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     // values — detect that and re-derive from config only in that case.
     let zoneDiscount = order.zoneDiscount ?? new Prisma.Decimal(0);
     const actualDiscount = order.subtotal.plus(order.deliveryFee).minus(order.total);
-    const savedTotalDiscount = zoneDiscount.plus(order.prepaidDiscount ?? new Prisma.Decimal(0));
+    const savedTotalDiscount = zoneDiscount
+      .plus(order.prepaidDiscount ?? new Prisma.Decimal(0))
+      .plus(order.couponDiscount);
     const isLegacyOrder = actualDiscount.minus(savedTotalDiscount).abs().gt(new Prisma.Decimal("0.01"));
 
     if (isLegacyOrder) {
@@ -85,7 +87,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     const prepaidDiscount = getPrepaidDiscount(order.subtotal, newMethod);
-    const total = order.subtotal.plus(order.deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
+    const total = order.subtotal
+      .plus(order.deliveryFee)
+      .minus(zoneDiscount)
+      .minus(prepaidDiscount)
+      .minus(order.couponDiscount);
 
     // Guarded write: only if nothing changed (status / payment) since we read it.
     const updated = await prisma.order.updateMany({

@@ -15,6 +15,7 @@ import {
 } from "@/lib/pricing";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { rateLimit } from "@/lib/rateLimit";
+import { validateCoupon } from "@/lib/coupons";
 import { isCodAvailable } from "@/data/delivery";
 
 // ==============================
@@ -56,6 +57,7 @@ const OrderInput = z.object({
     .string()
     .trim()
     .regex(/^[1-9]\d{5}$/, "Please enter a valid 6-digit pincode"),
+  couponCode: z.string().trim().max(30).optional(),
   paymentMethod: z.enum(["cod", "upi"], {
     errorMap: () => ({ message: "Invalid payment method" }),
   }),
@@ -71,6 +73,7 @@ const OrderInput = z.object({
 });
 
 class StockChangedError extends Error {}
+class CouponChangedError extends Error {}
 
 // GET — fetch logged-in user's orders
 export async function GET() {
@@ -202,14 +205,23 @@ export async function POST(request: Request) {
     //    subtotal / delivery fee / total. Shared with POST /api/orders/quote
     //    (the amount shown for UPI), so both always agree. See lib/pricing.ts
     // ==============================
-    const priced = await priceCart(qtyByProduct, input.pincode, input.paymentMethod);
+    const priced = await priceCart(
+      qtyByProduct,
+      input.pincode,
+      input.paymentMethod,
+      input.couponCode ? { code: input.couponCode, userId } : null
+    );
     if (!priced.ok) {
       return NextResponse.json(
         { error: priced.error },
         { status: priced.status }
       );
     }
-    const { lines, subtotal, deliveryFee, total, zoneDiscount, prepaidDiscount, deliveryZone } = priced;
+    // A coupon the customer asked for must be valid: never silently drop the discount.
+    if (priced.couponError) {
+      return NextResponse.json({ error: priced.couponError }, { status: 400 });
+    }
+    const { lines, subtotal, deliveryFee, total, zoneDiscount, prepaidDiscount, deliveryZone, couponCode, couponDiscount } = priced;
 
     // ==============================
     // 7. CREATE ORDER + ATOMIC STOCK DECREMENT
@@ -223,6 +235,23 @@ export async function POST(request: Request) {
     const customerEmail = input.customerEmail?.trim() || null;
 
     const order = await prisma.$transaction(async (tx) => {
+      // Coupon: lock the coupon row so two customers cannot both take the last use,
+      // then re-check inside the transaction.
+      if (couponCode) {
+        await tx.$queryRaw`SELECT "id" FROM "Coupon" WHERE "code" = ${couponCode} FOR UPDATE`;
+        const recheck = await validateCoupon({
+          db: tx,
+          code: couponCode,
+          subtotal,
+          cap: couponDiscount,
+          userId,
+        });
+        if (!recheck.ok) throw new CouponChangedError(recheck.error);
+        if (!recheck.discount.equals(couponDiscount)) {
+          throw new CouponChangedError("This coupon was just updated. Please apply it again.");
+        }
+      }
+
       const newOrder = await tx.order.create({
         data: {
           customerId: userId,
@@ -237,6 +266,8 @@ export async function POST(request: Request) {
           deliveryFee,
           zoneDiscount,
           prepaidDiscount,
+          couponCode,
+          couponDiscount,
           deliveryZone,
           total,
           status: "PENDING",
@@ -331,6 +362,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, order });
   } catch (error: any) {
     console.error("Create order error:", error);
+
+    if (error instanceof CouponChangedError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
 
     if (error instanceof StockChangedError) {
       return NextResponse.json(
