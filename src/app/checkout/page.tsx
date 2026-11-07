@@ -30,6 +30,9 @@ type ServerQuote = {
   originalDeliveryFee: number;
   deliveryFee: number;
   codAvailable: boolean;
+  couponCode: string | null;
+  couponDiscount: number;
+  couponError: string | null;
   total: number;
   items: { id: string; name: string; quantity: number; unitPrice: number; lineTotal: number; }[];
 };
@@ -50,6 +53,11 @@ export default function CheckoutPage() {
   const [quote, setQuote] = useState<ServerQuote | null>(null);
   const [quoteStatus, setQuoteStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [quoteError, setQuoteError] = useState("");
+
+  // Coupon state: couponInput = what the customer types, appliedCoupon = the code sent to the server
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState("");
 
   // Pincode verification state
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
@@ -142,6 +150,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
             pincode: formData.pincode.length === 6 ? formData.pincode : undefined,
+            couponCode: appliedCoupon ?? undefined,
             paymentMethod,
           }),
           signal: controller.signal,
@@ -166,7 +175,7 @@ export default function CheckoutPage() {
     })();
 
     return () => controller.abort();
-  }, [cartKey, userId, orderPlaced, formData.pincode, paymentMethod]);
+  }, [cartKey, userId, orderPlaced, formData.pincode, paymentMethod, appliedCoupon]);
 
   // Auto-switch to UPI if COD becomes unavailable
   useEffect(() => {
@@ -174,6 +183,29 @@ export default function CheckoutPage() {
       setPaymentMethod("upi");
     }
   }, [quote, paymentMethod]);
+
+  // Coupon: the server decides if a coupon is valid (it comes back inside the quote).
+  const applyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponError("Enter a coupon code"); return; }
+    if (!/^[A-Z0-9_-]{3,20}$/.test(code)) { setCouponError("Invalid coupon code"); return; }
+    setCouponError("");
+    setAppliedCoupon(code);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+  };
+
+  // If the server rejects the coupon (expired, minimum cart not met, ...), show why and drop it.
+  useEffect(() => {
+    if (quote && quote.couponError) {
+      setCouponError(quote.couponError);
+      setAppliedCoupon(null);
+    }
+  }, [quote]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,6 +228,7 @@ export default function CheckoutPage() {
           address: formData.address,
           city: formData.city,
           state: formData.state,
+          couponCode: appliedCoupon ?? undefined,
           pincode: formData.pincode,
           items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
           paymentMethod,
@@ -418,11 +451,41 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon */}
+              <div className="border-t pt-4 mb-4">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                    <div className="min-w-0">
+                      <span className="font-mono text-sm font-bold text-green-700">{appliedCoupon}</span>
+                      <span className="ml-2 text-xs text-green-700">{quote && quote.couponCode ? "applied" : "checking..."}</span>
+                    </div>
+                    <button type="button" onClick={removeCoupon} className="text-xs font-semibold text-red-600 hover:underline">Remove</button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        maxLength={20}
+                        onChange={(e) => { setCouponInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "")); setCouponError(""); }}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
+                        placeholder="Coupon code"
+                        className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm uppercase focus:border-primary focus:outline-none"
+                      />
+                      <button type="button" onClick={applyCoupon} disabled={!couponInput} className="rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white disabled:opacity-50">Apply</button>
+                    </div>
+                    {couponError && <p className="mt-1 text-xs text-red-600">{couponError}</p>}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Total MRP</span><span className="font-medium text-gray-900">₹{quote?.mrpTotal.toLocaleString("en-IN") || totalPrice}</span></div>
                 {quote && quote.productDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Discount on MRP</span><span className="font-medium text-green-600">- ₹{quote.productDiscount.toLocaleString("en-IN")}</span></div>}
                 {quote && quote.zoneDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Local Zone Discount</span><span className="font-medium text-green-600">- ₹{quote.zoneDiscount.toLocaleString("en-IN")}</span></div>}
                 {quote && quote.prepaidDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">5% Prepaid Discount</span><span className="font-medium text-green-600">- ₹{quote.prepaidDiscount.toLocaleString("en-IN")}</span></div>}
+                {quote && quote.couponDiscount > 0 && <div className="flex justify-between text-sm"><span className="text-gray-600">Coupon ({quote.couponCode})</span><span className="font-medium text-green-600">- ₹{quote.couponDiscount.toLocaleString("en-IN")}</span></div>}
                 <div className="flex justify-between text-sm"><span className="text-gray-600">Delivery Fee</span><span className="font-semibold">{quote?.deliveryFee === 0 ? <span className="text-green-600">FREE</span> : quote?.deliveryFee != null ? `₹${quote.deliveryFee}` : (quoteStatus === "loading" ? "Calculating..." : "—")}</span></div>
               </div>
 
@@ -431,9 +494,9 @@ export default function CheckoutPage() {
                 <span className="font-bold text-2xl text-primary">₹{quote?.total.toLocaleString("en-IN") || totalPrice}</span>
               </div>
 
-              {quote && (quote.productDiscount > 0 || (quote.deliveryFee === 0 && quote.subtotal > 0)) && (
+              {quote && (quote.productDiscount > 0 || quote.couponDiscount > 0 || (quote.deliveryFee === 0 && quote.subtotal > 0)) && (
                 <div className="mt-3 flex items-center justify-between rounded-lg bg-green-50 border border-green-100 p-2.5">
-                  <span className="text-xs font-bold text-green-700">You save ₹{(quote.productDiscount + (quote.deliveryFee === 0 ? quote.originalDeliveryFee : 0)).toLocaleString("en-IN")}</span>
+                  <span className="text-xs font-bold text-green-700">You save ₹{(quote.productDiscount + quote.couponDiscount + (quote.deliveryFee === 0 ? quote.originalDeliveryFee : 0)).toLocaleString("en-IN")}</span>
                   <ShieldCheck className="w-4 h-4 text-green-600" />
                 </div>
               )}
