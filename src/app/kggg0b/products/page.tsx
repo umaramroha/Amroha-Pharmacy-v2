@@ -49,6 +49,75 @@ export default function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+
+  // Upload a file straight to Cloudinary (unsigned preset) and return its URL
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file");
+      return null;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be under 5MB");
+      return null;
+    }
+    const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    if (!cloud || !preset) {
+      setError("Cloudinary is not configured");
+      return null;
+    }
+    try {
+      setError("");
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", preset);
+      fd.append("folder", "amroha-products");
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/" + cloud + "/image/upload",
+        { method: "POST", body: fd }
+      );
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      return data.secure_url as string;
+    } catch (err) {
+      console.error(err);
+      setError("Upload failed. Check that the Cloudinary preset is Unsigned");
+      return null;
+    }
+  };
+
+  const handleMainUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    setUploadingKey("main");
+    const url = await uploadToCloudinary(file);
+    if (url) setFormData((f) => ({ ...f, image: url }));
+    setUploadingKey(null);
+    input.value = "";
+  };
+
+  const handleGalleryUpload = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    setUploadingKey("g" + index);
+    const url = await uploadToCloudinary(file);
+    if (url) {
+      setFormData((f) => {
+        const imgs = [...f.images];
+        imgs[index] = url;
+        return { ...f, images: imgs };
+      });
+    }
+    setUploadingKey(null);
+    input.value = "";
+  };
+
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -380,6 +449,19 @@ export default function AdminProductsPage() {
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary"
                   placeholder="https://..."
                 />
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <label className="inline-flex items-center gap-2 cursor-pointer bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-md transition">
+                    {uploadingKey === "main" ? "Uploading..." : "Choose File"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleMainUpload}
+                      disabled={uploadingKey !== null}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-xs text-gray-500">or paste a URL above</span>
+                </div>
                 {formData.image && (
                   <div className="mt-2 w-24 h-24 bg-gray-100 rounded-md overflow-hidden border">
                     <img
@@ -446,6 +528,18 @@ export default function AdminProductsPage() {
                           className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-primary"
                           placeholder={`Image ${idx + 1} URL`}
                         />
+
+                        {/* Upload Button */}
+                        <label className="shrink-0 cursor-pointer bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-medium px-3 py-2 rounded-md transition">
+                          {uploadingKey === "g" + idx ? "..." : "Upload"}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => handleGalleryUpload(idx, e)}
+                            disabled={uploadingKey !== null}
+                            className="hidden"
+                          />
+                        </label>
 
                         {/* Remove Button */}
                         <button
