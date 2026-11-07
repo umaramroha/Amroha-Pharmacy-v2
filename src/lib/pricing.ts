@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getDeliveryZone, isCodAvailable } from "@/data/delivery";
 import { PREPAID_DISCOUNT_PERCENT } from "@/lib/offers";
+import { validateCoupon } from "@/lib/coupons";
 
 export const MAX_QTY_PER_PRODUCT = 10;
 export const MAX_TOTAL_ITEMS = 30;
@@ -43,6 +44,9 @@ export type PricingSuccess = {
   originalDeliveryFee: Prisma.Decimal;
   deliveryFee: Prisma.Decimal;
   codAvailable: boolean;
+  couponCode: string | null;
+  couponDiscount: Prisma.Decimal;
+  couponError: string | null;
   total: Prisma.Decimal;
 };
 
@@ -79,7 +83,8 @@ export function checkCartLimits(
 export async function priceCart(
   qtyByProduct: Map<string, number>,
   pincode?: string,
-  paymentMethod?: string
+  paymentMethod?: string,
+  coupon?: { code: string; userId: string } | null
 ): Promise<PricingFailure | PricingSuccess> {
   const productIds = Array.from(qtyByProduct.keys());
   const products = await prisma.product.findMany({
@@ -155,7 +160,38 @@ export async function priceCart(
   // 5% Prepaid Discount
   const prepaidDiscount = getPrepaidDiscount(subtotal, paymentMethod);
 
-  const total = subtotal.plus(deliveryFee).minus(zoneDiscount).minus(prepaidDiscount);
+  // Optional coupon. A bad coupon never blocks the cart: the caller decides
+  // what to do with couponError (the quote shows it, order creation rejects it).
+  let couponCode: string | null = null;
+  let couponDiscount = new Prisma.Decimal(0);
+  let couponError: string | null = null;
+  if (coupon && coupon.code.trim()) {
+    // Cap so coupon + zone + prepaid discounts can never exceed the product subtotal,
+    // even if the customer later switches to UPI (which adds the prepaid discount).
+    let cap = subtotal
+      .minus(zoneDiscount)
+      .minus(subtotal.mul(PREPAID_DISCOUNT_RATE).toDecimalPlaces(2));
+    if (cap.lt(0)) cap = new Prisma.Decimal(0);
+    const result = await validateCoupon({
+      db: prisma,
+      code: coupon.code,
+      subtotal,
+      cap,
+      userId: coupon.userId,
+    });
+    if (result.ok) {
+      couponCode = result.coupon.code;
+      couponDiscount = result.discount;
+    } else {
+      couponError = result.error;
+    }
+  }
 
-  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryZone, originalDeliveryFee, deliveryFee, codAvailable, total };
+  const total = subtotal
+    .plus(deliveryFee)
+    .minus(zoneDiscount)
+    .minus(prepaidDiscount)
+    .minus(couponDiscount);
+
+  return { ok: true, lines, subtotal, mrpTotal, productDiscount, prepaidDiscount, zoneDiscount, deliveryZone, originalDeliveryFee, deliveryFee, codAvailable, couponCode, couponDiscount, couponError, total };
 }
