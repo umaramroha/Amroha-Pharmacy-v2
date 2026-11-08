@@ -16,6 +16,7 @@ type Coupon = {
   startsAt: string | null;
   expiresAt: string | null;
   isActive: boolean;
+  firstOrderOnly: boolean;
   used: number;
   totalDiscount: number;
 };
@@ -28,6 +29,7 @@ const EMPTY_FORM = {
   maxDiscount: "",
   usageLimit: "",
   perUserLimit: "1",
+  firstOrderOnly: false,
   startsAt: "",
   expiresAt: "",
   isActive: true,
@@ -146,6 +148,7 @@ export default function AdminCouponsPage() {
       startsAt: toDateInput(c.startsAt),
       expiresAt: toDateInput(c.expiresAt),
       isActive: c.isActive,
+      firstOrderOnly: c.firstOrderOnly,
     });
     setShowForm(true);
     setError("");
@@ -190,6 +193,7 @@ export default function AdminCouponsPage() {
       startsAt: fromDateInput(formData.startsAt, false),
       expiresAt: fromDateInput(formData.expiresAt, true),
       isActive: formData.isActive,
+      firstOrderOnly: formData.firstOrderOnly,
     };
     if (!editingId) payload.code = formData.code.trim().toUpperCase();
 
@@ -473,6 +477,16 @@ export default function AdminCouponsPage() {
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input
                 type="checkbox"
+                checked={formData.firstOrderOnly}
+                onChange={(e) => setFormData({ ...formData, firstOrderOnly: e.target.checked })}
+                className="w-4 h-4"
+              />
+              First order only (works only for customers with no earlier order)
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
                 checked={formData.isActive}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="w-4 h-4"
@@ -526,6 +540,7 @@ export default function AdminCouponsPage() {
                   <p className="text-sm text-gray-800 mt-1">
                     {describe(c)}
                     {c.minCartValue > 0 ? " on orders above " + inr(c.minCartValue) : ""}
+                    {c.firstOrderOnly ? " · First order only" : ""}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     Used {c.used}
