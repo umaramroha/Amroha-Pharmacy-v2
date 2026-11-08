@@ -117,15 +117,15 @@ function AdminOrdersContent() {
           {orders.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
               <div className="bg-gray-50 px-5 py-3 flex flex-wrap justify-between items-center gap-3 border-b">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div><p className="text-xs text-gray-500">Order ID</p><p className="font-mono text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
-                  {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
+                  {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
-                  {order.paymentStatus === "PENDING" && (
+                  {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
                     <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">
                       Mark as PAID
                     </button>

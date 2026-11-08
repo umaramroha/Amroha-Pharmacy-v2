@@ -124,6 +124,11 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           throw new Error("Order not found");
         }
 
+        // Guard: a cancelled order cannot be marked as paid. Re-activate it first.
+        if (currentOrder.status === "CANCELLED" && paymentStatus === "PAID") {
+          throw new Error("This order is cancelled. Re-activate it before marking it as paid.");
+        }
+
         // Case 1: Cancelling the order
         if (status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
           const updatedRes = await tx.order.updateMany({
