@@ -134,6 +134,7 @@ model Coupon {
   startsAt      DateTime?
   expiresAt     DateTime?
   isActive      Boolean   @default(true)
+  firstOrderOnly Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
