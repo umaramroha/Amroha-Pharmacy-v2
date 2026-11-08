@@ -84,6 +84,17 @@ export async function validateCoupon(opts: {
     }
   }
 
+  // First-order-only coupons: the customer must not have any earlier order.
+  // Cancelled orders do not count, so a cancelled first order frees it again.
+  if (coupon.firstOrderOnly) {
+    const previousOrders = await db.order.count({
+      where: { customerId: userId, status: { not: "CANCELLED" } },
+    });
+    if (previousOrders > 0) {
+      return fail("This coupon is only valid on your first order");
+    }
+  }
+
   const discount = computeCouponDiscount(coupon, subtotal, cap);
   if (discount.lte(0)) return fail("This coupon cannot be applied to this order");
 

@@ -39,6 +39,7 @@ const baseFields = z.object({
   startsAt: z.string().datetime("Invalid start date").nullable().optional(),
   expiresAt: z.string().datetime("Invalid expiry date").nullable().optional(),
   isActive: z.boolean().default(true),
+  firstOrderOnly: z.boolean().default(false),
 });
 
 function checkCoupon(
@@ -98,5 +99,6 @@ export function toCouponData(v: CouponFields) {
     startsAt: v.startsAt ? new Date(v.startsAt) : null,
     expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
     isActive: v.isActive,
+    firstOrderOnly: v.firstOrderOnly,
   };
 }

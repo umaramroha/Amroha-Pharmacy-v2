@@ -57,6 +57,7 @@ export async function GET() {
           startsAt: c.startsAt,
           expiresAt: c.expiresAt,
           isActive: c.isActive,
+          firstOrderOnly: c.firstOrderOnly,
           used: u ? u._count._all : 0,
           totalDiscount: u && u._sum.couponDiscount ? Number(u._sum.couponDiscount) : 0,
         };
