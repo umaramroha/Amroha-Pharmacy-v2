@@ -3,6 +3,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
+import { REVENUE_WHERE } from "@/lib/revenue";
 
 type AdminSessionData = {
   adminId?: string;
@@ -33,7 +34,7 @@ export async function GET() {
         prisma.customer.count(),
         prisma.order.aggregate({
           _sum: { total: true },
-          where: { status: { not: "CANCELLED" } },
+          where: REVENUE_WHERE,
         }),
       ]);
 

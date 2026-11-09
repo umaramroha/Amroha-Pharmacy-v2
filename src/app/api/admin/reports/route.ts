@@ -3,6 +3,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { adminSessionOptions } from "@/lib/adminSession";
+import { REVENUE_WHERE } from "@/lib/revenue";
 
 type AdminSessionData = {
   adminId?: string;
@@ -35,14 +36,14 @@ export async function GET() {
     ] = await Promise.all([
       prisma.order.aggregate({
         _sum: { total: true },
-        where: { status: { not: "CANCELLED" } },
+        where: REVENUE_WHERE,
       }),
       prisma.order.count(),
       prisma.order.count({ where: { status: "DELIVERED" } }),
       prisma.order.count({ where: { status: "CANCELLED" } }),
       prisma.order.aggregate({
         _avg: { total: true },
-        where: { status: { not: "CANCELLED" } },
+        where: REVENUE_WHERE,
       }),
     ]);
 
@@ -93,7 +94,7 @@ export async function GET() {
     const recentOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: sevenDaysAgo },
-        status: { not: "CANCELLED" },
+        ...REVENUE_WHERE,
       },
       select: { total: true, createdAt: true },
     });

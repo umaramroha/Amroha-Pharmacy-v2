@@ -129,7 +129,7 @@ function AdminOrdersContent() {
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
                   {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
                     <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">
-                      Mark as PAID
+                      {order.paymentMethod === "cod" ? "Mark COD as paid" : "Mark as PAID"}
                     </button>
                   )}
                   <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">🖨️ Print</button>

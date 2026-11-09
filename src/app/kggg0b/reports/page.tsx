@@ -69,7 +69,7 @@ export default function AdminReportsPage() {
 
   const stats = [
     {
-      label: "Total Revenue",
+      label: "Revenue (received)",
       value: `₹${Number(data.totalRevenue).toLocaleString("en-IN")}`,
       icon: "",
       color: "text-green-600",

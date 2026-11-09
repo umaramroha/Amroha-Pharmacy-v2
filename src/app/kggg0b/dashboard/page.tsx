@@ -82,7 +82,7 @@ export default function AdminDashboard() {
       icon: Pill,
     },
     {
-      label: "Revenue (excl. cancelled)",
+      label: "Revenue (received)",
       value: `₹${Number(stats?.revenue ?? 0).toFixed(0)}`,
       color: "text-green-600",
       bg: "bg-green-100",
