@@ -120,6 +120,8 @@ function AdminOrdersContent() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div><p className="text-xs text-gray-500">Order ID</p><p className="font-mono text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
+                  <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">₹{Number(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
+                  <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</p></div>
                   {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
                 <div className="flex items-center gap-2">
