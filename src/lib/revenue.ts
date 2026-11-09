@@ -11,3 +11,16 @@ export const REVENUE_WHERE: Prisma.OrderWhereInput = {
     { paymentMethod: "upi", status: "DELIVERED" },
   ],
 };
+
+// Same rule as REVENUE_WHERE, for orders that are already loaded in memory.
+export function isRevenueOrder(o: {
+  status: string;
+  paymentMethod: string;
+  paymentStatus: string;
+}): boolean {
+  if (o.status === "CANCELLED") return false;
+  return (
+    (o.paymentMethod === "cod" && o.paymentStatus === "PAID") ||
+    (o.paymentMethod === "upi" && o.status === "DELIVERED")
+  );
+}
