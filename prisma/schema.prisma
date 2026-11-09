@@ -93,9 +93,13 @@ model Customer {
   resetTokenExpiry        DateTime?
   lastPasswordChange DateTime @default(now())
   createdAt DateTime @default(now())
+  followUpAt     DateTime?
+  followUpNote   String?
+  followUpStatus String?
   orders    Order[]
   @@index([resetToken])
   @@index([verificationToken])
+  @@index([followUpStatus, followUpAt])
 }
 
 
