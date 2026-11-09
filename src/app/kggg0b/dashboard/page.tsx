@@ -14,6 +14,19 @@ type Stats = {
   totalProducts: number;
   totalCustomers: number;
   revenue: number;
+  todayOrders?: number;
+  todaySales?: number;
+  pendingPayments?: number;
+  lowStock?: { id: string; name: string; stock: number }[];
+  recentOrders?: {
+    id: string;
+    customerName: string;
+    total: number | string;
+    status: string;
+    paymentMethod: string;
+    paymentStatus: string;
+    createdAt: string;
+  }[];
 };
 
 export default function AdminDashboard() {
@@ -69,7 +82,7 @@ export default function AdminDashboard() {
       icon: Pill,
     },
     {
-      label: "Total Revenue",
+      label: "Revenue (excl. cancelled)",
       value: `₹${Number(stats?.revenue ?? 0).toFixed(0)}`,
       color: "text-green-600",
       bg: "bg-green-100",
@@ -145,6 +158,70 @@ export default function AdminDashboard() {
             <p className="text-2xl font-bold text-purple-600">{stats?.totalCustomers ?? 0}</p>
           </div>
         </div>
+      </div>
+
+      {/* Today & Alerts */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <p className="text-xs md:text-sm text-gray-600 mb-1">Today&apos;s Orders</p>
+          <p className="text-2xl font-bold text-primary">{stats?.todayOrders ?? 0}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <p className="text-xs md:text-sm text-gray-600 mb-1">Today&apos;s Sales</p>
+          <p className="text-2xl font-bold text-green-600">₹{Number(stats?.todaySales ?? 0).toFixed(0)}</p>
+        </div>
+        <Link href="/kggg0b/orders" className="bg-white rounded-lg shadow-sm border p-4 hover:border-primary transition">
+          <p className="text-xs md:text-sm text-gray-600 mb-1">Payment Pending</p>
+          <p className="text-2xl font-bold text-orange-600">{stats?.pendingPayments ?? 0}</p>
+        </Link>
+        <Link href="/kggg0b/products" className="bg-white rounded-lg shadow-sm border p-4 hover:border-primary transition">
+          <p className="text-xs md:text-sm text-gray-600 mb-1">Low Stock Items</p>
+          <p className="text-2xl font-bold text-red-600">{(stats?.lowStock ?? []).length}</p>
+        </Link>
+      </div>
+
+      {(stats?.lowStock ?? []).length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
+          <h2 className="text-lg font-bold mb-3 text-red-600">Low Stock (5 or less)</h2>
+          <ul className="divide-y">
+            {(stats?.lowStock ?? []).map((p) => (
+              <li key={p.id} className="flex justify-between items-center py-2 text-sm">
+                <span className="text-gray-800 pr-3">{p.name}</span>
+                <span className={`font-bold whitespace-nowrap ${p.stock === 0 ? "text-red-600" : "text-orange-600"}`}>
+                  {p.stock === 0 ? "Out of stock" : `${p.stock} left`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-lg font-bold text-primary">Recent Orders</h2>
+          <Link href="/kggg0b/orders" className="text-sm text-primary font-semibold">View all</Link>
+        </div>
+        {(stats?.recentOrders ?? []).length === 0 ? (
+          <p className="text-sm text-gray-500">No orders yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {(stats?.recentOrders ?? []).map((o) => (
+              <li key={o.id} className="py-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono font-semibold">#{o.id.slice(-8).toUpperCase()}</span>
+                  <span className="font-bold">₹{Number(o.total).toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500 mt-0.5">
+                  <span>
+                    {o.customerName} · {o.paymentMethod} ·{" "}
+                    {new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+                  </span>
+                  <span className="font-semibold">{o.status}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Quick Actions */}
