@@ -61,6 +61,14 @@ export default function Header() {
           <span className="inline-flex shrink-0 items-center gap-1.5 text-slate-200">
             <svg aria-hidden="true" className="h-4 w-4 text-emerald-300" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
             Delivering to: <strong className="font-semibold text-white">Amroha</strong>
+            {isLoggedIn && user && (
+              <>
+                <span aria-hidden="true" className="text-slate-500">•</span>
+                <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap text-slate-300">
+                  Welcome, <strong className="max-w-[110px] truncate font-semibold text-emerald-300">{user.name.split(" ")[0]}</strong>
+                </span>
+              </>
+            )}
           </span>
           <span className="hidden text-slate-300 xl:block">Authentic Ayurvedic & Unani care • Delivered across India</span>
           <div className="hidden items-center gap-5 sm:flex">
