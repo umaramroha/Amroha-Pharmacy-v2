@@ -33,7 +33,14 @@ export async function GET(request: Request) {
       ]
     } : {};
 
-    const [customers, totalCount] = await Promise.all([
+    // End of today in IST (UTC+5:30): follow-ups due today or overdue
+    const IST_MS = 5.5 * 60 * 60 * 1000;
+    const istNow = new Date(Date.now() + IST_MS);
+    const endOfToday = new Date(
+      Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate() + 1) - IST_MS - 1
+    );
+
+    const [customers, totalCount, dueToday] = await Promise.all([
       prisma.customer.findMany({
         take: limit,
         skip,
@@ -41,15 +48,23 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "desc" },
         select: {
           id: true, name: true, email: true, mobile: true, createdAt: true,
+          followUpAt: true, followUpNote: true, followUpStatus: true,
           _count: { select: { orders: true } },
         },
       }),
-      prisma.customer.count({ where })
+      prisma.customer.count({ where }),
+      prisma.customer.findMany({
+        where: { followUpStatus: "PENDING", followUpAt: { lte: endOfToday } },
+        orderBy: { followUpAt: "asc" },
+        take: 30,
+        select: { id: true, name: true, email: true, mobile: true, followUpAt: true, followUpNote: true },
+      }),
     ]);
 
     return NextResponse.json({ 
       customers, 
-      totalPages: Math.ceil(totalCount / limit) 
+      totalPages: Math.ceil(totalCount / limit),
+      dueToday 
     });
   } catch (error: any) {
     console.error("Admin customers error:", error);

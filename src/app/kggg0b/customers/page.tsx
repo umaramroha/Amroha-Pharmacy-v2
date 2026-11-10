@@ -1,12 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Users, Phone, MessageCircle, Mail, X } from "lucide-react";
+import { Users, Phone, MessageCircle, Mail, X, CalendarClock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type Customer = {
   id: string; name: string; email: string; mobile: string | null; createdAt: string;
+  followUpAt: string | null; followUpNote: string | null; followUpStatus: string | null;
   _count: { orders: number; };
+};
+
+type DueCustomer = {
+  id: string; name: string; email: string; mobile: string | null;
+  followUpAt: string | null; followUpNote: string | null;
 };
 
 export default function AdminCustomersPage() {
@@ -16,6 +22,13 @@ export default function AdminCustomersPage() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [dueToday, setDueToday] = useState<DueCustomer[]>([]);
+  const [fuFor, setFuFor] = useState<{ id: string; name: string } | null>(null);
+  const [fuDate, setFuDate] = useState("");
+  const [fuNote, setFuNote] = useState("");
+  const [fuStatus, setFuStatus] = useState("PENDING");
+  const [fuSaving, setFuSaving] = useState(false);
+  const [fuError, setFuError] = useState("");
   const [mailTo, setMailTo] = useState<Customer | null>(null);
   const [mailSubject, setMailSubject] = useState("");
   const [mailBody, setMailBody] = useState("");
@@ -33,6 +46,45 @@ export default function AdminCustomersPage() {
     { label: "Offer", subject: "A special offer for you - Amroha Pharmacy", body: "We have a special offer for you. Use code ______ at checkout to get a discount on your next order. Valid till ______." },
     { label: "Thank you", subject: "Thank you for your order - Amroha Pharmacy", body: "Thank you for ordering from Amroha Pharmacy. We hope you are happy with your products. Your feedback means a lot to us." },
   ];
+
+  const istDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const todayIst = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const fuLabel = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+  const FU_STATUS_LABEL: Record<string, string> = { PENDING: "Follow-up", DONE: "Done", NOT_INTERESTED: "Not interested" };
+
+  const openFollowUp = (c: { id: string; name: string; followUpAt: string | null; followUpNote: string | null; followUpStatus?: string | null }) => {
+    setFuFor({ id: c.id, name: c.name });
+    setFuDate(c.followUpAt ? istDate(c.followUpAt) : "");
+    setFuNote(c.followUpNote || "");
+    setFuStatus(c.followUpStatus || "PENDING");
+    setFuError("");
+  };
+
+  const saveFollowUp = async (clear: boolean) => {
+    if (!fuFor) return;
+    setFuSaving(true);
+    setFuError("");
+    try {
+      const body = clear
+        ? { followUpStatus: null, followUpAt: null, followUpNote: null }
+        : { followUpStatus: fuStatus, followUpAt: fuDate || null, followUpNote: fuNote.trim() || null };
+      const res = await fetch("/api/admin/customers/" + fuFor.id + "/followup", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 401) { router.push("/kggg0b/login"); return; }
+      const data = await res.json();
+      if (!res.ok) { setFuError(data.error || "Could not save"); return; }
+      setFuFor(null);
+      fetchCustomers();
+    } catch {
+      setFuError("Network error. Please try again.");
+    } finally {
+      setFuSaving(false);
+    }
+  };
 
   const openMail = (c: Customer) => {
     setMailTo(c);
@@ -83,6 +135,7 @@ export default function AdminCustomersPage() {
       const data = await res.json();
       setCustomers(data.customers || []);
       setTotalPages(data.totalPages || 1);
+      setDueToday(data.dueToday || []);
     } catch (err) {
       console.error("Failed to fetch customers", err);
     } finally {
@@ -101,6 +154,31 @@ export default function AdminCustomersPage() {
           <p className="text-gray-600 text-sm mt-1">Page {currentPage} of {totalPages}</p>
         </div>
       </div>
+
+      {dueToday.length > 0 && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <h2 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
+            <CalendarClock className="w-5 h-5" /> Follow-ups due ({dueToday.length})
+          </h2>
+          <ul className="space-y-2">
+            {dueToday.map((d) => (
+              <li key={d.id} className="bg-white rounded-md border p-3 flex flex-wrap items-center gap-2 justify-between">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{d.name}</p>
+                  <p className={"text-xs " + (d.followUpAt && istDate(d.followUpAt) < todayIst ? "text-red-600 font-semibold" : "text-gray-500")}>
+                    {d.followUpAt ? fuLabel(d.followUpAt) + (istDate(d.followUpAt) < todayIst ? " (overdue)" : " (today)") : ""}
+                    {d.followUpNote ? " — " + d.followUpNote : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {d.mobile && <a href={"tel:" + d.mobile} className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700">Call</a>}
+                  <button type="button" onClick={() => openFollowUp({ ...d, followUpStatus: "PENDING" })} className="text-xs font-bold px-3 py-1.5 rounded-full bg-purple-100 text-purple-800">Update</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border shadow-sm p-4 mb-6">
         <div className="relative">
@@ -151,6 +229,19 @@ export default function AdminCustomersPage() {
                 <button type="button" onClick={() => openMail(customer)} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 hover:bg-orange-100 transition">
                   <Mail className="w-3.5 h-3.5" /> Email
                 </button>
+                <button type="button" onClick={() => openFollowUp(customer)} className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-100 transition">
+                  <CalendarClock className="w-3.5 h-3.5" /> {customer.followUpStatus ? "Edit follow-up" : "Follow-up"}
+                </button>
+                {customer.followUpStatus && (
+                  <p className="w-full text-xs text-gray-600">
+                    <span className={"font-bold " + (customer.followUpStatus === "PENDING" && customer.followUpAt && istDate(customer.followUpAt) < todayIst ? "text-red-600" : "text-purple-700")}>
+                      {FU_STATUS_LABEL[customer.followUpStatus] || customer.followUpStatus}
+                      {customer.followUpAt ? " · " + fuLabel(customer.followUpAt) : ""}
+                      {customer.followUpStatus === "PENDING" && customer.followUpAt && istDate(customer.followUpAt) < todayIst ? " (overdue)" : ""}
+                    </span>
+                    {customer.followUpNote ? " — " + customer.followUpNote : ""}
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -184,6 +275,39 @@ export default function AdminCustomersPage() {
               <button type="button" onClick={() => setMailTo(null)} className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
               <button type="button" onClick={sendMail} disabled={mailSending || mailSubject.trim().length < 3 || mailBody.trim().length < 5}
                 className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg disabled:opacity-50">{mailSending ? "Sending..." : "Send"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {fuFor && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => setFuFor(null)}>
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-primary">Follow-up</h2>
+                <p className="text-sm text-gray-600 truncate">{fuFor.name}</p>
+              </div>
+              <button type="button" onClick={() => setFuFor(null)} className="p-1 text-gray-500 hover:text-gray-800"><X className="w-5 h-5" /></button>
+            </div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+            <select value={fuStatus} onChange={(e) => setFuStatus(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 bg-white">
+              <option value="PENDING">Pending (follow up on the date)</option>
+              <option value="DONE">Done</option>
+              <option value="NOT_INTERESTED">Not interested</option>
+            </select>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Follow-up date</label>
+            <input type="date" value={fuDate} onChange={(e) => setFuDate(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3" />
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Note</label>
+            <textarea value={fuNote} onChange={(e) => setFuNote(e.target.value)} maxLength={500} rows={4} placeholder="e.g. Asked about refill, call again after 10 days"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:outline-none focus:border-primary" />
+            {fuError && <p className="text-sm text-red-600 font-medium mb-3">{fuError}</p>}
+            <div className="flex justify-between gap-2">
+              <button type="button" onClick={() => saveFollowUp(true)} disabled={fuSaving} className="px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50">Clear</button>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setFuFor(null)} className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
+                <button type="button" onClick={() => saveFollowUp(false)} disabled={fuSaving} className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg disabled:opacity-50">{fuSaving ? "Saving..." : "Save"}</button>
+              </div>
             </div>
           </div>
         </div>
