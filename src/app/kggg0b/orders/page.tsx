@@ -17,6 +17,45 @@ type Order = {
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
 
+// Opens WhatsApp with a ready message for this order (admin only needs to press Send)
+function whatsappUrl(order: Order): string | null {
+  const last10 = (order.customerMobile || "").replace(/\D/g, "").slice(-10);
+  if (last10.length !== 10) return null;
+  const id = order.id.slice(-8).toUpperCase();
+  const first = (order.customerName || "").trim().split(" ")[0] || "Customer";
+  const amount = "₹" + Number(order.total);
+  const isCod = order.paymentMethod === "cod";
+  let body: string;
+  switch (order.status) {
+    case "PROCESSING":
+      body = `Your order #${id} is being packed and will be shipped soon.`;
+      break;
+    case "SHIPPED":
+      body =
+        `Your order #${id} has been shipped and will reach you soon.` +
+        (isCod && order.paymentStatus !== "PAID" ? ` Please keep ${amount} ready for Cash on Delivery.` : "");
+      break;
+    case "DELIVERED":
+      body = `Your order #${id} has been delivered. Thank you for shopping with us! If you have any question about the product, just reply here.`;
+      break;
+    case "CANCELLED":
+      body =
+        `Your order #${id} has been cancelled.` +
+        (order.paymentStatus === "REFUND_PENDING" ? " Your payment will be refunded shortly." : "") +
+        " You can place a new order anytime.";
+      break;
+    default:
+      body =
+        `Thank you for your order #${id} of ${amount}.` +
+        (!isCod && order.paymentStatus === "PENDING"
+          ? ` Please complete your UPI payment to confirm the order.`
+          : isCod ? " You can pay on delivery." : "") +
+        " We will update you when it is shipped.";
+  }
+  const text = `Namaste ${first}, this is Amroha Pharmacy. ${body}`;
+  return "https://wa.me/91" + last10 + "?text=" + encodeURIComponent(text);
+}
+
 function AdminOrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -124,7 +163,7 @@ function AdminOrdersContent() {
                   <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</p></div>
                   {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
                   {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
@@ -133,6 +172,9 @@ function AdminOrdersContent() {
                     </button>
                   )}
                   <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">🖨️ Print</button>
+                  {whatsappUrl(order) && (
+                    <a href={whatsappUrl(order) as string} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">💬 WhatsApp</a>
+                  )}
                 </div>
               </div>
               
