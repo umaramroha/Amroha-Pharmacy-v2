@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { transporter, FROM_EMAIL } from "@/lib/email/mailer";
+import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
 import { getOrderStatusUpdateHTML } from "@/lib/email/templates";
 import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
@@ -112,7 +112,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     }
 
     // FIX 2: Transaction to update order, handle refund status, and stock safely
-    let updated, oldStatus;
+    let updated, oldStatus, oldPaymentStatus;
     try {
       const result = await prisma.$transaction(async (tx) => {
         const currentOrder = await tx.order.findUnique({
@@ -193,34 +193,55 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           },
         });
 
-        return { order: finalOrder!, oldStatus: currentOrder.status };
+        return { order: finalOrder!, oldStatus: currentOrder.status, oldPaymentStatus: currentOrder.paymentStatus };
       });
       
       updated = result.order;
       oldStatus = result.oldStatus;
+      oldPaymentStatus = result.oldPaymentStatus;
     } catch (err: any) {
       console.error("Admin transaction error:", err);
       return NextResponse.json({ error: err.message || "Failed to update order" }, { status: 400 });
     }
 
-    // Send status update email to customer
+    const shortId = updated.id.slice(-8).toUpperCase();
+    const refundPending = updated.paymentStatus === "REFUND_PENDING" && oldPaymentStatus !== "REFUND_PENDING";
+
+    // Email to the customer when the order status changes
     if (status && status !== oldStatus && updated.customerEmail) {
-      try {
-        await transporter.sendMail({
-          from: FROM_EMAIL,
-          to: updated.customerEmail,
-          subject: `Order Update: #${updated.id.slice(-8).toUpperCase()} is now ${status}`,
-          html: getOrderStatusUpdateHTML({
-            customerName: updated.customerName,
-            orderId: updated.id,
-            status: status,
-            total: updated.total.toString(),
-          }),
-        });
-        console.log(`Status update email sent for order #${updated.id.slice(-8).toUpperCase()}`);
-      } catch (err) {
-        console.error("Failed to send status update email:", err);
-      }
+      await sendCustomerEmail({
+        event: "order-status-" + status,
+        to: updated.customerEmail,
+        subject: `Order Update: #${shortId} is now ${status}`,
+        html: getOrderStatusUpdateHTML({
+          customerName: updated.customerName,
+          orderId: updated.id,
+          status: status,
+          total: updated.total.toString(),
+          refundPending,
+        }),
+      });
+    }
+
+    // Emails to the admin (record of money events)
+    if (updated.paymentStatus === "PAID" && oldPaymentStatus !== "PAID") {
+      await sendAdminAlert({
+        event: "payment-received",
+        subject: `💰 Payment received - Order #${shortId} - ₹${updated.total.toString()}`,
+        title: "Payment received",
+        order: updated,
+        lines: ["Order marked as PAID from the admin panel."],
+      });
+    }
+    if (refundPending) {
+      await sendAdminAlert({
+        event: "refund-pending",
+        subject: `↩️ Refund pending - Order #${shortId} - ₹${updated.total.toString()}`,
+        title: "Refund pending",
+        color: "#dc2626",
+        order: updated,
+        lines: ["A paid order was cancelled. Please refund the customer."],
+      });
     }
 
     return NextResponse.json({ success: true, order: updated });

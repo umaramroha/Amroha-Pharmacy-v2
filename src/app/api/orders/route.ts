@@ -1,4 +1,4 @@
-import { transporter, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/email/mailer";
+import { sendCustomerEmail, sendAdminEmail, alertLowStock } from "@/lib/notify";
 import {
   getOrderConfirmationHTML,
   getAdminOrderNotificationHTML,
@@ -323,8 +323,8 @@ export async function POST(request: Request) {
       }));
 
       if (customerEmail) {
-        await transporter.sendMail({
-          from: FROM_EMAIL,
+        await sendCustomerEmail({
+          event: "order-confirmation",
           to: customerEmail,
           subject: `✅ Order Confirmed - #${shortId} - Amroha Pharmacy`,
           html: getOrderConfirmationHTML({
@@ -340,21 +340,25 @@ export async function POST(request: Request) {
         });
       }
 
-      if (ADMIN_EMAIL) {
-        await transporter.sendMail({
-          from: FROM_EMAIL,
-          to: ADMIN_EMAIL,
-          subject: `🔔 New Order #${shortId} - ₹${total.toString()}`,
-          html: getAdminOrderNotificationHTML({
-            customerName: input.customerName,
-            customerMobile: input.customerMobile,
-            total: Number(total),
-            paymentMethod: input.paymentMethod,
-            address: fullAddress,
-            orderId: order.id,
-          }),
-        });
-      }
+      // Admin email is independent: it is sent even if the customer email fails
+      await sendAdminEmail({
+        event: "new-order",
+        subject: `🔔 New Order #${shortId} - ₹${total.toString()}`,
+        html: getAdminOrderNotificationHTML({
+          customerName: input.customerName,
+          customerMobile: input.customerMobile,
+          total: Number(total),
+          paymentMethod: input.paymentMethod,
+          address: fullAddress,
+          orderId: order.id,
+          items: orderItems,
+          couponCode: couponCode || undefined,
+          couponDiscount: Number(couponDiscount),
+          customerEmail: customerEmail || undefined,
+        }),
+      });
+
+      await alertLowStock(lines.map((l) => l.productId));
     } catch (emailError) {
       console.error("Email send error:", emailError);
     }

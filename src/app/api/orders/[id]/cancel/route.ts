@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { escapeHtml } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
-import { transporter, FROM_EMAIL, ADMIN_EMAIL } from "@/lib/email/mailer";
+import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
 
 const CANCELLABLE_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING"];
 
@@ -68,17 +68,38 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const order = cancellation.order!;
     const shortId = order.id.slice(-8).toUpperCase();
 
-    try {
-      const emailToNotify = order.customerEmail || session.email;
-      if (emailToNotify) {
-        await transporter.sendMail({
-          from: FROM_EMAIL,
-          to: emailToNotify,
-          subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
-          html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled.</p></div>`,
-        });
-      }
-    } catch (e) {}
+    const wasPaid = order.paymentStatus === "PAID";
+    const emailToNotify = order.customerEmail || session.email;
+    if (emailToNotify) {
+      const refundNote = wasPaid
+        ? "<p>Your payment will be refunded. We will contact you shortly on WhatsApp or phone about the refund.</p>"
+        : "";
+      await sendCustomerEmail({
+        event: "order-cancelled-by-customer",
+        to: emailToNotify,
+        subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
+        html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled.</p>${refundNote}</div>`,
+      });
+    }
+
+    await sendAdminAlert({
+      event: "order-cancelled-by-customer",
+      subject: `❌ Order #${shortId} cancelled by customer`,
+      title: "Order cancelled by customer",
+      color: "#dc2626",
+      order: {
+        id: order.id,
+        customerName: order.customerName,
+        customerMobile: order.customerMobile,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: wasPaid ? "REFUND_PENDING" : "CANCELLED",
+        status: "CANCELLED",
+      },
+      lines: wasPaid
+        ? ["This order was already PAID. Refund is pending: please refund the customer."]
+        : ["Payment was not received yet, so no refund is needed."],
+    });
 
     return NextResponse.json({ success: true, message: "Order cancelled successfully" });
   } catch (error: any) {

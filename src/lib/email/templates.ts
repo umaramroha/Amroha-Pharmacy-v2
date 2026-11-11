@@ -139,6 +139,10 @@ export function getAdminOrderNotificationHTML(data: {
   paymentMethod: string;
   address: string;
   orderId: string;
+  items?: { name: string; quantity: number; price: number }[];
+  couponCode?: string;
+  couponDiscount?: number;
+  customerEmail?: string;
 }): string {
   const shortId = data.orderId.slice(-8).toUpperCase();
 
@@ -151,6 +155,9 @@ export function getAdminOrderNotificationHTML(data: {
         <p><strong>Customer:</strong> ${escapeHtml(data.customerName)}</p>
         <p><strong>Mobile:</strong> ${escapeHtml(data.customerMobile)}</p>
         <p><strong>Address:</strong> ${escapeHtml(data.address)}</p>
+        ${data.customerEmail ? `<p><strong>Email:</strong> ${escapeHtml(data.customerEmail)}</p>` : ""}
+        ${(data.items || []).length > 0 ? `<p><strong>Items:</strong></p><ul style="margin:4px 0 12px 18px;padding:0;color:#374151;font-size:14px">${(data.items || []).map((i) => `<li>${escapeHtml(i.name)} × ${i.quantity} — ₹${(i.price * i.quantity).toLocaleString("en-IN")}</li>`).join("")}</ul>` : ""}
+        ${data.couponCode ? `<p><strong>Coupon:</strong> ${escapeHtml(data.couponCode)} (− ₹${(data.couponDiscount || 0).toLocaleString("en-IN")})</p>` : ""}
         <p><strong>Total:</strong> ₹${data.total.toLocaleString("en-IN")}</p>
         <p><strong>Payment:</strong> ${data.paymentMethod === "cod" ? "COD" : "UPI"}</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;" />
@@ -167,6 +174,7 @@ export function getOrderStatusUpdateHTML(data: {
   orderId: string;
   status: string;
   total: string;
+  refundPending?: boolean;
 }): string {
   const shortId = data.orderId.slice(-8).toUpperCase();
   
@@ -190,6 +198,7 @@ export function getOrderStatusUpdateHTML(data: {
           <strong>Total Amount:</strong> ₹${data.total}<br />
           <strong>Current Status:</strong> ${data.status}
         </p>
+        ${data.refundPending ? `<p style="font-size: 14px; color: #92400e; background-color: #fffbeb; padding: 10px; border-radius: 6px;">Your payment for this order will be refunded. We will contact you shortly on WhatsApp or phone about the refund.</p>` : ""}
         <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
           You can view your order details by logging into your account.
         </p>

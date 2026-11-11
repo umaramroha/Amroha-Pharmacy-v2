@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { getPrepaidDiscount } from "@/lib/pricing";
 import { isCodAvailable, getDeliveryZone } from "@/data/delivery";
+import { sendAdminAlert } from "@/lib/notify";
 
 /**
  * POST /api/orders/[id]/switch-payment   body: { newMethod: "cod" | "upi" }
@@ -117,6 +118,19 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     }
 
     const updatedOrder = await prisma.order.findUnique({ where: { id: order.id } });
+
+    if (updatedOrder) {
+      await sendAdminAlert({
+        event: "payment-method-switched",
+        subject: `🔁 Order #${updatedOrder.id.slice(-8).toUpperCase()} payment changed to ${newMethod.toUpperCase()}`,
+        title: "Payment method changed by customer",
+        order: updatedOrder,
+        lines: [
+          `Changed from ${order.paymentMethod.toUpperCase()} to ${newMethod.toUpperCase()}. New total: ₹${Number(updatedOrder.total)}.`,
+        ],
+      });
+    }
+
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (error: any) {
     console.error("Switch payment error:", error);
