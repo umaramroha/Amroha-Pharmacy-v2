@@ -42,9 +42,9 @@ export default function AdminCustomersPage() {
   };
 
   const MAIL_TEMPLATES = [
-    { label: "Follow-up", subject: "How are you feeling? - Amroha Pharmacy", body: "We hope you are doing well. We wanted to check how you are feeling after using your last order. If you have any questions or need a refill, just reply to this email or message us on WhatsApp." },
-    { label: "Offer", subject: "A special offer for you - Amroha Pharmacy", body: "We have a special offer for you. Use code ______ at checkout to get a discount on your next order. Valid till ______." },
-    { label: "Thank you", subject: "Thank you for your order - Amroha Pharmacy", body: "Thank you for ordering from Amroha Pharmacy. We hope you are happy with your products. Your feedback means a lot to us." },
+    { label: "Follow-up", subject: "Follow-up on your recent order - Amroha Pharmacy", body: "We hope you are doing well. We are following up on your recent order to check whether you need any assistance. If you have any questions about your medicines or would like to reorder, please reply to this email or contact us on WhatsApp at +91 80779 88509." },
+    { label: "Offer", subject: "A special offer from Amroha Pharmacy", body: "We are pleased to offer you a special discount on your next order. Please use coupon code ______ at checkout. This offer is valid until ______." },
+    { label: "Thank you", subject: "Thank you for your order - Amroha Pharmacy", body: "Thank you for choosing Amroha Pharmacy. We hope you are satisfied with your order. Your feedback is valuable to us, and we are always happy to assist you." },
   ];
 
   const istDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
@@ -222,7 +222,7 @@ export default function AdminCustomersPage() {
                   </a>
                 )}
                 {waNumber(customer.mobile) && (
-                  <a href={"https://wa.me/" + waNumber(customer.mobile) + "?text=" + encodeURIComponent("Hello " + customer.name + ", this is Amroha Pharmacy. ")} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition">
+                  <a href={"https://wa.me/" + waNumber(customer.mobile) + "?text=" + encodeURIComponent("Dear " + customer.name + ",\n\nThis is Amroha Pharmacy. ")} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-green-50 text-green-700 hover:bg-green-100 transition">
                     <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                   </a>
                 )}

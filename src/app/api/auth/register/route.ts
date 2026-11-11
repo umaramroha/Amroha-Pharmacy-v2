@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         from: FROM_EMAIL,
         to: cleanEmail,
         subject: "Verify your Amroha Pharmacy Account",
-        html: `<div style="text-align: center;"><h2>Welcome ${escapeHtml(name)}!</h2><p>Click below to verify your account:</p><a href="${verifyUrl}">Verify Email</a></div>`,
+        html: `<div style="text-align: center;"><h2>Welcome to Amroha Pharmacy</h2><p>Dear ${escapeHtml(name)},</p><p>Thank you for registering. Please verify your email address using the link below.</p><a href="${verifyUrl}">Verify Email</a></div>`,
       });
     } catch (emailError) {
       // If email fails, delete the user so they can try again without email conflict

@@ -72,13 +72,13 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const emailToNotify = order.customerEmail || session.email;
     if (emailToNotify) {
       const refundNote = wasPaid
-        ? "<p>Your payment will be refunded. We will contact you shortly on WhatsApp or phone about the refund.</p>"
+        ? "<p>Your payment will be refunded. Our team will contact you shortly regarding the refund.</p>"
         : "";
       await sendCustomerEmail({
         event: "order-cancelled-by-customer",
         to: emailToNotify,
-        subject: `❌ Order Cancelled - #${shortId} - Amroha Pharmacy`,
-        html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Namaste <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled.</p>${refundNote}</div>`,
+        subject: `Order #${shortId} Cancelled - Amroha Pharmacy`,
+        html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Dear <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled as requested.</p>${refundNote}<p>If you did not request this cancellation or need any assistance, please contact us on WhatsApp at +91 80779 88509.</p><p>Regards,<br>Amroha Pharmacy</p></div>`,
       });
     }
 

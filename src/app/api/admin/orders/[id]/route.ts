@@ -4,7 +4,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
-import { getOrderStatusUpdateHTML } from "@/lib/email/templates";
+import { getOrderStatusUpdateHTML, getOrderStatusLabel } from "@/lib/email/templates";
 import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -212,7 +212,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       await sendCustomerEmail({
         event: "order-status-" + status,
         to: updated.customerEmail,
-        subject: `Order Update: #${shortId} is now ${status}`,
+        subject: `Order #${shortId} ${getOrderStatusLabel(status)} - Amroha Pharmacy`,
         html: getOrderStatusUpdateHTML({
           customerName: updated.customerName,
           orderId: updated.id,

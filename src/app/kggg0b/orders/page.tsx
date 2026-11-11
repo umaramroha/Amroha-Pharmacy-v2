@@ -17,7 +17,7 @@ type Order = {
 
 const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
 
-// Opens WhatsApp with a ready message for this order (admin only needs to press Send)
+// Opens WhatsApp with a ready, professional message for this order (admin only presses Send)
 function whatsappUrl(order: Order): string | null {
   const last10 = (order.customerMobile || "").replace(/\D/g, "").slice(-10);
   if (last10.length !== 10) return null;
@@ -28,31 +28,30 @@ function whatsappUrl(order: Order): string | null {
   let body: string;
   switch (order.status) {
     case "PROCESSING":
-      body = `Your order #${id} is being packed and will be shipped soon.`;
+      body = `Your order #${id} is being prepared for dispatch.`;
       break;
     case "SHIPPED":
       body =
-        `Your order #${id} has been shipped and will reach you soon.` +
+        `Your order #${id} has been dispatched and will reach you soon.` +
         (isCod && order.paymentStatus !== "PAID" ? ` Please keep ${amount} ready for Cash on Delivery.` : "");
       break;
     case "DELIVERED":
-      body = `Your order #${id} has been delivered. Thank you for shopping with us! If you have any question about the product, just reply here.`;
+      body = `Your order #${id} has been delivered. Thank you for choosing Amroha Pharmacy. If you have any questions about your medicines, please reply to this message.`;
       break;
     case "CANCELLED":
       body =
         `Your order #${id} has been cancelled.` +
         (order.paymentStatus === "REFUND_PENDING" ? " Your payment will be refunded shortly." : "") +
-        " You can place a new order anytime.";
+        " Please contact us if you need any assistance.";
       break;
     default:
       body =
-        `Thank you for your order #${id} of ${amount}.` +
+        `Thank you for your order #${id} (${amount}). We have received it and will notify you once it is dispatched.` +
         (!isCod && order.paymentStatus === "PENDING"
-          ? ` Please complete your UPI payment to confirm the order.`
-          : isCod ? " You can pay on delivery." : "") +
-        " We will update you when it is shipped.";
+          ? " Please complete your UPI payment to confirm the order."
+          : isCod ? " Payment mode: Cash on Delivery." : "");
   }
-  const text = `Namaste ${first}, this is Amroha Pharmacy. ${body}`;
+  const text = `Dear ${first},\n\n${body}\n\nRegards,\nAmroha Pharmacy`;
   return "https://wa.me/91" + last10 + "?text=" + encodeURIComponent(text);
 }
 

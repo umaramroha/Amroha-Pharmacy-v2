@@ -326,7 +326,7 @@ export async function POST(request: Request) {
         await sendCustomerEmail({
           event: "order-confirmation",
           to: customerEmail,
-          subject: `✅ Order Confirmed - #${shortId} - Amroha Pharmacy`,
+          subject: `Order Confirmation #${shortId} - Amroha Pharmacy`,
           html: getOrderConfirmationHTML({
             customerName: input.customerName,
             orderId: order.id,

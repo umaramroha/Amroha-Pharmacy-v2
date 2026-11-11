@@ -68,12 +68,12 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
 
     const html =
       '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:20px;color:#1f2937;font-size:15px;line-height:1.6">' +
-      "<p>Hello " + escapeHtml(customer.name) + ",</p>" +
+      "<p>Dear " + escapeHtml(customer.name) + ",</p>" +
       "<div>" + escapeHtml(message).replace(/\n/g, "<br>") + "</div>" +
       '<p style="margin-top:24px">Regards,<br><strong>Amroha Pharmacy</strong><br>' +
       '<a href="https://amrohapharmacy.vercel.app">amrohapharmacy.vercel.app</a></p></div>';
 
-    const text = "Hello " + customer.name + ",\n\n" + message + "\n\nRegards,\nAmroha Pharmacy";
+    const text = "Dear " + customer.name + ",\n\n" + message + "\n\nRegards,\nAmroha Pharmacy";
 
     try {
       await transporter.sendMail({

@@ -57,14 +57,14 @@ export function getOrderConfirmationHTML(data: OrderConfirmationData): string {
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
         
         <div style="background-color: #0F766E; padding: 30px 20px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">✅ Order Confirmed!</h1>
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Confirmation</h1>
         </div>
 
         <div style="padding: 30px 25px;">
-          <p style="font-size: 16px; color: #1f2937;">Hello <strong>${escapeHtml(customerName)}</strong>,</p>
+          <p style="font-size: 16px; color: #1f2937;">Dear <strong>${escapeHtml(customerName)}</strong>,</p>
 
           <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
-            Your order has been placed successfully. We will dispatch it shortly and send tracking details on WhatsApp.
+            Thank you for your order with Amroha Pharmacy. We have received it and will notify you as soon as it is dispatched.
           </p>
 
           <div style="background-color: #f0fdfa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #0F766E;">
@@ -169,6 +169,19 @@ export function getAdminOrderNotificationHTML(data: {
   `;
 }
 
+// Customer-facing names for order statuses
+export function getOrderStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    PENDING: "Pending",
+    CONFIRMED: "Confirmed",
+    PROCESSING: "Being Prepared",
+    SHIPPED: "Dispatched",
+    DELIVERED: "Delivered",
+    CANCELLED: "Cancelled",
+  };
+  return labels[status] || status;
+}
+
 export function getOrderStatusUpdateHTML(data: {
   customerName: string;
   orderId: string;
@@ -179,32 +192,33 @@ export function getOrderStatusUpdateHTML(data: {
   const shortId = data.orderId.slice(-8).toUpperCase();
   
   let statusMessage = "";
-  if (data.status === "SHIPPED") statusMessage = "Your order is on the way! 🚚";
-  else if (data.status === "DELIVERED") statusMessage = "Your order has been delivered! 📦";
+  if (data.status === "CONFIRMED") statusMessage = "Your order has been confirmed.";
+  else if (data.status === "PROCESSING") statusMessage = "Your order is being prepared for dispatch.";
+  else if (data.status === "SHIPPED") statusMessage = "Your order has been dispatched and is on its way.";
+  else if (data.status === "DELIVERED") statusMessage = "Your order has been delivered. Thank you for choosing Amroha Pharmacy.";
   else if (data.status === "CANCELLED") statusMessage = "Your order has been cancelled.";
-  else if (data.status === "CONFIRMED") statusMessage = "Your order has been confirmed! ✅";
-  else statusMessage = `Your order status is now: ${data.status}`;
+  else statusMessage = `Your order status has been updated to: ${getOrderStatusLabel(data.status)}.`;
 
   return `
     <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;">
         <h2 style="color: #0F766E; margin-top: 0;">Order Update</h2>
-        <p style="font-size: 16px; color: #1f2937;">Hello <strong>${escapeHtml(data.customerName)}</strong>,</p>
+        <p style="font-size: 16px; color: #1f2937;">Dear <strong>${escapeHtml(data.customerName)}</strong>,</p>
         <p style="font-size: 16px; color: #1f2937; font-weight: bold; background-color: #f0fdf4; padding: 10px; border-radius: 6px; text-align: center;">
           ${statusMessage}
         </p>
         <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
           <strong>Order ID:</strong> #${shortId}<br />
           <strong>Total Amount:</strong> ₹${data.total}<br />
-          <strong>Current Status:</strong> ${data.status}
+          <strong>Current Status:</strong> ${getOrderStatusLabel(data.status)}
         </p>
-        ${data.refundPending ? `<p style="font-size: 14px; color: #92400e; background-color: #fffbeb; padding: 10px; border-radius: 6px;">Your payment for this order will be refunded. We will contact you shortly on WhatsApp or phone about the refund.</p>` : ""}
+        ${data.refundPending ? `<p style="font-size: 14px; color: #92400e; background-color: #fffbeb; padding: 10px; border-radius: 6px;">Your payment for this order will be refunded. Our team will contact you shortly regarding the refund.</p>` : ""}
         <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
           You can view your order details by logging into your account.
         </p>
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
           <p style="font-size: 12px; color: #9ca3af; text-align: center;">
-            If you have any questions, reply to this email or contact us on WhatsApp.
+            If you have any questions, please reply to this email or contact us on WhatsApp at +91 80779 88509.
           </p>
         </div>
       </div>
