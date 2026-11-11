@@ -142,3 +142,21 @@ model Coupon {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
+
+// Record of every email the site tries to send (success or failure)
+model NotificationLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  event     String
+  audience  String   // CUSTOMER or ADMIN
+  toEmail   String
+  subject   String
+  status    String   // SENT or FAILED
+  error     String?
+  html      String?  // kept only for FAILED emails so they can be re-sent
+  orderId   String?
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([orderId])
+}
