@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Package, Clock, Pill, IndianRupee, Users, ShoppingBag, 
-  Image as ImageIcon, BarChart, Settings, LogOut, Ticket 
+  Image as ImageIcon, BarChart, Settings, LogOut, Ticket, Mail 
 } from "lucide-react";
 
 type Stats = {
@@ -17,6 +17,7 @@ type Stats = {
   todayOrders?: number;
   todaySales?: number;
   pendingPayments?: number;
+  failedEmails?: number;
   lowStock?: { id: string; name: string; stock: number }[];
   recentOrders?: {
     id: string;
@@ -97,6 +98,7 @@ export default function AdminDashboard() {
     { label: "Coupons", href: "/kggg0b/coupons", icon: Ticket, desc: "Create discount codes" },
     { label: "Customers", href: "/kggg0b/customers", icon: Users, desc: "View customer list" },
     { label: "Reports", href: "/kggg0b/reports", icon: BarChart, desc: "Sales & analytics" },
+    { label: "Email Log", href: "/kggg0b/notifications", icon: Mail, desc: "Sent & failed emails" },
     { label: "Settings", href: "/kggg0b/settings", icon: Settings, desc: "Change email & password" },
   ];
 
@@ -130,6 +132,13 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Failed emails alert */}
+      {(stats?.failedEmails ?? 0) > 0 && (
+        <Link href="/kggg0b/notifications?status=FAILED" className="block bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6 text-sm font-medium hover:bg-red-100 transition">
+          ⚠ {stats?.failedEmails} email(s) failed to send. Tap to review and re-send.
+        </Link>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

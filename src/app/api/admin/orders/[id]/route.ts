@@ -212,6 +212,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       await sendCustomerEmail({
         event: "order-status-" + status,
         to: updated.customerEmail,
+        orderId: updated.id,
         subject: `Order #${shortId} ${getOrderStatusLabel(status)} - Amroha Pharmacy`,
         html: getOrderStatusUpdateHTML({
           customerName: updated.customerName,

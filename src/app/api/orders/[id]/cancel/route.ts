@@ -77,6 +77,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
       await sendCustomerEmail({
         event: "order-cancelled-by-customer",
         to: emailToNotify,
+        orderId: order.id,
         subject: `Order #${shortId} Cancelled - Amroha Pharmacy`,
         html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #dc2626;">Order Cancelled</h2><p>Dear <strong>${escapeHtml(order.customerName)}</strong>,</p><p>Your order <strong>#${shortId}</strong> has been cancelled as requested.</p>${refundNote}<p>If you did not request this cancellation or need any assistance, please contact us on WhatsApp at +91 80779 88509.</p><p>Regards,<br>Amroha Pharmacy</p></div>`,
       });

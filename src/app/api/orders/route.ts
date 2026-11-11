@@ -325,6 +325,7 @@ export async function POST(request: Request) {
       if (customerEmail) {
         await sendCustomerEmail({
           event: "order-confirmation",
+          orderId: order.id,
           to: customerEmail,
           subject: `Order Confirmation #${shortId} - Amroha Pharmacy`,
           html: getOrderConfirmationHTML({
@@ -343,6 +344,7 @@ export async function POST(request: Request) {
       // Admin email is independent: it is sent even if the customer email fails
       await sendAdminEmail({
         event: "new-order",
+        orderId: order.id,
         subject: `🔔 New Order #${shortId} - ₹${total.toString()}`,
         html: getAdminOrderNotificationHTML({
           customerName: input.customerName,

@@ -5,6 +5,39 @@ import { prisma } from "@/lib/prisma";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://amrohapharmacy.vercel.app";
 const LOW_STOCK_LIMIT = 5;
 
+type LogEntry = {
+  event: string;
+  audience: "CUSTOMER" | "ADMIN";
+  toEmail: string;
+  subject: string;
+  status: "SENT" | "FAILED";
+  error?: string;
+  html?: string;
+  orderId?: string;
+};
+
+const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+// Saves one row in NotificationLog. The HTML is kept only for FAILED emails (so they can be re-sent).
+async function logEmail(entry: LogEntry): Promise<void> {
+  try {
+    await prisma.notificationLog.create({
+      data: {
+        event: entry.event,
+        audience: entry.audience,
+        toEmail: entry.toEmail,
+        subject: entry.subject,
+        status: entry.status,
+        error: entry.error ? entry.error.slice(0, 500) : null,
+        html: entry.status === "FAILED" ? entry.html ?? null : null,
+        orderId: entry.orderId ?? null,
+      },
+    });
+  } catch (err) {
+    console.error("[notify] could not write log entry", err);
+  }
+}
+
 // Every function here NEVER throws: a failed email must not break an order.
 // Failures are written to the server log (Vercel Logs) as "[notify] <event>: ... FAILED".
 
@@ -13,6 +46,7 @@ export async function sendCustomerEmail(opts: {
   to: string;
   subject: string;
   html: string;
+  orderId?: string;
 }): Promise<boolean> {
   try {
     await transporter.sendMail({
@@ -23,9 +57,11 @@ export async function sendCustomerEmail(opts: {
       html: opts.html,
     });
     console.log("[notify] " + opts.event + ": customer email sent");
+    await logEmail({ event: opts.event, audience: "CUSTOMER", toEmail: opts.to, subject: opts.subject, status: "SENT", orderId: opts.orderId });
     return true;
   } catch (err) {
     console.error("[notify] " + opts.event + ": customer email FAILED", err);
+    await logEmail({ event: opts.event, audience: "CUSTOMER", toEmail: opts.to, subject: opts.subject, status: "FAILED", error: errMsg(err), html: opts.html, orderId: opts.orderId });
     return false;
   }
 }
@@ -34,9 +70,11 @@ export async function sendAdminEmail(opts: {
   event: string;
   subject: string;
   html: string;
+  orderId?: string;
 }): Promise<boolean> {
   if (!ADMIN_EMAIL) {
     console.error("[notify] " + opts.event + ": ADMIN_EMAIL is not set, admin email skipped");
+    await logEmail({ event: opts.event, audience: "ADMIN", toEmail: "(ADMIN_EMAIL not set)", subject: opts.subject, status: "FAILED", error: "ADMIN_EMAIL is not set", orderId: opts.orderId });
     return false;
   }
   try {
@@ -47,9 +85,11 @@ export async function sendAdminEmail(opts: {
       html: opts.html,
     });
     console.log("[notify] " + opts.event + ": admin email sent");
+    await logEmail({ event: opts.event, audience: "ADMIN", toEmail: ADMIN_EMAIL, subject: opts.subject, status: "SENT", orderId: opts.orderId });
     return true;
   } catch (err) {
     console.error("[notify] " + opts.event + ": admin email FAILED", err);
+    await logEmail({ event: opts.event, audience: "ADMIN", toEmail: ADMIN_EMAIL, subject: opts.subject, status: "FAILED", error: errMsg(err), html: opts.html, orderId: opts.orderId });
     return false;
   }
 }
@@ -116,7 +156,7 @@ export async function sendAdminAlert(opts: {
     body +
     "</div></div>";
 
-  return sendAdminEmail({ event: opts.event, subject: opts.subject, html });
+  return sendAdminEmail({ event: opts.event, subject: opts.subject, html, orderId: opts.order?.id });
 }
 
 // After an order: email the admin if any ordered product is now low or out of stock.

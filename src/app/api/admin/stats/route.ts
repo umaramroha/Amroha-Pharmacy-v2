@@ -45,7 +45,8 @@ export async function GET() {
       Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - IST_MS
     );
 
-    const [todayAgg, pendingPayments, lowStock, recentOrders] = await Promise.all([
+    const [failedEmails, todayAgg, pendingPayments, lowStock, recentOrders] = await Promise.all([
+      prisma.notificationLog.count({ where: { status: "FAILED" } }).catch(() => 0),
       prisma.order.aggregate({
         _count: { _all: true },
         _sum: { total: true },
@@ -86,6 +87,7 @@ export async function GET() {
       pendingPayments,
       lowStock,
       recentOrders,
+      failedEmails,
     });
   } catch (error: any) {
     console.error("Admin stats error:", error);
