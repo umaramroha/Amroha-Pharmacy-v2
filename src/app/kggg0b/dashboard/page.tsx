@@ -10,6 +10,7 @@ import {
 
 type Stats = {
   totalOrders: number;
+  activeOrders?: number;
   pendingOrders: number;
   totalProducts: number;
   totalCustomers: number;
@@ -60,46 +61,37 @@ export default function AdminDashboard() {
     router.push("/kggg0b/login");
   };
 
-  const statCards = [
-    {
-      label: "Total Orders",
-      value: stats?.totalOrders ?? 0,
-      color: "text-primary",
-      bg: "bg-primary/10",
-      icon: Package,
-    },
-    {
-      label: "Pending Orders",
-      value: stats?.pendingOrders ?? 0,
-      color: "text-orange-600",
-      bg: "bg-orange-100",
-      icon: Clock,
-    },
-    {
-      label: "Active Products",
-      value: stats?.totalProducts ?? 0,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-      icon: Pill,
-    },
-    {
-      label: "Revenue (received)",
-      value: `₹${Number(stats?.revenue ?? 0).toFixed(0)}`,
-      color: "text-green-600",
-      bg: "bg-green-100",
-      icon: IndianRupee,
-    },
+  const overviewCards = [
+    { label: "Active Orders", value: stats?.activeOrders ?? 0, icon: Package, tint: "bg-primary/10 text-primary", num: "text-gray-900" },
+    { label: "Pending", value: stats?.pendingOrders ?? 0, icon: Clock, tint: "bg-orange-100 text-orange-600", num: "text-orange-600" },
+    { label: "Revenue (received)", value: "₹" + Number(stats?.revenue ?? 0).toFixed(0), icon: IndianRupee, tint: "bg-green-100 text-green-600", num: "text-green-600" },
+    { label: "Customers", value: stats?.totalCustomers ?? 0, icon: Users, tint: "bg-primary/10 text-primary", num: "text-gray-900" },
+    { label: "Active Products", value: stats?.totalProducts ?? 0, icon: Pill, tint: "bg-primary/10 text-primary", num: "text-gray-900" },
   ];
 
+  const todayCards = [
+    { label: "Today's Orders", value: stats?.todayOrders ?? 0, icon: ShoppingBag, tint: "bg-primary/10 text-primary", num: "text-gray-900" },
+    { label: "Today's Sales", value: "₹" + Number(stats?.todaySales ?? 0).toFixed(0), icon: IndianRupee, tint: "bg-green-100 text-green-600", num: "text-green-600" },
+  ];
+
+  const statusBadge: Record<string, string> = {
+    PENDING: "bg-yellow-100 text-yellow-800",
+    CONFIRMED: "bg-blue-100 text-blue-800",
+    PROCESSING: "bg-purple-100 text-purple-800",
+    SHIPPED: "bg-indigo-100 text-indigo-800",
+    DELIVERED: "bg-green-100 text-green-800",
+    CANCELLED: "bg-red-100 text-red-800",
+  };
+
   const menuItems = [
-    { label: "Orders", href: "/kggg0b/orders", icon: ShoppingBag, desc: "Manage customer orders" },
-    { label: "Products", href: "/kggg0b/products", icon: Pill, desc: "Add, edit, delete products" },
-    { label: "Banners", href: "/kggg0b/banners", icon: ImageIcon, desc: "Manage homepage banners" },
-    { label: "Coupons", href: "/kggg0b/coupons", icon: Ticket, desc: "Create discount codes" },
-    { label: "Customers", href: "/kggg0b/customers", icon: Users, desc: "View customer list" },
+    { label: "Orders", href: "/kggg0b/orders", icon: ShoppingBag, desc: "Manage orders" },
+    { label: "Products", href: "/kggg0b/products", icon: Pill, desc: "Add, edit, delete" },
+    { label: "Banners", href: "/kggg0b/banners", icon: ImageIcon, desc: "Homepage banners" },
+    { label: "Coupons", href: "/kggg0b/coupons", icon: Ticket, desc: "Discount codes" },
+    { label: "Customers", href: "/kggg0b/customers", icon: Users, desc: "Customer list" },
     { label: "Reports", href: "/kggg0b/reports", icon: BarChart, desc: "Sales & analytics" },
-    { label: "Email Log", href: "/kggg0b/notifications", icon: Mail, desc: "Sent & failed emails" },
-    { label: "Settings", href: "/kggg0b/settings", icon: Settings, desc: "Change email & password" },
+    { label: "Email Log", href: "/kggg0b/notifications", icon: Mail, desc: "Sent & failed" },
+    { label: "Settings", href: "/kggg0b/settings", icon: Settings, desc: "Email & password" },
   ];
 
   if (loading) {
@@ -121,7 +113,6 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary">Admin Dashboard</h1>
-          <p className="text-gray-600 text-sm mt-1">Welcome back, Admin</p>
         </div>
         <div className="flex gap-2">
           <Link href="/" className="text-sm px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-100 transition">
@@ -140,114 +131,106 @@ export default function AdminDashboard() {
         </Link>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
+      {/* Overview */}
+      <p className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-gray-500 mb-2">Overview</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3">
+        {overviewCards.map((c, i) => {
+          const Icon = c.icon;
           return (
-            <div key={stat.label} className="bg-white rounded-lg shadow-sm border p-4 md:p-6">
-              <div className={`w-12 h-12 ${stat.bg} rounded-full flex items-center justify-center mb-3`}>
-                <Icon className={`w-6 h-6 ${stat.color}`} />
+            <div key={c.label} className={"bg-white rounded-xl border p-3 md:p-4 flex items-center gap-2.5 md:gap-3" + (i === overviewCards.length - 1 && overviewCards.length % 2 === 1 ? " col-span-2 md:col-span-1" : "")}>
+              <div className={"w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 " + c.tint}>
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
-              <p className="text-xs md:text-sm text-gray-600 mb-1">{stat.label}</p>
-              <p className={`text-2xl md:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+              <div className="min-w-0">
+                <p className="text-[11px] md:text-xs text-gray-500 leading-tight">{c.label}</p>
+                <p className={"text-lg md:text-2xl font-bold leading-tight " + c.num}>{c.value}</p>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Customers Count */}
-      <div className="bg-white rounded-lg shadow-sm border p-5 mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Registered Customers</p>
-            <p className="text-2xl font-bold text-purple-600">{stats?.totalCustomers ?? 0}</p>
-          </div>
-        </div>
+      {/* Today */}
+      <p className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-gray-500 mt-5 mb-2">Today</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-3">
+        {todayCards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="bg-white rounded-xl border p-3 md:p-4 flex items-center gap-2.5 md:gap-3">
+              <div className={"w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center shrink-0 " + c.tint}>
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] md:text-xs text-gray-500 leading-tight">{c.label}</p>
+                <p className={"text-lg md:text-2xl font-bold leading-tight " + c.num}>{c.value}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Today & Alerts */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <p className="text-xs md:text-sm text-gray-600 mb-1">Today&apos;s Orders</p>
-          <p className="text-2xl font-bold text-primary">{stats?.todayOrders ?? 0}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <p className="text-xs md:text-sm text-gray-600 mb-1">Today&apos;s Sales</p>
-          <p className="text-2xl font-bold text-green-600">₹{Number(stats?.todaySales ?? 0).toFixed(0)}</p>
-        </div>
-        <Link href="/kggg0b/orders" className="bg-white rounded-lg shadow-sm border p-4 hover:border-primary transition">
-          <p className="text-xs md:text-sm text-gray-600 mb-1">Payment Pending</p>
-          <p className="text-2xl font-bold text-orange-600">{stats?.pendingPayments ?? 0}</p>
-        </Link>
-        <Link href="/kggg0b/products" className="bg-white rounded-lg shadow-sm border p-4 hover:border-primary transition">
-          <p className="text-xs md:text-sm text-gray-600 mb-1">Low Stock Items</p>
-          <p className="text-2xl font-bold text-red-600">{(stats?.lowStock ?? []).length}</p>
-        </Link>
-      </div>
-
-      {(stats?.lowStock ?? []).length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
-          <h2 className="text-lg font-bold mb-3 text-red-600">Low Stock (5 or less)</h2>
-          <ul className="divide-y">
-            {(stats?.lowStock ?? []).map((p) => (
-              <li key={p.id} className="flex justify-between items-center py-2 text-sm">
-                <span className="text-gray-800 pr-3">{p.name}</span>
-                <span className={`font-bold whitespace-nowrap ${p.stock === 0 ? "text-red-600" : "text-orange-600"}`}>
-                  {p.stock === 0 ? "Out of stock" : `${p.stock} left`}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-8">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold text-primary">Recent Orders</h2>
-          <Link href="/kggg0b/orders" className="text-sm text-primary font-semibold">View all</Link>
-        </div>
-        {(stats?.recentOrders ?? []).length === 0 ? (
-          <p className="text-sm text-gray-500">No orders yet.</p>
-        ) : (
-          <ul className="divide-y">
-            {(stats?.recentOrders ?? []).map((o) => (
-              <li key={o.id} className="py-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="font-mono font-semibold">#{o.id.slice(-8).toUpperCase()}</span>
-                  <span className="font-bold">₹{Number(o.total).toFixed(0)}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs text-gray-500 mt-0.5">
-                  <span>
-                    {o.customerName} · {o.paymentMethod} ·{" "}
-                    {new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+      {/* Needs attention */}
+      <p className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-gray-500 mt-5 mb-2">Needs attention</p>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-2.5 md:gap-3">
+        {(stats?.lowStock ?? []).length > 0 && (
+          <div className="bg-white rounded-xl border p-3 md:p-4 lg:col-span-2">
+            <h2 className="text-sm md:text-base font-bold mb-1 text-red-600">Low Stock (5 or less)</h2>
+            <ul className="divide-y">
+              {(stats?.lowStock ?? []).map((p) => (
+                <li key={p.id} className="flex justify-between items-center py-2 text-sm gap-3">
+                  <span className="text-gray-800">{p.name}</span>
+                  <span className={"text-[11px] md:text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap " + (p.stock === 0 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700")}>
+                    {p.stock === 0 ? "Out of stock" : p.stock + " left"}
                   </span>
-                  <span className="font-semibold">{o.status}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
+
+        <div className={"bg-white rounded-xl border p-3 md:p-4 " + ((stats?.lowStock ?? []).length > 0 ? "lg:col-span-3" : "lg:col-span-5")}>
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="text-sm md:text-base font-bold text-gray-900">Recent Orders</h2>
+            <Link href="/kggg0b/orders" className="text-xs md:text-sm text-primary font-semibold">View all</Link>
+          </div>
+          {(stats?.recentOrders ?? []).length === 0 ? (
+            <p className="text-sm text-gray-500 py-2">No orders yet.</p>
+          ) : (
+            <ul className="divide-y">
+              {(stats?.recentOrders ?? []).map((o) => (
+                <li key={o.id}>
+                  <Link href="/kggg0b/orders" className="flex justify-between items-center py-2 gap-3 hover:bg-gray-50 rounded">
+                    <div className="min-w-0">
+                      <p className="font-mono font-semibold text-sm">#{o.id.slice(-8).toUpperCase()}</p>
+                      <p className="text-[11px] md:text-xs text-gray-500 truncate">
+                        {o.customerName} · {o.paymentMethod} · {new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-sm">₹{Number(o.total).toFixed(0)}</p>
+                      <span className={"inline-block text-[10px] md:text-[11px] font-bold px-2 py-0.5 rounded-full " + (statusBadge[o.status] || "bg-gray-100 text-gray-800")}>{o.status}</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Quick Actions */}
-      <h2 className="text-xl font-bold mb-4 text-primary">Quick Actions</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <p className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-gray-500 mt-5 mb-2">Quick actions</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
-            <Link key={item.label} href={item.href} className="bg-white rounded-lg shadow-sm border p-5 hover:shadow-md hover:border-primary transition group">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition">{item.label}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
-                </div>
+            <Link key={item.label} href={item.href} className="bg-white rounded-xl border p-3 hover:shadow-md hover:border-primary transition group flex items-center gap-2.5 md:gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition">
+                <Icon className="w-4 h-4 md:w-5 md:h-5" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-sm md:text-base group-hover:text-primary transition leading-tight">{item.label}</h3>
+                <p className="text-[11px] md:text-xs text-gray-500 leading-tight">{item.desc}</p>
               </div>
             </Link>
           );

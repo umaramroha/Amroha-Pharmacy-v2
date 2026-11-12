@@ -45,7 +45,8 @@ export async function GET() {
       Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate()) - IST_MS
     );
 
-    const [failedEmails, todayAgg, pendingPayments, lowStock, recentOrders] = await Promise.all([
+    const [activeOrders, failedEmails, todayAgg, pendingPayments, lowStock, recentOrders] = await Promise.all([
+      prisma.order.count({ where: { status: { not: "CANCELLED" } } }),
       prisma.notificationLog.count({ where: { status: "FAILED" } }).catch(() => 0),
       prisma.order.aggregate({
         _count: { _all: true },
@@ -62,6 +63,7 @@ export async function GET() {
         select: { id: true, name: true, stock: true },
       }),
       prisma.order.findMany({
+        where: { status: { not: "CANCELLED" } },
         orderBy: { createdAt: "desc" },
         take: 5,
         select: {
@@ -88,6 +90,7 @@ export async function GET() {
       lowStock,
       recentOrders,
       failedEmails,
+      activeOrders,
     });
   } catch (error: any) {
     console.error("Admin stats error:", error);
