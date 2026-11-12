@@ -4,7 +4,8 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
-import { getOrderStatusUpdateHTML, getOrderStatusLabel } from "@/lib/email/templates";
+import { getOrderStatusUpdateHTML, getOrderStatusLabel, getTrackingUpdateHTML } from "@/lib/email/templates";
+import { parseCourier, parseTracking } from "@/lib/courier";
 import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -107,12 +108,25 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       updateData.paymentStatus = paymentStatus;
     }
 
+    const hasCourier = body.courierName !== undefined;
+    const hasTracking = body.trackingNumber !== undefined;
+    if (hasCourier) {
+      const c = parseCourier(body.courierName);
+      if (!c.ok) return NextResponse.json({ error: "Invalid courier" }, { status: 400 });
+      updateData.courierName = c.value;
+    }
+    if (hasTracking) {
+      const t = parseTracking(body.trackingNumber);
+      if (!t.ok) return NextResponse.json({ error: "Invalid tracking number (letters, numbers, - and / only, max 40)" }, { status: 400 });
+      updateData.trackingNumber = t.value;
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
 
     // FIX 2: Transaction to update order, handle refund status, and stock safely
-    let updated, oldStatus, oldPaymentStatus;
+    let updated, oldStatus, oldPaymentStatus, oldCourier, oldTracking;
     try {
       const result = await prisma.$transaction(async (tx) => {
         const currentOrder = await tx.order.findUnique({
@@ -122,6 +136,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
 
         if (!currentOrder) {
           throw new Error("Order not found");
+        }
+
+        if ((hasCourier || hasTracking) && !["SHIPPED", "DELIVERED"].includes(status || currentOrder.status)) {
+          throw new Error("Add courier and tracking details after the order is shipped.");
         }
 
         // Guard: a cancelled order cannot be marked as paid. Re-activate it first.
@@ -177,7 +195,10 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         else {
           await tx.order.update({
             where: { id: params.id },
-            data: updateData,
+            data: {
+              ...updateData,
+              ...(status === "SHIPPED" && currentOrder.status !== "SHIPPED" ? { shippedAt: new Date() } : {}),
+            },
           });
         }
 
@@ -193,12 +214,14 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           },
         });
 
-        return { order: finalOrder!, oldStatus: currentOrder.status, oldPaymentStatus: currentOrder.paymentStatus };
+        return { order: finalOrder!, oldStatus: currentOrder.status, oldPaymentStatus: currentOrder.paymentStatus, oldCourier: currentOrder.courierName, oldTracking: currentOrder.trackingNumber };
       });
       
       updated = result.order;
       oldStatus = result.oldStatus;
       oldPaymentStatus = result.oldPaymentStatus;
+      oldCourier = result.oldCourier;
+      oldTracking = result.oldTracking;
     } catch (err: any) {
       console.error("Admin transaction error:", err);
       return NextResponse.json({ error: err.message || "Failed to update order" }, { status: 400 });
@@ -220,6 +243,30 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           status: status,
           total: updated.total.toString(),
           refundPending,
+          courierName: updated.courierName,
+          trackingNumber: updated.trackingNumber,
+        }),
+      });
+    }
+
+    // Tracking details added or changed after the order was already shipped
+    const statusEmailSent = !!(status && status !== oldStatus);
+    if (
+      !statusEmailSent &&
+      updated.customerEmail &&
+      updated.trackingNumber &&
+      (updated.trackingNumber !== oldTracking || updated.courierName !== oldCourier)
+    ) {
+      await sendCustomerEmail({
+        event: "tracking-update",
+        to: updated.customerEmail,
+        orderId: updated.id,
+        subject: "Tracking details for Order #" + shortId + " - Amroha Pharmacy",
+        html: getTrackingUpdateHTML({
+          customerName: updated.customerName,
+          orderId: updated.id,
+          courierName: updated.courierName,
+          trackingNumber: updated.trackingNumber,
         }),
       });
     }

@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { COURIERS } from "@/lib/courier";
 
 type OrderItem = {
   id: string; quantity: number; price: string;
@@ -12,6 +13,7 @@ type Order = {
   id: string; customerName: string; customerMobile: string; customerEmail: string | null;
   address: string; city: string; state: string; pincode: string; total: string; couponCode: string | null; couponDiscount: string;
   status: string; paymentMethod: string; paymentStatus: string; createdAt: string;
+  courierName: string | null; trackingNumber: string | null;
   items: OrderItem[]; customer: { id: string; name: string; email: string; mobile: string | null; } | null;
 };
 
@@ -51,6 +53,13 @@ function whatsappUrl(order: Order): string | null {
           ? " Please complete your UPI payment to confirm the order."
           : isCod ? " Payment mode: Cash on Delivery." : "");
   }
+  if (order.status === "SHIPPED" && (order.courierName || order.trackingNumber)) {
+    const lines = [
+      order.courierName ? "Courier: " + order.courierName : "",
+      order.trackingNumber ? "Tracking Number: " + order.trackingNumber : "",
+    ].filter(Boolean);
+    body += "\n\n" + lines.join("\n");
+  }
   const text = `Dear ${first},\n\n${body}\n\nRegards,\nAmroha Pharmacy`;
   return "https://wa.me/91" + last10 + "?text=" + encodeURIComponent(text);
 }
@@ -68,6 +77,8 @@ function AdminOrdersContent() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [printOrder, setPrintOrder] = useState<any>(null);
+  const [trackDraft, setTrackDraft] = useState<Record<string, { courier: string; tracking: string }>>({});
+  const [trackMsg, setTrackMsg] = useState<Record<string, string>>({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -119,6 +130,29 @@ function AdminOrdersContent() {
     } catch (err) { console.error(err); }
   };
 
+  const saveTracking = async (order: Order) => {
+    const d = trackDraft[order.id] || { courier: order.courierName || "", tracking: order.trackingNumber || "" };
+    const tracking = d.tracking.trim();
+    const changed = tracking !== (order.trackingNumber || "") || d.courier !== (order.courierName || "");
+    setTrackMsg((m) => ({ ...m, [order.id]: "Saving..." }));
+    try {
+      const res = await fetch("/api/admin/orders/" + order.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courierName: d.courier || null, trackingNumber: tracking || null }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, courierName: d.courier || null, trackingNumber: tracking || null } : o)));
+        setTrackMsg((m) => ({ ...m, [order.id]: "Saved." + (changed && tracking && order.customerEmail ? " Customer has been emailed." : "") }));
+      } else {
+        setTrackMsg((m) => ({ ...m, [order.id]: data.error || "Could not save." }));
+      }
+    } catch {
+      setTrackMsg((m) => ({ ...m, [order.id]: "Could not save." }));
+    }
+  };
+
   const statusColors: Record<string, string> = {
     PENDING: "bg-yellow-100 text-yellow-800", CONFIRMED: "bg-blue-100 text-blue-800",
     PROCESSING: "bg-purple-100 text-purple-800", SHIPPED: "bg-indigo-100 text-indigo-800",
@@ -160,6 +194,7 @@ function AdminOrdersContent() {
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
                   <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">₹{Number(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</p></div>
+                  {order.trackingNumber && (<div><p className="text-xs text-gray-500">{order.courierName || "Tracking"}</p><p className="font-mono text-sm font-semibold whitespace-nowrap">{order.trackingNumber}</p></div>)}
                   {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -201,6 +236,32 @@ function AdminOrdersContent() {
                       ))}
                     </div>
                   </div>
+                  {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
+                    <div>
+                      <h3 className="font-semibold text-sm mb-2">Courier &amp; Tracking</h3>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={trackDraft[order.id]?.courier ?? order.courierName ?? ""}
+                          onChange={(e) => setTrackDraft((p) => ({ ...p, [order.id]: { courier: e.target.value, tracking: p[order.id]?.tracking ?? order.trackingNumber ?? "" } }))}
+                          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white"
+                        >
+                          <option value="">Not selected</option>
+                          {COURIERS.map((c) => (<option key={c} value={c}>{c}</option>))}
+                        </select>
+                        <input
+                          type="text"
+                          maxLength={40}
+                          placeholder="Tracking number (optional)"
+                          value={trackDraft[order.id]?.tracking ?? order.trackingNumber ?? ""}
+                          onChange={(e) => setTrackDraft((p) => ({ ...p, [order.id]: { courier: p[order.id]?.courier ?? order.courierName ?? "", tracking: e.target.value } }))}
+                          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-56 bg-white"
+                        />
+                        <button onClick={() => saveTracking(order)} className="text-xs bg-primary text-white font-bold px-4 py-2 rounded-full">Save</button>
+                      </div>
+                      {trackMsg[order.id] && <p className="text-xs text-gray-600 mt-2">{trackMsg[order.id]}</p>}
+                      <p className="text-xs text-gray-500 mt-2">Optional. The customer receives these details by email and in the WhatsApp message.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

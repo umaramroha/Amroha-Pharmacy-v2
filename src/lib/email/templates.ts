@@ -182,12 +182,46 @@ export function getOrderStatusLabel(status: string): string {
   return labels[status] || status;
 }
 
+function shippingBlockHTML(courierName?: string | null, trackingNumber?: string | null): string {
+  if (!courierName && !trackingNumber) return "";
+  const rows: string[] = [];
+  if (courierName) rows.push("<strong>Courier:</strong> " + escapeHtml(courierName));
+  if (trackingNumber) rows.push("<strong>Tracking Number:</strong> " + escapeHtml(trackingNumber));
+  return (
+    "<div style='margin-top: 16px; padding: 12px; background-color: #eff6ff; border-radius: 6px; font-size: 14px; color: #1e3a8a;'>" +
+    rows.join("<br />") +
+    (trackingNumber ? "<br /><span style='font-size: 12px; color: #4b5563;'>You can track your parcel with this number on the courier's official website or app.</span>" : "") +
+    "</div>"
+  );
+}
+
+export function getTrackingUpdateHTML(data: {
+  customerName: string;
+  orderId: string;
+  courierName?: string | null;
+  trackingNumber?: string | null;
+}): string {
+  const shortId = data.orderId.slice(-8).toUpperCase();
+  return (
+    "<div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc;'>" +
+    "<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px;'>" +
+    "<h2 style='color: #0F766E; margin-top: 0;'>Tracking Details</h2>" +
+    "<p style='font-size: 16px; color: #1f2937;'>Dear <strong>" + escapeHtml(data.customerName) + "</strong>,</p>" +
+    "<p style='font-size: 14px; color: #4b5563;'>The shipping details for your order <strong>#" + shortId + "</strong> are given below.</p>" +
+    shippingBlockHTML(data.courierName, data.trackingNumber) +
+    "<div style='margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;'><p style='font-size: 12px; color: #9ca3af; text-align: center;'>If you have any questions, please reply to this email or contact us on WhatsApp at +91 80779 88509.</p></div>" +
+    "</div></div>"
+  );
+}
+
 export function getOrderStatusUpdateHTML(data: {
   customerName: string;
   orderId: string;
   status: string;
   total: string;
   refundPending?: boolean;
+  courierName?: string | null;
+  trackingNumber?: string | null;
 }): string {
   const shortId = data.orderId.slice(-8).toUpperCase();
   
@@ -213,6 +247,7 @@ export function getOrderStatusUpdateHTML(data: {
           <strong>Current Status:</strong> ${getOrderStatusLabel(data.status)}
         </p>
         ${data.refundPending ? `<p style="font-size: 14px; color: #92400e; background-color: #fffbeb; padding: 10px; border-radius: 6px;">Your payment for this order will be refunded. Our team will contact you shortly regarding the refund.</p>` : ""}
+        ${data.status === "SHIPPED" ? shippingBlockHTML(data.courierName, data.trackingNumber) : ""}
         <p style="font-size: 14px; color: #4b5563; margin-top: 20px;">
           You can view your order details by logging into your account.
         </p>
