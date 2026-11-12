@@ -188,8 +188,8 @@ function AdminOrdersContent() {
         <div className="space-y-4">
           {orders.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
-              <div className="bg-gray-50 px-5 py-3 flex flex-wrap justify-between items-center gap-3 border-b">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="bg-gray-50 px-5 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 border-b">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0 flex-1">
                   <div><p className="text-xs text-gray-500">Order ID</p><p className="font-mono text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
                   <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">₹{Number(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
@@ -197,17 +197,17 @@ function AdminOrdersContent() {
                   {order.trackingNumber && (<div><p className="text-xs text-gray-500">{order.courierName || "Tracking"}</p><p className="font-mono text-sm font-semibold whitespace-nowrap">{order.trackingNumber}</p></div>)}
                   {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
-                  <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
+                <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:justify-end">
+                  <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
+                  <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="inline-flex items-center justify-center h-8 text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
                   {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
-                    <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">
+                    <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 rounded-full transition">
                       {order.paymentMethod === "cod" ? "Mark COD as paid" : "Mark as PAID"}
                     </button>
                   )}
-                  <button onClick={() => setPrintOrder(order)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-full transition ml-2">🖨️ Print</button>
+                  <button onClick={() => setPrintOrder(order)} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 rounded-full transition">🖨️ Print</button>
                   {whatsappUrl(order) && (
-                    <a href={whatsappUrl(order) as string} target="_blank" rel="noopener noreferrer" className="text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 py-1.5 rounded-full transition ml-2">💬 WhatsApp</a>
+                    <a href={whatsappUrl(order) as string} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 rounded-full transition">💬 WhatsApp</a>
                   )}
                 </div>
               </div>
