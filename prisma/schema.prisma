@@ -46,6 +46,9 @@ model Order {
   deliveryZone    String?
   total           Decimal
   status         String      @default("PENDING")
+  courierName    String?
+  trackingNumber String?
+  shippedAt      DateTime?
   paymentMethod  String
   paymentStatus  String      @default("PENDING")
   createdAt      DateTime    @default(now())
