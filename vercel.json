@@ -1,4 +1,7 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npx prisma generate && npm run build"
+  "buildCommand": "npx prisma generate && npm run build",
+  "regions": [
+    "sin1"
+  ]
 }
