@@ -8,6 +8,8 @@ import { getOrderStatusUpdateHTML, getOrderStatusLabel, getTrackingUpdateHTML } 
 import { parseCourier, parseTracking } from "@/lib/courier";
 import { adminSessionOptions, getAdminSession } from "@/lib/adminSession";
 import { rateLimit } from "@/lib/rateLimit";
+import { revalidateTag } from "next/cache"; // CACHE_V1
+import { PRODUCTS_CACHE_TAG } from "@/lib/products";
 
 type AdminSessionData = {
   adminId?: string;
@@ -258,6 +260,11 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     } catch (err: any) {
       console.error("Admin transaction error:", err);
       return NextResponse.json({ error: err.message || "Failed to update order" }, { status: 400 });
+    }
+
+    // Cancelling or re-activating an order changes stock: refresh the product cache
+    if (status === "CANCELLED" || oldStatus === "CANCELLED") {
+      try { revalidateTag(PRODUCTS_CACHE_TAG); } catch {}
     }
 
     const shortId = updated.id.slice(-8).toUpperCase();

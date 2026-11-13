@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cache } from "react"; // CACHE_V1
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import ProductDetailClient, { type ProductDetailProduct } from "@/components/product/ProductDetailClient";
@@ -10,11 +11,12 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-async function getActiveProduct(slug: string) {
+// Same product is needed by the page title and the page body: look it up once per request.
+const getActiveProduct = cache(async (slug: string) => {
   return prisma.product.findFirst({
     where: { slug, isActive: true },
   });
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

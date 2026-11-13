@@ -55,20 +55,32 @@ import { unstable_cache } from "next/cache";
 export const PRODUCTS_CACHE_TAG = "products";
 
 // Cache ALL active products so the DB doesn't wake up on every navigation.
-export async function getCachedProducts() {
-  return prisma.product.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      price: true,
-      mrp: true,
-      image: true,
-      stock: true,
-      category: true,
-      description: true,
-    },
-  });
-}
+// CACHE_V1: refreshed every 60 seconds, and immediately when a product is edited
+// or when an order changes stock (revalidateTag(PRODUCTS_CACHE_TAG)).
+export const getCachedProducts = unstable_cache(
+  async () => {
+    const rows = await prisma.product.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        price: true,
+        mrp: true,
+        image: true,
+        stock: true,
+        category: true,
+        description: true,
+      },
+    });
+    // Prices as text: the cache stores plain JSON, and the page needs text anyway.
+    return rows.map((p) => ({
+      ...p,
+      price: p.price.toString(),
+      mrp: p.mrp ? p.mrp.toString() : null,
+    }));
+  },
+  ["products-all-active"],
+  { tags: [PRODUCTS_CACHE_TAG], revalidate: 60 }
+);

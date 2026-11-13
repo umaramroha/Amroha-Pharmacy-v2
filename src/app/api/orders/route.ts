@@ -17,6 +17,8 @@ import { sessionOptions, SessionData } from "@/lib/session";
 import { rateLimit } from "@/lib/rateLimit";
 import { validateCoupon } from "@/lib/coupons";
 import { isCodAvailable } from "@/data/delivery";
+import { revalidateTag } from "next/cache"; // CACHE_V1
+import { PRODUCTS_CACHE_TAG } from "@/lib/products";
 
 // ==============================
 // CONSTANTS
@@ -339,6 +341,10 @@ export async function POST(request: Request) {
     // ==============================
     // 8. SEND EMAILS (unchanged behaviour; values now come from the server)
     // ==============================
+    if (!isDuplicate) {
+      try { revalidateTag(PRODUCTS_CACHE_TAG); } catch {}
+    }
+
     try {
       if (isDuplicate) return NextResponse.json({ success: true, order });
       const shortId = order.id.slice(-8).toUpperCase();

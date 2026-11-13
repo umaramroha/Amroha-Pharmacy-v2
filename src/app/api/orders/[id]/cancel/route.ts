@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
 import { rateLimit } from "@/lib/rateLimit"; // RATELIMIT_V1
+import { revalidateTag } from "next/cache"; // CACHE_V1
+import { PRODUCTS_CACHE_TAG } from "@/lib/products";
 
 const CANCELLABLE_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING"];
 
@@ -70,6 +72,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (cancellation.error === "NOT_FOUND") return NextResponse.json({ error: "Order not found" }, { status: 404 });
     if (cancellation.error === "ALREADY_CANCELLED") return NextResponse.json({ error: "This order has already been cancelled." }, { status: 400 });
     if (cancellation.error === "NOT_CANCELLABLE") return NextResponse.json({ error: "This order can no longer be cancelled." }, { status: 400 });
+
+    try { revalidateTag(PRODUCTS_CACHE_TAG); } catch {}
 
     const order = cancellation.order!;
     const shortId = order.id.slice(-8).toUpperCase();
