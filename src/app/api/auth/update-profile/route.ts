@@ -3,6 +3,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
+import { rateLimit } from "@/lib/rateLimit"; // RATELIMIT_V1
 
 export async function PATCH(request: Request) {
   try {
@@ -18,6 +19,11 @@ export async function PATCH(request: Request) {
     if (!dbCustomer || (session.lastPasswordChange && new Date(session.lastPasswordChange) < dbCustomer.lastPasswordChange)) {
       session.destroy();
       return NextResponse.json({ error: "Session expired. Please login again." }, { status: 401 });
+    }
+
+    const rate = await rateLimit("update-profile:" + session.userId, 20, 60 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
 
     const body = await request.json();

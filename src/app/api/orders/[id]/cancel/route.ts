@@ -5,6 +5,7 @@ import { escapeHtml } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { sessionOptions, SessionData } from "@/lib/session";
 import { sendCustomerEmail, sendAdminAlert } from "@/lib/notify";
+import { rateLimit } from "@/lib/rateLimit"; // RATELIMIT_V1
 
 const CANCELLABLE_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING"];
 
@@ -19,6 +20,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     if (!user || (session.lastPasswordChange && new Date(session.lastPasswordChange) < user.lastPasswordChange)) {
       session.destroy();
       return NextResponse.json({ error: "Session expired. Please login again." }, { status: 401 });
+    }
+
+    const rate = await rateLimit("cancel-order:" + session.userId, 10, 60 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later or contact us on WhatsApp." }, { status: 429 });
     }
 
     // Atomic Transaction: Status update + Stock restore

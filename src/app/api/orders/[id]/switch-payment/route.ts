@@ -8,6 +8,7 @@ import { sessionOptions, SessionData } from "@/lib/session";
 import { getPrepaidDiscount } from "@/lib/pricing";
 import { isCodAvailable, getDeliveryZone } from "@/data/delivery";
 import { sendAdminAlert } from "@/lib/notify";
+import { rateLimit } from "@/lib/rateLimit"; // RATELIMIT_V1
 
 /**
  * POST /api/orders/[id]/switch-payment   body: { newMethod: "cod" | "upi" }
@@ -29,6 +30,11 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
     const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
     if (!session.isLoggedIn || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rate = await rateLimit("switch-payment:" + session.userId, 20, 60 * 60 * 1000);
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later or contact us on WhatsApp." }, { status: 429 });
     }
 
     let body: unknown;
