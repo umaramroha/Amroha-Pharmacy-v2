@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,6 +43,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const submitLock = useRef(false); // DEDUPE_V1
   const [orderError, setOrderError] = useState("");
 
   // State for Order ID and Total Amount
@@ -214,6 +215,8 @@ export default function CheckoutPage() {
     if (!validateMobile(formData.mobile)) { setOrderError("Please enter a valid 10-digit mobile number."); return; }
     if (formData.pincode.length !== 6) { setOrderError("Please enter a valid 6-digit pincode."); return; }
 
+    if (submitLock.current) return;
+    submitLock.current = true;
     setPlacingOrder(true);
     setOrderError("");
 
@@ -239,6 +242,7 @@ export default function CheckoutPage() {
       if (!res.ok) {
         setOrderError(data.error || "Failed to place order");
         setPlacingOrder(false);
+        submitLock.current = false;
         return;
       }
 
@@ -249,6 +253,7 @@ export default function CheckoutPage() {
     } catch (err) {
       setOrderError("Network error. Please try again.");
       setPlacingOrder(false);
+      submitLock.current = false;
     }
   };
 

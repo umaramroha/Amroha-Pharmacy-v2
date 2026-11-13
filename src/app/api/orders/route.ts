@@ -234,7 +234,34 @@ export async function POST(request: Request) {
 
     const customerEmail = input.customerEmail?.trim() || null;
 
+    // DEDUPE_V1: if the same customer sends the same order again within 30 seconds
+    // (double click / network retry), return the first order instead of creating another.
+    let isDuplicate = false as boolean;
+
     const order = await prisma.$transaction(async (tx) => {
+      // One request per customer at a time, so two simultaneous clicks cannot both pass the check below.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))`;
+
+      const recent = await tx.order.findFirst({
+        where: {
+          customerId: userId,
+          status: "PENDING",
+          paymentMethod: input.paymentMethod,
+          pincode: input.pincode,
+          createdAt: { gte: new Date(Date.now() - 30 * 1000) },
+        },
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+      });
+      if (recent && recent.total.equals(total)) {
+        const key = (rows: { productId: string; quantity: number }[]) =>
+          rows.map((r) => r.productId + ":" + r.quantity).sort().join("|");
+        if (key(recent.items) === key(lines.map((l) => ({ productId: l.productId, quantity: l.quantity })))) {
+          isDuplicate = true;
+          return recent;
+        }
+      }
+
       // Coupon: lock the coupon row so two customers cannot both take the last use,
       // then re-check inside the transaction.
       if (couponCode) {
@@ -313,6 +340,7 @@ export async function POST(request: Request) {
     // 8. SEND EMAILS (unchanged behaviour; values now come from the server)
     // ==============================
     try {
+      if (isDuplicate) return NextResponse.json({ success: true, order });
       const shortId = order.id.slice(-8).toUpperCase();
       const fullAddress = `${input.address}, ${input.city}, ${input.state} - ${input.pincode}`;
 
