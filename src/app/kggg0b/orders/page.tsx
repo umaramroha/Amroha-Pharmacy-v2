@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { COURIERS } from "@/lib/courier";
+import { formatINR } from "@/lib/money";
 
 type OrderItem = {
   id: string; quantity: number; price: string;
@@ -25,7 +26,7 @@ function whatsappUrl(order: Order): string | null {
   if (last10.length !== 10) return null;
   const id = order.id.slice(-8).toUpperCase();
   const first = (order.customerName || "").trim().split(" ")[0] || "Customer";
-  const amount = "₹" + Number(order.total);
+  const amount = formatINR(order.total);
   const isCod = order.paymentMethod === "cod";
   let body: string;
   switch (order.status) {
@@ -192,10 +193,10 @@ function AdminOrdersContent() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 min-w-0 flex-1">
                   <div><p className="text-xs text-gray-500">Order ID</p><p className="font-mono text-sm font-semibold">#{order.id.slice(-8).toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Customer</p><p className="text-sm font-medium">{order.customerName}</p></div>
-                  <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">₹{Number(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
+                  <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">{formatINR(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</p></div>
                   {order.trackingNumber && (<div><p className="text-xs text-gray-500">{order.courierName || "Tracking"}</p><p className="font-mono text-sm font-semibold whitespace-nowrap">{order.trackingNumber}</p></div>)}
-                  {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− ₹{order.couponDiscount})</p></div>)}
+                  {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− {formatINR(order.couponDiscount)})</p></div>)}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:justify-end">
                   <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
@@ -219,8 +220,8 @@ function AdminOrdersContent() {
                     <div className="space-y-2 bg-white rounded-md p-3 border">
                       {order.items.map((item) => (
                         <div key={item.id} className="flex items-center gap-3 text-sm">
-                          <div className="flex-1"><p className="font-medium">{item.product.name}</p><p className="text-xs text-gray-500">Qty: {item.quantity} × ₹{item.price}</p></div>
-                          <span className="font-semibold">₹{parseFloat(item.price) * item.quantity}</span>
+                          <div className="flex-1"><p className="font-medium">{item.product.name}</p><p className="text-xs text-gray-500">Qty: {item.quantity} × {formatINR(item.price)}</p></div>
+                          <span className="font-semibold">{formatINR(parseFloat(item.price) * item.quantity)}</span>
                         </div>
                       ))}
                     </div>
@@ -314,15 +315,15 @@ function AdminOrdersContent() {
                     <tr key={idx} className="border-b border-gray-200">
                       <td className="py-3 px-2 font-medium">{item.product?.name || "Product"}</td>
                       <td className="text-center py-3 px-2">{item.quantity}</td>
-                      <td className="text-right py-3 px-2">₹{item.price}</td>
-                      <td className="text-right py-3 px-2 font-medium">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
+                      <td className="text-right py-3 px-2">{formatINR(item.price)}</td>
+                      <td className="text-right py-3 px-2 font-medium">{formatINR(parseFloat(item.price) * item.quantity)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               <div className="flex justify-end text-sm"><div className="w-full sm:w-1/2">
-                {printOrder.couponCode && (<div className="flex justify-between py-2 text-sm text-gray-600"><span>Coupon ({printOrder.couponCode}):</span><span>− ₹{printOrder.couponDiscount}</span></div>)}
-                <div className="flex justify-between py-3 border-b-2 border-gray-800 font-bold text-lg text-gray-900"><span>Grand Total:</span><span>₹{printOrder.total}</span></div>
+                {printOrder.couponCode && (<div className="flex justify-between py-2 text-sm text-gray-600"><span>Coupon ({printOrder.couponCode}):</span><span>− {formatINR(printOrder.couponDiscount)}</span></div>)}
+                <div className="flex justify-between py-3 border-b-2 border-gray-800 font-bold text-lg text-gray-900"><span>Grand Total:</span><span>{formatINR(printOrder.total)}</span></div>
               </div></div>
             </div>
           </div>

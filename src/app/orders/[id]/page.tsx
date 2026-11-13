@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Smartphone,
   Truck,
+  Copy,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { getWhatsAppLink } from "@/lib/whatsapp";
@@ -57,6 +58,8 @@ type Order = {
   paymentMethod: string;
   paymentStatus: string;
   createdAt: string;
+  courierName: string | null;
+  trackingNumber: string | null;
   items: OrderItem[];
 };
 
@@ -147,6 +150,7 @@ export default function OrderDetailPage(
   const [cancelError, setCancelError] = useState("");
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [isSwitchingPayment, setIsSwitchingPayment] = useState(false);
+  const [trackCopied, setTrackCopied] = useState(false);
   const [switchError, setSwitchError] = useState("");
 
   useEffect(() => {
@@ -385,6 +389,48 @@ export default function OrderDetailPage(
             </p>
           </div>
         </div>
+      )}
+
+      {/* Shipping details (shown once the order is dispatched and the courier details have been added) */}
+      {(order.status === "SHIPPED" || order.status === "DELIVERED") && (order.courierName || order.trackingNumber) && (
+        <section className={card + " mb-6 p-4 md:p-5"}>
+          <div className="flex items-start gap-3">
+            <Truck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm font-semibold text-gray-900">Shipping details</h2>
+              {order.courierName && (
+                <p className="mt-1 text-sm text-gray-600">
+                  Courier: <span className="font-medium text-gray-900">{order.courierName}</span>
+                </p>
+              )}
+              {order.trackingNumber && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-600">Tracking number:</span>
+                  <span className="break-all font-mono text-sm font-semibold text-gray-900">{order.trackingNumber}</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(order.trackingNumber || "");
+                        setTrackCopied(true);
+                        setTimeout(() => setTrackCopied(false), 2000);
+                      } catch {}
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    {trackCopied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              )}
+              {order.trackingNumber && (
+                <p className="mt-2 text-xs text-gray-500">
+                  You can track your parcel with this number on the courier website or app.
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Payment due (UPI orders that are still unpaid) */}

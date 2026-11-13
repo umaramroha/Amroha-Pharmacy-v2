@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatINR } from "@/lib/money";
 
 type OrderItem = {
   id: string;
@@ -188,11 +189,11 @@ export default function OrdersPage() {
                         {item.product.name}
                       </Link>
                       <p className="text-xs text-gray-500">
-                        Qty: {item.quantity} × ₹{item.price}
+                        Qty: {item.quantity} × {formatINR(item.price)}
                       </p>
                     </div>
                     <span className="font-semibold text-sm">
-                      ₹{parseFloat(item.price) * item.quantity}
+                      {formatINR(parseFloat(item.price) * item.quantity)}
                     </span>
                   </div>
                 ))}
@@ -213,7 +214,7 @@ export default function OrdersPage() {
                 <div className="text-right">
                   <p className="text-xs text-gray-500">Total</p>
                   <p className="text-xl font-bold text-primary">
-                    ₹{order.total}
+                    {formatINR(order.total)}
                   </p>
                 </div>
               </div>
