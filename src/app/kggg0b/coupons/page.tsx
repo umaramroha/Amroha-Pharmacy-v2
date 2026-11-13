@@ -104,6 +104,7 @@ export default function AdminCouponsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null); // ALERTS_V1
 
   useEffect(() => {
     fetchCoupons();
@@ -242,13 +243,13 @@ export default function AdminCouponsPage() {
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Failed to update coupon");
+        setNotice({ ok: false, text: data.error || "Failed to update coupon" });
         return;
       }
       await fetchCoupons();
     } catch (err) {
       console.error("Toggle coupon error", err);
-      alert("Network error. Please try again.");
+      setNotice({ ok: false, text: "Network error. Please try again." });
     }
   };
 
@@ -262,14 +263,14 @@ export default function AdminCouponsPage() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.error || "Failed to delete coupon");
+        setNotice({ ok: false, text: data.error || "Failed to delete coupon" });
         return;
       }
       setMessage("Coupon deleted");
       await fetchCoupons();
     } catch (err) {
       console.error("Delete coupon error", err);
-      alert("Network error. Please try again.");
+      setNotice({ ok: false, text: "Network error. Please try again." });
     }
   };
 
@@ -314,6 +315,13 @@ export default function AdminCouponsPage() {
       {message && !showForm && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
           {message}
+        </div>
+      )}
+
+      {notice && (
+        <div className={"mb-4 p-3 rounded-lg text-sm border flex items-center justify-between gap-3 " + (notice.ok ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700")}>
+          <span>{notice.text}</span>
+          <button type="button" onClick={() => setNotice(null)} className="text-xs font-bold">Dismiss</button>
         </div>
       )}
 

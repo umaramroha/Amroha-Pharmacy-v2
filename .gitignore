@@ -9,7 +9,6 @@ scripts/seed-admin.js
 scripts/reset-admin.js
 scripts/check-admin.js
 .babelrc
-.babelrc
 
 # Backup files
 *.bak
@@ -18,4 +17,3 @@ scripts/check-admin.js
 tsconfig.tsbuildinfo
 all-code.txt
 AP30oct.txt
-*.txt

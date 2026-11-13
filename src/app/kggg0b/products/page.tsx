@@ -72,6 +72,7 @@ export default function AdminProductsPage() {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null); // ALERTS_V1
 
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
 
@@ -312,14 +313,14 @@ export default function AdminProductsPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert(data.error || "Failed to delete product");
+        setNotice({ ok: false, text: data.error || "Failed to delete product" });
         return;
       }
-      alert(data.message || "Done");
+      setNotice({ ok: true, text: data.message || "Done" });
       await fetchProducts();
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Delete failed. Check your connection and try again.");
+      setNotice({ ok: false, text: "Delete failed. Check your connection and try again." });
     }
   };
 
@@ -739,6 +740,13 @@ export default function AdminProductsPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {notice && (
+        <div className={"mb-4 p-3 rounded-lg text-sm border flex items-center justify-between gap-3 " + (notice.ok ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700")}>
+          <span>{notice.text}</span>
+          <button type="button" onClick={() => setNotice(null)} className="text-xs font-bold">Dismiss</button>
         </div>
       )}
 
