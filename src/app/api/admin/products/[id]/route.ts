@@ -121,6 +121,15 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
+    // MEDINFO_V1: empty text clears the field
+    if (data.manufacturer !== undefined) updateData.manufacturer = data.manufacturer?.trim() || null;
+    if (data.composition !== undefined) updateData.composition = data.composition?.trim() || null;
+    if (data.usage !== undefined) updateData.usage = data.usage?.trim() || null;
+    if (data.warnings !== undefined) updateData.warnings = data.warnings?.trim() || null;
+    if (data.batchNumber !== undefined) updateData.batchNumber = data.batchNumber?.trim() || null;
+    if (data.expiryDate !== undefined)
+      updateData.expiryDate = data.expiryDate ? new Date(data.expiryDate + "T00:00:00.000Z") : null;
+
     if (data.images !== undefined) {
       updateData.images = data.images;
       if (data.images.length > 0) {

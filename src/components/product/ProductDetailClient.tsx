@@ -26,8 +26,18 @@ export type ProductDetailProduct = {
   category: string | null;
   description: string | null;
   stock: number;
+  manufacturer?: string | null;
+  composition?: string | null;
+  usage?: string | null;
+  warnings?: string | null;
+  batchNumber?: string | null;
+  expiryDate?: string | null;
 };
 type Product = ProductDetailProduct;
+
+// MEDINFO_V1: "Dec 2027" style expiry label
+const formatExpiry = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", { month: "short", year: "numeric", timeZone: "UTC" });
 
 type Tab =
   | "description"
@@ -1039,6 +1049,40 @@ export default function ProductDetailClient({
                     "Product information is currently unavailable."}
                 </p>
 
+                {(product.manufacturer || product.composition || product.batchNumber || product.expiryDate) && (
+                  <div className="mt-6 rounded-xl border border-gray-100 overflow-hidden">
+                    <h3 className="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-900 border-b border-gray-100">
+                      Product Details
+                    </h3>
+                    <dl className="divide-y divide-gray-100 text-sm">
+                      {product.manufacturer && (
+                        <div className="flex gap-4 px-4 py-3">
+                          <dt className="w-32 shrink-0 text-gray-500">Manufacturer</dt>
+                          <dd className="text-gray-800">{product.manufacturer}</dd>
+                        </div>
+                      )}
+                      {product.composition && (
+                        <div className="flex gap-4 px-4 py-3">
+                          <dt className="w-32 shrink-0 text-gray-500">Composition</dt>
+                          <dd className="text-gray-800 whitespace-pre-line">{product.composition}</dd>
+                        </div>
+                      )}
+                      {product.batchNumber && (
+                        <div className="flex gap-4 px-4 py-3">
+                          <dt className="w-32 shrink-0 text-gray-500">Batch No.</dt>
+                          <dd className="text-gray-800">{product.batchNumber}</dd>
+                        </div>
+                      )}
+                      {product.expiryDate && (
+                        <div className="flex gap-4 px-4 py-3">
+                          <dt className="w-32 shrink-0 text-gray-500">Expiry</dt>
+                          <dd className="text-gray-800">{formatExpiry(product.expiryDate)}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </div>
+                )}
+
                 <div className="mt-6 flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
                   <div className="text-gray-500 shrink-0 mt-0.5">
                     <InfoIcon />
@@ -1088,6 +1132,13 @@ export default function ProductDetailClient({
                 <h2 className="text-xl font-bold text-gray-900 mb-6">
                   How to Use
                 </h2>
+
+                {product.usage && (
+                  <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-100">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Usage &amp; Dosage</h3>
+                    <p className="text-sm text-gray-700 leading-6 whitespace-pre-line">{product.usage}</p>
+                  </div>
+                )}
 
                 <div className="space-y-6">
                   {[
@@ -1147,6 +1198,13 @@ export default function ProductDetailClient({
                 <h2 className="text-xl font-bold text-gray-900 mb-5">
                   Precautions
                 </h2>
+
+                {product.warnings && (
+                  <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-100">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Warnings</h3>
+                    <p className="text-sm text-gray-700 leading-6 whitespace-pre-line">{product.warnings}</p>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {[

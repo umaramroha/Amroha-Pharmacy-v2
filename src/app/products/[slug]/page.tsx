@@ -60,6 +60,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
     category: item.category,
     description: item.description,
     stock: item.stock,
+    // MEDINFO_V1
+    manufacturer: item.manufacturer,
+    composition: item.composition,
+    usage: item.usage,
+    warnings: item.warnings,
+    batchNumber: item.batchNumber,
+    expiryDate: item.expiryDate ? item.expiryDate.toISOString() : null,
   });
 
   

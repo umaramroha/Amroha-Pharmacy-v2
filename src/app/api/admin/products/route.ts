@@ -102,6 +102,13 @@ export async function POST(request: Request) {
         category: data.category?.trim() || null,
         stock: data.stock ?? 0,
         isActive: data.isActive ?? true,
+        // MEDINFO_V1
+        manufacturer: data.manufacturer?.trim() || null,
+        composition: data.composition?.trim() || null,
+        usage: data.usage?.trim() || null,
+        warnings: data.warnings?.trim() || null,
+        batchNumber: data.batchNumber?.trim() || null,
+        expiryDate: data.expiryDate ? new Date(data.expiryDate + "T00:00:00.000Z") : null,
       },
     });
 

@@ -17,6 +17,12 @@ type Product = {
   category: string | null;
   stock: number;
   isActive: boolean;
+  manufacturer: string | null;
+  composition: string | null;
+  usage: string | null;
+  warnings: string | null;
+  batchNumber: string | null;
+  expiryDate: string | null;
 };
 
 const EMPTY_FORM = {
@@ -29,7 +35,25 @@ const EMPTY_FORM = {
   images: [] as string[],
   category: "general-problems",
   stock: "0",
+  manufacturer: "",
+  composition: "",
+  usage: "",
+  warnings: "",
+  batchNumber: "",
+  expiryDate: "",
 };
+
+// MEDINFO_V1: small expiry label for the product list
+function expiryInfo(iso: string | null): { text: string; cls: string } | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  const days = Math.ceil((t - Date.now()) / 86400000);
+  const label = new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  if (days < 0) return { text: "Expired " + label, cls: "bg-red-100 text-red-700" };
+  if (days <= 60) return { text: "Expires in " + days + " days (" + label + ")", cls: "bg-orange-100 text-orange-700" };
+  return { text: "Exp: " + label, cls: "bg-gray-100 text-gray-600" };
+}
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -174,6 +198,12 @@ export default function AdminProductsPage() {
       images: product.images || [],
       category: product.category || "general-problems",
       stock: product.stock.toString(),
+      manufacturer: product.manufacturer || "",
+      composition: product.composition || "",
+      usage: product.usage || "",
+      warnings: product.warnings || "",
+      batchNumber: product.batchNumber || "",
+      expiryDate: product.expiryDate ? product.expiryDate.slice(0, 10) : "",
     });
     setShowForm(true);
     setError("");
@@ -602,6 +632,76 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
+              <div className="md:col-span-2 pt-2 border-t">
+                <p className="text-sm font-semibold text-gray-800">Medicine details (optional)</p>
+                <p className="text-xs text-gray-500">Leave a field empty and it will not be shown to customers.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manufacturer</label>
+                <input
+                  type="text"
+                  maxLength={120}
+                  value={formData.manufacturer}
+                  onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Batch number</label>
+                <input
+                  type="text"
+                  maxLength={60}
+                  value={formData.batchNumber}
+                  onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expiry date</label>
+                <input
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Composition / Ingredients</label>
+                <textarea
+                  rows={3}
+                  maxLength={3000}
+                  value={formData.composition}
+                  onChange={(e) => setFormData({ ...formData, composition: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary resize-none"
+                ></textarea>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Usage / Dosage</label>
+                <textarea
+                  rows={3}
+                  maxLength={2000}
+                  value={formData.usage}
+                  onChange={(e) => setFormData({ ...formData, usage: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary resize-none"
+                ></textarea>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Warnings / Precautions</label>
+                <textarea
+                  rows={3}
+                  maxLength={2000}
+                  value={formData.warnings}
+                  onChange={(e) => setFormData({ ...formData, warnings: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-primary resize-none"
+                ></textarea>
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -716,6 +816,18 @@ export default function AdminProductsPage() {
                     {product.category}
                   </span>
                 </div>
+                {(product.batchNumber || product.expiryDate) && (
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {product.batchNumber && (
+                      <span className="text-xs text-gray-500">Batch: {product.batchNumber}</span>
+                    )}
+                    {expiryInfo(product.expiryDate) && (
+                      <span className={"text-xs px-2 py-0.5 rounded " + expiryInfo(product.expiryDate)!.cls}>
+                        {expiryInfo(product.expiryDate)!.text}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 flex-wrap">

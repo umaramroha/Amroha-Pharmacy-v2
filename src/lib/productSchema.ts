@@ -188,6 +188,32 @@ const isActive = z.boolean({
   invalid_type_error: "isActive must be true or false",
 });
 
+// MEDINFO_V1: optional medicine details (empty = not shown to customers)
+function optText(label: string, max: number) {
+  return z
+    .string({ invalid_type_error: label + " must be text" })
+    .trim()
+    .max(max, label + " is too long (max " + max + " characters)")
+    .nullable()
+    .optional();
+}
+const manufacturer = optText("Manufacturer", 120);
+const composition = optText("Composition", 3000);
+const usage = optText("Usage", 2000);
+const warnings = optText("Warnings", 2000);
+const batchNumber = optText("Batch number", 60);
+const expiryDate = z
+  .preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+    z
+      .string({ invalid_type_error: "Expiry date must be a date" })
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Expiry date must be a valid date")
+      .refine((v) => !Number.isNaN(Date.parse(v)), "Expiry date must be a valid date")
+      .nullable()
+  )
+  .optional();
+
 // ---------------------------------------------------------------
 // cross-field rule: MRP (if given) must be >= selling price
 // ---------------------------------------------------------------
@@ -229,6 +255,12 @@ export const createProductSchema = z
       category,
       stock: stock().optional(), // missing = 0
       isActive: isActive.optional(), // missing = true
+      manufacturer,
+      composition,
+      usage,
+      warnings,
+      batchNumber,
+      expiryDate,
     },
     objectError
   )
@@ -251,6 +283,12 @@ export const updateProductSchema = z
       category,
       stock: stock().optional(),
       isActive: isActive.optional(),
+      manufacturer,
+      composition,
+      usage,
+      warnings,
+      batchNumber,
+      expiryDate,
     },
     objectError
   )
