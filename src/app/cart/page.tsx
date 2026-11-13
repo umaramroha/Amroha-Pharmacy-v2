@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
@@ -75,7 +76,7 @@ export default function CartPage() {
                   {/* Image */}
                   <Link href={`/products/${item.slug}`} className="w-[88px] h-[110px] md:w-[100px] md:h-[120px] shrink-0 rounded-lg bg-[#f5f7f6] overflow-hidden border border-gray-100 flex items-center justify-center">
                     {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={optimizeImage(item.image, 200)} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       <ShoppingBag className="w-8 h-8 text-gray-300" />
                     )}

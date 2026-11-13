@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
@@ -72,7 +73,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="product-image-wrap overflow-hidden transition-shadow duration-300 group-hover:shadow-[inset_0_0_24px_rgba(8,127,115,0.08)]">
             {product.image ? (
               <img
-                src={product.image}
+                src={optimizeImage(product.image, 500)}
                 alt={product.name}
                 loading="lazy"
                 className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:group-hover:scale-100"

@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -523,7 +524,7 @@ export default function ProductDetailClient({
               <div className="aspect-[4/3] sm:aspect-square bg-white">
                 {gallery.length > 0 && gallery[activeImage] ? (
                   <img
-                    src={gallery[activeImage]}
+                    src={optimizeImage(gallery[activeImage], 900)}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -554,7 +555,7 @@ export default function ProductDetailClient({
                     aria-label={`View image ${idx + 1}`}
                   >
                     <img
-                      src={img}
+                      src={optimizeImage(img, 160)}
                       alt={`${product.name} ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -1309,7 +1310,7 @@ export default function ProductDetailClient({
 
                       {item.image ? (
                         <img
-                          src={item.image}
+                          src={optimizeImage(item.image, 500)}
                           alt={item.name}
                           loading="lazy"
                           className="w-full h-full object-contain group-hover:scale-[1.04] transition-transform duration-300"

@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
@@ -79,7 +80,7 @@ export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
                   content = (
                     <div className={`relative ${sizeClass} bg-gray-100 overflow-hidden`}>
                       {promo.image ? (
-                        <img src={promo.image} alt={promo.title || "Banner"} className="w-full h-full object-cover object-center" />
+                        <img src={optimizeImage(promo.image, 1400)} alt={promo.title || "Banner"} className="w-full h-full object-cover object-center" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">Banner</div>
                       )}
@@ -89,7 +90,7 @@ export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
                   content = (
                     <div className={`relative ${sizeClass} bg-gray-100 overflow-hidden`}>
                       {promo.image && (
-                        <img src={promo.image} alt={promo.title} className="w-full h-full object-cover object-center" />
+                        <img src={optimizeImage(promo.image, 1400)} alt={promo.title} className="w-full h-full object-cover object-center" />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-center p-6 md:p-12 text-white">
                         <p className="text-[10px] md:text-xs font-bold tracking-wide uppercase opacity-90 mb-1 md:mb-2">{promo.brand}</p>
@@ -109,7 +110,7 @@ export default function PromoCarousel({ banners }: { banners: BannerDTO[] }) {
                       </div>
                       <div className="shrink-0 w-[40%] md:w-[45%] h-full relative z-0 flex items-center justify-end pr-4 md:pr-8">
                         {promo.image ? (
-                          <img src={promo.image} alt={promo.title} className="w-full h-[80%] md:h-[90%] object-contain drop-shadow-xl" />
+                          <img src={optimizeImage(promo.image, 800)} alt={promo.title} className="w-full h-[80%] md:h-[90%] object-contain drop-shadow-xl" />
                         ) : (
                           <div className="w-full h-full bg-white/40 rounded flex items-center justify-center text-gray-400 text-xs">Image</div>
                         )}

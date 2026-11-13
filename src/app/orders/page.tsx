@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -175,7 +176,7 @@ export default function OrdersPage() {
                     {item.product.image && (
                       <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden shrink-0">
                         <img
-                          src={item.product.image}
+                          src={optimizeImage(item.product.image, 160)}
                           alt={item.product.name}
                           className="w-full h-full object-cover"
                         />

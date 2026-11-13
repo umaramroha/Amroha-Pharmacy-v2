@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 
 import { useState, useEffect, use, type ComponentType } from "react";
 import Link from "next/link";
@@ -542,7 +543,7 @@ export default function OrderDetailPage(
                   >
                     {item.product.image ? (
                       <img
-                        src={item.product.image}
+                        src={optimizeImage(item.product.image, 160)}
                         alt={item.product.name}
                         className="h-full w-full object-cover"
                       />

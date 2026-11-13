@@ -1,4 +1,5 @@
 "use client";
+import { optimizeImage } from "@/lib/img";
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
 import { useCart } from "@/contexts/CartContext";
@@ -52,7 +53,7 @@ export default function HomeProductCard({ product }: { product: Product }) {
           </span>
         )}
         {product.image ? (
-          <img src={product.image} alt={product.name} className="h-full w-full object-contain p-2 mix-blend-multiply" loading="lazy" />
+          <img src={optimizeImage(product.image, 400)} alt={product.name} className="h-full w-full object-contain p-2 mix-blend-multiply" loading="lazy" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray-300 text-4xl">🌿</div>
         )}
