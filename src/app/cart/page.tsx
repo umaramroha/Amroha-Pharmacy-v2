@@ -176,7 +176,7 @@ export default function CartPage() {
               </a>
 
               <div className="mt-5 pt-5 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                <ShieldCheck className="w-4 h-4 text-green-600" /> 100% Authentic Medicines
+                <ShieldCheck className="w-4 h-4 text-green-600" /> Sourced from authorised suppliers
               </div>
             </div>
           </div>

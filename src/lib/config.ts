@@ -11,12 +11,6 @@ export const siteConfig = {
   upiName: "Amroha Pharmacy",
 };
 
-export const deliveryConfig = {
-  areas: ["All India"],
-  fee: 50,
-  freeAbove: 500,
-};
-
 export const categories = [
   { name: "Male Problems", slug: "male-problems" },
   { name: "Female Problems", slug: "female-problems" },

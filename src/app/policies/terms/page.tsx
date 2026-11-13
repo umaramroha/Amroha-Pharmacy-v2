@@ -528,8 +528,8 @@ export default function TermsPage() {
             </p>
 
             <p>
-              We shall endeavour to acknowledge and resolve complaints within
-              the timelines prescribed under applicable law.
+              We shall acknowledge complaints within 48 hours of receipt and
+              endeavour to resolve them within one month of receipt.
             </p>
 
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mt-8 mb-3">

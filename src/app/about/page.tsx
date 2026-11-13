@@ -18,8 +18,8 @@ export default function AboutPage() {
             About Amroha Pharmacy
           </h1>
           <p className="text-base md:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed">
-            Authentic Ayurvedic aur Unani medicines, trusted by families
-            across India — delivered from the heart of Amroha, Uttar Pradesh.
+            Ayurvedic and Unani wellness products for families across India,
+            delivered from Amroha, Uttar Pradesh.
           </p>
         </div>
       </section>
@@ -110,8 +110,8 @@ export default function AboutPage() {
             {[
               {
                 icon: "✅",
-                title: "100% Authentic Products",
-                desc: "Sourced directly from trusted manufacturers and authorised suppliers. Genuine Ayurvedic and Unani medicines only.",
+                title: "Authorised Sourcing",
+                desc: "We source products from manufacturers, brands and authorised distributors. Manufacturer, batch and expiry details are shown on the product page where available.",
               },
               {
                 icon: "💰",
@@ -135,8 +135,8 @@ export default function AboutPage() {
               },
               {
                 icon: "🔒",
-                title: "Safe & Secure",
-                desc: "Secure payments via UPI, protected checkout, and privacy-focused handling of your personal data.",
+                title: "Payment & Privacy",
+                desc: "Pay by UPI or Cash on Delivery (where available). Your personal data is handled as described in our Privacy Policy.",
               },
             ].map((item) => (
               <div

@@ -18,7 +18,7 @@ export const deliveryZones: DeliveryZone[] = [
     deliveryFee: 0,
     freeAbove: 0,
     discount: 5,
-    offerMessage: "🎉 Amroha me FREE Delivery + 5% OFF!",
+    offerMessage: "🎉 Free delivery + 5% OFF in Amroha!",
   },
   {
     name: "Nearby / Priority Zone",
