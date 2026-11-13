@@ -21,6 +21,12 @@ model Product {
   isActive    Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  manufacturer String?
+  composition  String?
+  usage        String?
+  warnings     String?
+  batchNumber  String?
+  expiryDate   DateTime?
   orderItems  OrderItem[]
   @@index([isActive, category])
   @@index([isActive, createdAt])
