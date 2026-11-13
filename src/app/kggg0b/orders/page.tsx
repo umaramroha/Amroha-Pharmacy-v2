@@ -80,6 +80,8 @@ function AdminOrdersContent() {
   const [printOrder, setPrintOrder] = useState<any>(null);
   const [trackDraft, setTrackDraft] = useState<Record<string, { courier: string; tracking: string }>>({});
   const [trackMsg, setTrackMsg] = useState<Record<string, string>>({});
+  const [actionError, setActionError] = useState("");
+  // ORDER_RULES_V1
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -113,7 +115,11 @@ function AdminOrdersContent() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+        setActionError("");
+        fetchOrders();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setActionError(d.error || "Could not update the order.");
       }
     } catch (err) { console.error("Update error:", err); } finally { setUpdating(null); }
   };
@@ -126,7 +132,11 @@ function AdminOrdersContent() {
         body: JSON.stringify({ paymentStatus }),
       });
       if (res.ok) {
+        setActionError("");
         setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, paymentStatus } : o)));
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setActionError(d.error || "Could not update the payment status.");
       }
     } catch (err) { console.error(err); }
   };
@@ -180,6 +190,13 @@ function AdminOrdersContent() {
         ))}
       </div>
 
+      {actionError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 flex items-center justify-between gap-3">
+          <span>{actionError}</span>
+          <button onClick={() => setActionError("")} className="text-xs font-bold">Dismiss</button>
+        </div>
+      )}
+
       {orders.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg border">
           <div className="text-6xl mb-4">📦</div>
@@ -204,6 +221,11 @@ function AdminOrdersContent() {
                   {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
                     <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 rounded-full transition">
                       {order.paymentMethod === "cod" ? "Mark COD as paid" : "Mark as PAID"}
+                    </button>
+                  )}
+                  {order.paymentStatus === "REFUND_PENDING" && (
+                    <button onClick={() => updatePaymentStatus(order.id, "REFUNDED")} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold px-3 rounded-full transition">
+                      Mark as refunded
                     </button>
                   )}
                   <button onClick={() => setPrintOrder(order)} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 rounded-full transition">🖨️ Print</button>

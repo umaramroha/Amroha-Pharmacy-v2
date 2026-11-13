@@ -127,6 +127,9 @@ function getPaymentStatus(order: Order, amountDue: string) {
       return { text: "Paid", className: "text-green-600" };
     case "REFUND_PENDING":
       return { text: "Refund pending", className: "text-orange-600" };
+    case "REFUNDED":
+      return { text: "Refunded", className: "text-green-600" };
+    // ORDER_RULES_V1
     case "PENDING":
       return order.paymentMethod === "cod"
         ? { text: `Pay ${amountDue} on delivery`, className: "text-gray-900" }

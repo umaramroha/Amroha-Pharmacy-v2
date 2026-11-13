@@ -32,7 +32,16 @@ const VALID_STATUSES = [
   "DELIVERED",
   "CANCELLED",
 ];
-const VALID_PAYMENT_STATUSES = ["PENDING", "PAID", "REFUND_PENDING", "CANCELLED"];
+const VALID_PAYMENT_STATUSES = ["PENDING", "PAID", "REFUND_PENDING", "REFUNDED", "CANCELLED"];
+
+// ORDER_RULES_V1
+// Payment status the admin may set by hand (from -> allowed next values).
+// REFUND_PENDING and CANCELLED are set automatically when an order is cancelled.
+const MANUAL_PAYMENT_MOVES: Record<string, string[]> = {
+  PENDING: ["PAID"],
+  PAID: ["PENDING"],
+  REFUND_PENDING: ["REFUNDED"],
+};
 
 // GET single order
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
@@ -147,6 +156,29 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
           throw new Error("This order is cancelled. Re-activate it before marking it as paid.");
         }
 
+        // Guard: a delivered order cannot be cancelled (the parcel is with the customer).
+        if (status === "CANCELLED" && currentOrder.status === "DELIVERED") {
+          throw new Error("A delivered order cannot be cancelled.");
+        }
+
+        // Guard: manual payment status changes must follow the allowed moves.
+        // (Cancel / re-activate set the payment status themselves, so they are skipped here.)
+        const isCancelOrReactivate =
+          (status === "CANCELLED" && currentOrder.status !== "CANCELLED") ||
+          (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED");
+        if (paymentStatus && !isCancelOrReactivate && paymentStatus !== currentOrder.paymentStatus) {
+          const allowedNext = MANUAL_PAYMENT_MOVES[currentOrder.paymentStatus] || [];
+          if (!allowedNext.includes(paymentStatus)) {
+            throw new Error("Payment status cannot be changed from " + currentOrder.paymentStatus + " to " + paymentStatus + ".");
+          }
+          if (currentOrder.status === "CANCELLED" && paymentStatus !== "REFUNDED") {
+            throw new Error("This order is cancelled. Re-activate it first.");
+          }
+          if (currentOrder.status !== "CANCELLED" && paymentStatus === "REFUNDED") {
+            throw new Error("Only a cancelled order can be marked as refunded.");
+          }
+        }
+
         // Case 1: Cancelling the order
         if (status === "CANCELLED" && currentOrder.status !== "CANCELLED") {
           const updatedRes = await tx.order.updateMany({
@@ -173,7 +205,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         else if (currentOrder.status === "CANCELLED" && status && status !== "CANCELLED") {
           const updatedRes = await tx.order.updateMany({
             where: { id: params.id, status: "CANCELLED" },
-            data: { status, paymentStatus: "PENDING" },
+            // Money still with us (refund not done yet) stays PAID; a completed refund or unpaid order starts again as PENDING.
+            data: { status, paymentStatus: currentOrder.paymentStatus === "REFUND_PENDING" ? "PAID" : "PENDING" },
           });
 
           if (updatedRes.count === 0) {
