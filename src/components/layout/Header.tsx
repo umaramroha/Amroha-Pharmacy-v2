@@ -109,7 +109,7 @@ export default function Header() {
                 </>
               )}
             </div>
-            <Link href="/blogs" className={`nav-link ${pathname.startsWith("/blogs") ? "nav-link-active" : ""}`}>Wellness journal</Link>
+            <Link href="/blogs" className={`nav-link ${pathname.startsWith("/blogs") ? "nav-link-active" : ""}`}>Health Tips</Link>
             <Link href="/about" className={`nav-link ${pathname === "/about" ? "nav-link-active" : ""}`}>About</Link>
           </nav>
 
@@ -170,7 +170,7 @@ export default function Header() {
         <div className="border-t border-slate-200 bg-white lg:hidden">
           <nav className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6" aria-label="Mobile navigation">
             {[
-              ["Home", "/"], ["Shop products", "/products"], ["Shop by concern", "/concerns"], ["Wellness journal", "/blogs"], ["About us", "/about"], ["Contact", "/contact"],
+              ["Home", "/"], ["Shop products", "/products"], ["Shop by concern", "/concerns"], ["Health Tips", "/blogs"], ["About us", "/about"], ["Contact", "/contact"],
             ].map(([label, href]) => <Link key={href} href={href} className="mobile-nav-link">{label}<span>→</span></Link>)}
             {isLoggedIn ? <><Link href="/profile" className="mobile-nav-link">My profile<span>→</span></Link><Link href="/orders" className="mobile-nav-link">My orders<span>→</span></Link><button onClick={handleLogout} className="mobile-nav-link w-full text-left text-rose-600">Log out<span>→</span></button></> : <Link href="/login" className="mt-2 block rounded-xl bg-emerald-700 px-4 py-3 text-center text-sm font-bold text-white">Login / create account</Link>}
           </nav>

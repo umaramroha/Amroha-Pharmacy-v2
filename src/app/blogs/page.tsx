@@ -18,11 +18,11 @@ export default function BlogsPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3">
-            Health Blog
+            Health Tips
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Ayurvedic wisdom, Unani insights, aur practical health tips — sab
-            ek jagah
+            Ayurvedic wisdom, Unani insights and practical health tips, all in
+            one place.
           </p>
         </div>
 

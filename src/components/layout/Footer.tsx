@@ -72,7 +72,7 @@ export default function Footer() {
                   href="/blogs"
                   className="opacity-80 hover:opacity-100 hover:text-secondary transition"
                 >
-                  Wellness Journal
+                  Health Tips
                 </Link>
               </li>
               <li>
