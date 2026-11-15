@@ -174,7 +174,7 @@ export default function TipArticle({ tip, lang, products }: Props) {
           </span>
         </div>
 
-        <h1 className="mb-5 text-3xl font-bold leading-tight text-gray-900 md:text-4xl">{t.title}</h1>
+        <h1 className={`mb-5 text-3xl font-bold text-gray-900 md:text-4xl ${lang === "hi" ? "leading-snug" : "leading-tight"}`}>{t.title}</h1>
 
         {/* Author and dates */}
         <div className="mb-6 flex items-center gap-3 border-b border-gray-200 pb-6">
