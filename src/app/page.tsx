@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageCircle, Zap, ShieldCheck, Baby, Heart, Stethoscope, Flame, TrendingDown, Dumbbell, Bone, Droplets, Activity } from "lucide-react";
 import HomeProductCard from "@/components/home/HomeProductCard";
+import HealthTipsSection from "@/components/home/HealthTipsSection";
 import PromoCarousel from "@/components/home/PromoCarousel";
 import TrustIcon from "@/components/ui/TrustIcon";
 import { concerns } from "@/data/concerns";
@@ -154,6 +155,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* HEALTH TIPS */}
+      <HealthTipsSection />
 
       {/* FLOATING WHATSAPP */}
       <a href={helpLink} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="fixed bottom-[88px] right-4 z-50 grid h-12 w-12 place-items-center rounded-full bg-green-600 text-white shadow-lg md:hidden">
