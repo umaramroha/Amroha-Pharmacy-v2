@@ -11,91 +11,91 @@ export const concerns: Concern[] = [
   {
     slug: "mens-vitality",
     name: "Men's Vitality & Wellness",
-    hindiName: "Mardana Taqat & Wellness",
+    hindiName: "पुरुषों की ताकत और वेलनेस",
     icon: "🦁",
     description:
-      "Mardana taqat, energy aur overall wellness ke liye authentic Ayurvedic aur Unani formulations. Ashwagandha, Shilajit aur Safed Musli jaise traditional ingredients se bani medicines.",
+      "Traditional Ayurvedic and Unani formulations for men's strength, energy and overall wellness, made with ingredients such as Ashwagandha, Shilajit and Safed Musli.",
     relatedCategories: ["male-problems"],
   },
   {
     slug: "sexual-health",
     name: "Sexual Health & Stamina",
-    hindiName: "Sexual Health & Vigor",
+    hindiName: "यौन स्वास्थ्य और ताकत",
     icon: "🛡️",
     description:
-      "Stamina, vigor aur sexual health ko naturally improve karne ke liye traditional remedies. Performance aur confidence dono improve karne me madadgar.",
+      "Traditional Ayurvedic and Unani remedies that support stamina, vigor and sexual wellness.",
     relatedCategories: ["male-problems"],
   },
   {
     slug: "male-fertility",
     name: "Male Fertility",
-    hindiName: "Sperm Count & Fertility",
+    hindiName: "स्पर्म काउंट और प्रजनन क्षमता",
     icon: "👶",
     description:
-      "Sperm count, motility aur male fertility ko support karne ke liye Ayurvedic aur Unani formulations. Salab Misri, Gokhru aur Akarkara jaise ingredients.",
+      "Ayurvedic and Unani formulations to support sperm count, motility and male fertility, with ingredients such as Salab Misri, Gokhru and Akarkara.",
     relatedCategories: ["male-problems"],
   },
   {
     slug: "womens-health",
     name: "Women's Health",
-    hindiName: "Khawateen Ki Sehat",
+    hindiName: "महिलाओं का स्वास्थ्य",
     icon: "💗",
     description:
-      "Women's wellness, hormonal balance aur reproductive health ke liye safe aur natural remedies. Ashok, Lodhra aur Shatavari jaise traditional ingredients.",
+      "Traditional remedies for women's wellness, hormonal balance and reproductive health, made with ingredients such as Ashok, Lodhra and Shatavari.",
     relatedCategories: ["female-problems"],
   },
   {
     slug: "white-discharge",
     name: "White Discharge (Likoria)",
-    hindiName: "Safed Pani / Likoria",
+    hindiName: "सफेद पानी / ल्यूकोरिया",
     icon: "🩺",
     description:
-      "Likoria aur white discharge se related problems ke liye safe aur effective herbal solutions. Regular check-up aur proper treatment zaroori hai.",
+      "Herbal support for problems related to white discharge (likoria). Regular check-ups and proper medical treatment are important.",
     relatedCategories: ["female-problems"],
   },
   {
     slug: "gastric-digestion",
     name: "Gastric, Digestion & Acidity",
-    hindiName: "Pet Ke Amraz & Hazma",
+    hindiName: "पेट और पाचन की समस्या",
     icon: "🫀",
     description:
-      "Gas, acidity, constipation aur digestion problems ka natural aur permanent samadhan. Triphala, Hingwashtak aur Saunf jaise traditional remedies.",
+      "Traditional remedies for gas, acidity, constipation and digestion problems, made with ingredients such as Triphala, Hingwashtak and Saunf.",
     relatedCategories: ["general-problems"],
   },
   {
     slug: "weight-loss",
     name: "Weight Loss & Obesity",
-    hindiName: "Wazan Ghatana / Motapa",
+    hindiName: "वजन घटाना / मोटापा",
     icon: "📏",
     description:
-      "Healthy weight management ke liye herbal aur natural support — bina crash diet ke. Regular exercise aur balanced diet ke saath.",
+      "Herbal support for healthy weight management, without crash diets. Best used along with regular exercise and a balanced diet.",
     relatedCategories: ["general-problems"],
   },
   {
     slug: "weight-gain",
     name: "Weight Gain & Weakness",
-    hindiName: "Wazan Badhana / Weakness",
+    hindiName: "वजन बढ़ाना / कमजोरी",
     icon: "💪",
     description:
-      "Weight gain, muscle building aur weakness door karne ke liye traditional tonics aur supplements. Ashwagandha aur Musli jaise ingredients.",
+      "Traditional tonics and supplements to support healthy weight gain, muscle building and general strength, with ingredients such as Ashwagandha and Musli.",
     relatedCategories: ["general-problems"],
   },
   {
     slug: "joints-pain",
     name: "Joints, Back & Arthritis Pain",
-    hindiName: "Jodon Aur Kamar Ka Dard",
+    hindiName: "जोड़ों और कमर का दर्द",
     icon: "🦵",
     description:
-      "Joint pain, back pain aur arthritis ke liye Ayurvedic aur Unani oils aur capsules. Mahanarayan oil, Shallaki aur Majoon Suranjan.",
+      "Ayurvedic and Unani oils and capsules for joint pain, back pain and arthritis, including Mahanarayan Oil, Shallaki and Majoon Suranjan.",
     relatedCategories: ["general-problems"],
   },
   {
     slug: "diabetes",
     name: "Diabetes & Blood Sugar",
-    hindiName: "Sugar Control",
+    hindiName: "शुगर (मधुमेह)",
     icon: "🩸",
     description:
-      "Blood sugar management ke liye traditional Ayurvedic aur Unani ingredients. Karela, Jamun aur Gurmar jaise natural remedies.",
+      "Traditional Ayurvedic and Unani ingredients such as Karela, Jamun and Gurmar, used to support healthy blood sugar levels. Use alongside, never instead of, the treatment prescribed by your doctor.",
     relatedCategories: ["general-problems"],
   },
 ];
