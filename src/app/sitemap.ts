@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from "@/lib/prisma";
-import { blogs } from "@/data/blogs";
+import { HEALTH_TIPS } from "@/data/healthTips";
 import { concerns } from "@/data/concerns";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -44,7 +44,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1.0 : 0.7,
   }));
 
-  const blogUrls = blogs.map(b => ({ url: `${baseUrl}/blogs/${b.slug}`, lastModified: new Date(), priority: 0.6 }));
+  // Health Tips: one entry per language, each pointing at the other (hreflang)
+  const blogUrls: MetadataRoute.Sitemap = HEALTH_TIPS.flatMap((t) => {
+    const en = `${baseUrl}/blogs/${t.slug}`;
+    const hi = `${baseUrl}/blogs/hi/${t.slug}`;
+    const lastModified = new Date(`${t.updated}T00:00:00Z`);
+    const alternates = { languages: { en, hi } };
+    return [
+      { url: en, lastModified, changeFrequency: 'monthly' as const, priority: 0.6, alternates },
+      { url: hi, lastModified, changeFrequency: 'monthly' as const, priority: 0.6, alternates },
+    ];
+  });
   const concernUrls = concerns.map(c => ({ url: `${baseUrl}/concerns/${c.slug}`, lastModified: new Date(), priority: 0.7 }));
   return [...staticRoutes, ...productUrls, ...blogUrls, ...concernUrls];
 }
