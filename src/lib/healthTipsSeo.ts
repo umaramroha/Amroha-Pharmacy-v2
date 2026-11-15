@@ -7,8 +7,9 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://amrohaphar
 const ORG_NAME = "Amroha Pharmacy";
 const TEAM_NAME = "Amroha Pharmacy Health Team";
 
-// Same temporary image as layout.tsx. Change both when the final share image is ready.
-const DEFAULT_OG_IMAGE = "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&h=630&fit=crop";
+// Brand share image made by src/app/og/route.tsx (layout.tsx uses the same one).
+// After a design change, bump ?v= here and in layout.tsx.
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og?v=1`;
 
 export function tipUrl(slug: string, lang: TipLang): string {
   return `${SITE_URL}${tipPath(slug, lang)}`;

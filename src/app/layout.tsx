@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "Amroha Pharmacy",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&h=630&fit=crop", // Temporary high-quality pharmacy image
+        url: "/og?v=1",
         width: 1200,
         height: 630,
         alt: "Amroha Pharmacy",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Amroha Pharmacy - Ayurvedic & Unani Care",
     description: "Authentic Ayurvedic and Unani medicines delivered across India.",
-    images: ["https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&h=630&fit=crop"],
+    images: ["/og?v=1"],
   },
 };
 
