@@ -91,6 +91,7 @@ export default function AdminDashboard() {
     { label: "Customers", href: "/kggg0b/customers", icon: Users, desc: "Customer list" },
     { label: "Reports", href: "/kggg0b/reports", icon: BarChart, desc: "Sales & analytics" },
     { label: "Email Log", href: "/kggg0b/notifications", icon: Mail, desc: "Sent & failed" },
+    { label: "Promo Email", href: "/kggg0b/promo", icon: Mail, desc: "Send offers" },
     { label: "Settings", href: "/kggg0b/settings", icon: Settings, desc: "Email & password" },
   ];
 
