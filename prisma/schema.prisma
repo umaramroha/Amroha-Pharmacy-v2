@@ -105,6 +105,10 @@ model Customer {
   followUpAt     DateTime?
   followUpNote   String?
   followUpStatus String?
+  // Promotional email permission. Default OFF; set only when the customer ticks the box or turns the switch ON.
+  marketingOptIn    Boolean   @default(false)
+  marketingOptInAt  DateTime?
+  marketingOptOutAt DateTime?
   orders    Order[]
   @@index([resetToken])
   @@index([verificationToken])
@@ -164,8 +168,22 @@ model NotificationLog {
   error     String?
   html      String?  // kept only for FAILED emails so they can be re-sent
   orderId   String?
+  campaignId String?  // promo campaign this email belonged to
 
   @@index([createdAt])
   @@index([status, createdAt])
   @@index([orderId])
+  @@index([campaignId])
+}
+
+// People who sign up for offers from the website footer (no account needed). Only confirmed rows get promo email.
+model EmailSubscriber {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  confirmToken String?
+  confirmedAt  DateTime?
+  optedOutAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([confirmToken])
 }
