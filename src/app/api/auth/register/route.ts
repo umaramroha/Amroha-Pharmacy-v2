@@ -12,7 +12,9 @@ const RegisterSchema = z.object({
   // Zod's .email() is strict and handles the mkk.@gmail.com edge case properly
   email: z.string().trim().email("Please enter a valid email address"), 
   mobile: z.string().trim().regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit Indian mobile number"),
-  password: z.string().min(8, "Password must be at least 8 characters")
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  // Promo email permission from the signup checkbox (unticked by default)
+  marketingOptIn: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
     const parsed = RegisterSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
 
-    const { name, email, mobile, password } = parsed.data;
+    const { name, email, mobile, password, marketingOptIn } = parsed.data;
     const cleanEmail = email.toLowerCase().trim();
 
     const existing = await prisma.customer.findUnique({ where: { email: cleanEmail } });
@@ -39,6 +41,8 @@ export async function POST(request: Request) {
       data: {
         name: name.trim(), email: cleanEmail, mobile: mobile.trim(),
         password: hashedPassword, isVerified: false, verificationToken,
+        marketingOptIn: marketingOptIn === true,
+        marketingOptInAt: marketingOptIn === true ? new Date() : null,
         verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });

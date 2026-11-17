@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +40,8 @@ const handleSubmit = async (e: React.FormEvent) => {
   formData.name,
   formData.email,
   formData.mobile,
-  formData.password
+  formData.password,
+  marketingOptIn
 );
 
     setLoading(false);
@@ -150,6 +152,18 @@ const handleSubmit = async (e: React.FormEvent) => {
                 required
               />
             </div>
+
+            <label className="flex items-start gap-2 text-sm text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-primary"
+              />
+              <span>
+                Send me offers and health tips by email (optional). You can unsubscribe at any time.
+              </span>
+            </label>
 
             <button
               type="submit"

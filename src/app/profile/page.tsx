@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import EmailOffersRow from "@/components/profile/EmailOffersRow";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -697,6 +698,9 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+
+            {/* Email offers (promo mail permission) */}
+            <EmailOffersRow />
           </div>
         </section>
 

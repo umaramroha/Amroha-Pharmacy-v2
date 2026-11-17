@@ -57,6 +57,7 @@ export async function PATCH(request: Request) {
         email: true,
         mobile: true,
         createdAt: true,
+        marketingOptIn: true,
       },
     });
 

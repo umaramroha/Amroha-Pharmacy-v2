@@ -23,6 +23,7 @@ export async function GET() {
         email: true,
         mobile: true,
         createdAt: true,
+        marketingOptIn: true,
         lastPasswordChange: true,
       },
     })

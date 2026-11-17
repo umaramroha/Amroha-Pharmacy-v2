@@ -14,6 +14,7 @@ export type User = {
   email: string;
   mobile: string;
   createdAt: string;
+  marketingOptIn?: boolean;
 };
 
 type AuthContextType = {
@@ -24,7 +25,8 @@ type AuthContextType = {
     name: string,
     email: string,
     mobile: string,
-    password: string
+    password: string,
+    marketingOptIn?: boolean
   ) => Promise<{ success: boolean; message: string }>;
   login: (
     email: string,
@@ -65,13 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     name: string,
     email: string,
     mobile: string,
-    password: string
+    password: string,
+    marketingOptIn?: boolean
   ) => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, mobile, password }),
+        body: JSON.stringify({ name, email, mobile, password, marketingOptIn: marketingOptIn === true }),
       });
 
       const data = await res.json();
