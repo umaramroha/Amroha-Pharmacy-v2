@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
+import FooterOffers from "@/components/layout/FooterOffers";
 
 export default function Footer() {
   return (
@@ -121,6 +122,9 @@ export default function Footer() {
             </ul>
           </div>
         </div>
+
+        {/* Offers sign-up (double opt-in) */}
+        <FooterOffers />
 
         {/* Divider */}
         <div className="border-t border-white/15 pt-4">
