@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null, lastPasswordChange: new Date() },
     });
     if (updated.count !== 1) {
-      return NextResponse.json({ error: "Token already used or invalid." }, { status: 400 });
+      return NextResponse.json({ error: "This reset link has already been used or is not valid. Please request a new one." }, { status: 400 });
     }
 
     return NextResponse.json({ 

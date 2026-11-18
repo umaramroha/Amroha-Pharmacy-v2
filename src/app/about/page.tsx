@@ -40,7 +40,7 @@ export default function AboutPage() {
               authorised suppliers.
             </p>
             <p>
-              We believe that nature has the power to heal, and our ancestors'
+              We believe that nature can support our wellbeing, and our ancestors'
               wisdom in Ayurveda and Unani systems of medicine holds the key to
               holistic wellness. Every product we sell is carefully sourced
               from trusted manufacturers and traditional practitioners, and is
@@ -130,8 +130,8 @@ export default function AboutPage() {
               },
               {
                 icon: "👨‍⚕️",
-                title: "Expert Guidance",
-                desc: "Traditional knowledge with practical advice. We help you find the right remedy for your concern.",
+                title: "Personal Guidance",
+                desc: "Traditional knowledge with practical advice. Our team helps you with product information and your order.",
               },
               {
                 icon: "🔒",
@@ -258,7 +258,7 @@ export default function AboutPage() {
         <section>
           <div className="bg-gradient-to-br from-primary to-primary-dark text-white rounded-2xl p-8 md:p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Koi Sawaal Hai?
+              Have a Question?
             </h2>
             <p className="text-white/90 mb-6 max-w-lg mx-auto text-sm md:text-base">
               Message us directly on WhatsApp or call us. We are here to support

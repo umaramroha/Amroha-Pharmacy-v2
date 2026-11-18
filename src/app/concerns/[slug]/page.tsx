@@ -164,7 +164,7 @@ export default async function ConcernDetailPage(props: { params: Promise<{ slug:
           Need guidance?
         </h3>
         <p className="text-gray-600 mb-4 text-sm">
-          Have questions about this concern? Ask an expert on WhatsApp.
+          Have questions about this concern? Ask our team on WhatsApp.
         </p>
         <a
           href={getWhatsAppLink(getContactMessage(concern.name))}

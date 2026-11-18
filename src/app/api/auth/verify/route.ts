@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     // 1. Strict type check to prevent Prisma object injection
     if (typeof token !== "string" || token.trim() === "") {
-      return NextResponse.json({ error: "Invalid token format" }, { status: 400 });
+      return NextResponse.json({ error: "This verification link is not valid. Please request a new one." }, { status: 400 });
     }
 
     // 2. Find customer with matching token AND check if it's not expired
