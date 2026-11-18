@@ -62,6 +62,10 @@ export default function TermsPage() {
               <br />
               GSTIN: Not Applicable
               <br />
+              Drug Licence No.: [DUMMY - placeholder only, to be replaced with the real number]
+              <br />
+              FSSAI Licence No.: [DUMMY - placeholder only, to be replaced with the real number]
+              <br />
               Email: Amrohapharmastore@gmail.com
               <br />
               Customer Support: +91 80779 88509
