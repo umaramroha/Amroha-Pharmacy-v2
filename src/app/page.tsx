@@ -52,7 +52,7 @@ export default async function Home() {
     url: "https://amrohapharmacy.vercel.app",
     image: `${"https://amrohapharmacy.vercel.app"}/og?v=1`,
     email: siteConfig.email,
-    address: { "@type": "PostalAddress", streetAddress: "Mohalla Nal", addressLocality: "Amroha", addressRegion: "Uttar Pradesh", addressCountry: "IN" },
+    address: { "@type": "PostalAddress", streetAddress: "Mohalla Nal", addressLocality: "Amroha", addressRegion: "Uttar Pradesh", postalCode: "244221", addressCountry: "IN" },
     telephone: siteConfig.phone,
     openingHours: "Mo-Sa 09:00-20:00",
   };

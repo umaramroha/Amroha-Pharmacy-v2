@@ -80,7 +80,7 @@ ${formData.message}`;
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Mohalla Nal, Amroha,
                     <br />
-                    Uttar Pradesh, India
+                    Uttar Pradesh - 244221, India
                   </p>
                 </div>
               </div>

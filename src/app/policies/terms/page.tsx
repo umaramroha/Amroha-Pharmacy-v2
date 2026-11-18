@@ -57,8 +57,8 @@ export default function TermsPage() {
               <br />
               Legal Entity/Proprietor: Umar Imam
               <br />
-              Registered/Business Address: Mohalla Nal, Amroha, Uttar Pradesh,
-              India
+              Registered/Business Address: Mohalla Nal, Amroha, Uttar Pradesh
+              - 244221, India
               <br />
               GSTIN: Not Applicable
               <br />
@@ -528,7 +528,7 @@ export default function TermsPage() {
               <br />
               Phone: +91 80779 88509
               <br />
-              Address: Mohalla Nal, Amroha, Uttar Pradesh, India
+              Address: Mohalla Nal, Amroha, Uttar Pradesh - 244221, India
             </p>
 
             <p>
@@ -569,7 +569,7 @@ export default function TermsPage() {
             <p>
               Amroha Pharmacy
               <br />
-              Mohalla Nal, Amroha, Uttar Pradesh, India
+              Mohalla Nal, Amroha, Uttar Pradesh - 244221, India
               <br />
               Email: Amrohapharmastore@gmail.com
               <br />

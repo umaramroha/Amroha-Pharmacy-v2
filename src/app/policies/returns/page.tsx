@@ -374,7 +374,7 @@ export default function ReturnsPolicyPage() {
             <p>
               Amroha Pharmacy
               <br />
-              Mohalla Nal, Amroha, Uttar Pradesh, India
+              Mohalla Nal, Amroha, Uttar Pradesh - 244221, India
               <br />
               Email: Amrohapharmastore@gmail.com
               <br />

@@ -98,7 +98,7 @@ export default function Footer() {
                 <span className="opacity-80 leading-relaxed text-xs">
                   Mohalla Nal, Amroha,
                   <br />
-                  Uttar Pradesh, India
+                  Uttar Pradesh - 244221, India
                 </span>
               </li>
               <li className="flex items-start gap-3">

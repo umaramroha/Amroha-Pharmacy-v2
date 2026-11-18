@@ -106,7 +106,7 @@ export function buildPromoHtml(content: PromoContent, name: string | null, unsub
     "</div>" +
     '<div style="padding: 18px 25px; background-color: #f1f5f9; text-align: center;">' +
     '<p style="font-size: 11px; color: #6b7280; line-height: 1.6; margin: 0 0 8px;">This email is for general information and is not medical advice. Please consult a doctor for any health problem.</p>' +
-    '<p style="font-size: 11px; color: #6b7280; line-height: 1.6; margin: 0;">You are receiving this because you chose to receive offers from Amroha Pharmacy, Amroha, Uttar Pradesh, India.<br><a href="' + escapeHtml(unsubscribeUrl) + '" style="color: #0F766E;">Unsubscribe</a></p>' +
+    '<p style="font-size: 11px; color: #6b7280; line-height: 1.6; margin: 0;">You are receiving this because you chose to receive offers from Amroha Pharmacy, Amroha, Uttar Pradesh - 244221, India.<br><a href="' + escapeHtml(unsubscribeUrl) + '" style="color: #0F766E;">Unsubscribe</a></p>' +
     "</div></div></body></html>"
   );
 }
