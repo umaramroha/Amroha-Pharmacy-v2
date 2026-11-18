@@ -14,7 +14,7 @@ const updateBannerSchema = z.object({
   subtitle: z.string().trim().max(200).optional().nullable(),
   imageUrl: z.string().url("Must be a valid URL").optional(),
   linkUrl: z.string().trim().max(500).optional().nullable().refine(
-    (val) => !val || val === "" || val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://"),
+    (val) => !val || val === "" || (val.startsWith("/") && !val.startsWith("//") && !val.startsWith("/\\")) || val.startsWith("http://") || val.startsWith("https://"),
     "Must be a valid URL (http/https) or a relative path starting with /"
   ),
   theme: z.string().optional(),

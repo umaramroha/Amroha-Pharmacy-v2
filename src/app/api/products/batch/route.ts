@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rateLimit";
 
 const BatchInput = z.object({
   ids: z.array(z.string().min(1).max(64)).min(1).max(100),
@@ -13,6 +14,10 @@ const BatchInput = z.object({
  */
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+    const rate = await rateLimit(`products-batch:${ip}`, 60, 60 * 1000, { failOpen: true });
+    if (!rate.allowed) return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
+
     let body: unknown;
     try {
       body = await request.json();
