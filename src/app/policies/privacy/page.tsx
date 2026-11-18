@@ -190,8 +190,9 @@ export default function PrivacyPolicyPage() {
                 To improve the Website, products, services and user experience;
               </li>
               <li>
-                To send transactional and, where permitted, promotional
-                communications;
+                To send transactional communications, and promotional emails only to
+                people who have chosen to receive them (every promotional email
+                has an unsubscribe link);
               </li>
               <li>To enforce our Terms & Conditions and other policies;</li>
               <li>

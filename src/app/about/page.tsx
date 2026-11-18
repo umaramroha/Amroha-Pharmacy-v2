@@ -261,8 +261,8 @@ export default function AboutPage() {
               Koi Sawaal Hai?
             </h2>
             <p className="text-white/90 mb-6 max-w-lg mx-auto text-sm md:text-base">
-              Hum aapki madad ke liye yahan hain. WhatsApp pe direct message
-              or call us — we are here to support your health journey.
+              Message us directly on WhatsApp or call us. We are here to support
+              your health journey.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <a

@@ -32,7 +32,7 @@ export default function ConcernsPage() {
           Shop by Concern
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Natural solutions for every health concern — approved by Ayurvedic and Unani experts.
+          Traditional Ayurvedic and Unani products, organised by common health concerns.
         </p>
       </div>
 

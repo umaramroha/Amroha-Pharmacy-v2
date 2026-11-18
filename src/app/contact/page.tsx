@@ -56,8 +56,8 @@ ${formData.message}`;
             Contact Us
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Hum aapki madad ke liye yahan hain. WhatsApp, phone ya form ke
-            reach out to us.
+            We are here to help you. Reach out to us by WhatsApp, phone or the
+            form below.
           </p>
         </div>
 
@@ -141,8 +141,8 @@ ${formData.message}`;
 
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
               <p className="text-xs text-green-800 leading-relaxed">
-                <Lightbulb className="w-4 h-4 inline mr-1 text-yellow-500" /> <strong>Quick Response:</strong> WhatsApp pe sabse jaldi
-                reply milta hai. Order, product ya kisi bhi sawaal ke liye
+                <Lightbulb className="w-4 h-4 inline mr-1 text-yellow-500" /> <strong>Quick Response:</strong> WhatsApp is the fastest way to
+                reach us. For any question about an order or a product,
                 message us directly.
               </p>
             </div>
