@@ -132,6 +132,17 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
       updateData.trackingNumber = t.value;
     }
 
+    // Optional payment reference (UTR) written by the admin when marking an order as paid
+    let paymentRef: string | null = null;
+    if (body.paymentRef !== undefined) {
+      const raw = typeof body.paymentRef === "string" ? body.paymentRef.trim() : "";
+      if (raw && !/^[A-Za-z0-9\-_\/]{6,40}$/.test(raw)) {
+        return NextResponse.json({ error: "Invalid payment reference (6 to 40 letters or numbers; - _ / allowed)" }, { status: 400 });
+      }
+      paymentRef = raw || null;
+      updateData.paymentRef = paymentRef;
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
     }
@@ -156,6 +167,14 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         // Guard: a cancelled order cannot be marked as paid. Re-activate it first.
         if (currentOrder.status === "CANCELLED" && paymentStatus === "PAID") {
           throw new Error("This order is cancelled. Re-activate it before marking it as paid.");
+        }
+
+        // Guard: the same payment reference cannot be used on two orders.
+        if (paymentRef) {
+          const dup = await tx.order.findFirst({ where: { paymentRef, id: { not: params.id } }, select: { id: true } });
+          if (dup) {
+            throw new Error("This payment reference is already used on order #" + dup.id.slice(-8).toUpperCase() + ".");
+          }
         }
 
         // Guard: a delivered order cannot be cancelled (the parcel is with the customer).
@@ -233,6 +252,8 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
             data: {
               ...updateData,
               ...(status === "SHIPPED" && currentOrder.status !== "SHIPPED" ? { shippedAt: new Date() } : {}),
+              ...(paymentStatus === "PAID" && currentOrder.paymentStatus !== "PAID" ? { paidAt: new Date() } : {}),
+              ...(paymentStatus === "PENDING" && currentOrder.paymentStatus === "PAID" ? { paidAt: null, paymentRef: null } : {}),
             },
           });
         }

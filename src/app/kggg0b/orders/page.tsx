@@ -14,7 +14,7 @@ type Order = {
   id: string; customerName: string; customerMobile: string; customerEmail: string | null;
   address: string; city: string; state: string; pincode: string; total: string; couponCode: string | null; couponDiscount: string;
   status: string; paymentMethod: string; paymentStatus: string; createdAt: string;
-  courierName: string | null; trackingNumber: string | null;
+  courierName: string | null; trackingNumber: string | null; paymentRef: string | null; paidAt: string | null;
   items: OrderItem[]; customer: { id: string; name: string; email: string; mobile: string | null; } | null;
 };
 
@@ -124,16 +124,16 @@ function AdminOrdersContent() {
     } catch (err) { console.error("Update error:", err); } finally { setUpdating(null); }
   };
 
-  const updatePaymentStatus = async (orderId: string, paymentStatus: string) => {
+  const updatePaymentStatus = async (orderId: string, paymentStatus: string, paymentRef?: string) => {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentStatus }),
+        body: JSON.stringify({ paymentStatus, ...(paymentRef ? { paymentRef } : {}) }),
       });
       if (res.ok) {
         setActionError("");
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, paymentStatus } : o)));
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, paymentStatus, ...(paymentStatus === "PAID" ? { paymentRef: paymentRef || null, paidAt: new Date().toISOString() } : {}), ...(paymentStatus === "PENDING" ? { paymentRef: null, paidAt: null } : {}) } : o)));
       } else {
         const d = await res.json().catch(() => ({}));
         setActionError(d.error || "Could not update the payment status.");
@@ -213,13 +213,19 @@ function AdminOrdersContent() {
                   <div><p className="text-xs text-gray-500">Total</p><p className="text-sm font-semibold whitespace-nowrap">{formatINR(order.total)} · {order.paymentMethod.toUpperCase()}</p></div>
                   <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</p></div>
                   {order.trackingNumber && (<div><p className="text-xs text-gray-500">{order.courierName || "Tracking"}</p><p className="font-mono text-sm font-semibold whitespace-nowrap">{order.trackingNumber}</p></div>)}
+                  {order.paymentRef && (<div title={order.paidAt ? "Paid on " + new Date(order.paidAt).toLocaleString("en-IN") : undefined}><p className="text-xs text-gray-500">UTR</p><p className="font-mono text-sm font-semibold text-gray-800 whitespace-nowrap">{order.paymentRef}</p></div>)}
                   {order.couponCode && (<div><p className="text-xs text-gray-500">Coupon</p><p className="font-mono text-sm font-semibold text-green-700 whitespace-nowrap">{order.couponCode} (− {formatINR(order.couponDiscount)})</p></div>)}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 lg:shrink-0 lg:justify-end">
                   <span className={`inline-flex items-center justify-center h-8 px-3 rounded-full text-xs font-bold ${statusColors[order.status] || "bg-gray-100 text-gray-800"}`}>{order.status}</span>
                   <button onClick={() => setExpandedId(expandedId === order.id ? null : order.id)} className="inline-flex items-center justify-center h-8 text-xs text-primary hover:underline font-medium px-2">{expandedId === order.id ? "Hide" : "Details"}</button>
                   {order.paymentStatus === "PENDING" && order.status !== "CANCELLED" && (
-                    <button onClick={() => updatePaymentStatus(order.id, "PAID")} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 rounded-full transition">
+                    <button onClick={() => {
+                      if (order.paymentMethod === "cod") { updatePaymentStatus(order.id, "PAID"); return; }
+                      const ref = window.prompt("Enter the UTR / transaction number from the payment screenshot (leave empty to skip):");
+                      if (ref === null) return;
+                      updatePaymentStatus(order.id, "PAID", ref.trim());
+                    }} className="inline-flex items-center justify-center h-8 whitespace-nowrap text-xs bg-green-50 hover:bg-green-100 text-green-700 font-bold px-3 rounded-full transition">
                       {order.paymentMethod === "cod" ? "Mark COD as paid" : "Mark as PAID"}
                     </button>
                   )}

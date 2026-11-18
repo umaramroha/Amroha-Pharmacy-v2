@@ -57,10 +57,13 @@ model Order {
   shippedAt      DateTime?
   paymentMethod  String
   paymentStatus  String      @default("PENDING")
+  paymentRef     String?
+  paidAt         DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   customer       Customer?   @relation(fields: [customerId], references: [id])
   items          OrderItem[]
+  @@index([paymentRef])
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
