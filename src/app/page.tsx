@@ -57,7 +57,7 @@ export default async function Home() {
   return (
     <div>
       <h1 className="sr-only">Amroha Pharmacy - Authentic Ayurvedic & Unani Medicines</h1>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
 
       {/* HERO = Database Banner Carousel */}
       <PromoCarousel banners={banners} />

@@ -89,7 +89,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <ProductDetailClient
       product={serializeProduct(product)}
       similar={relatedProducts.map(serializeProduct)}
